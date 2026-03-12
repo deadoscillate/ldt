@@ -4,12 +4,21 @@ import { CourseTemplateResolutionError } from "@/lib/course/errors";
 import {
   courseDocumentSchema,
   type BlockIncludeDocument,
+  type CalloutBlockDocument,
   type CourseDocument,
   type CourseTemplateDocument,
   type CourseTemplateEntryDocument,
   type CourseTemplateNodeDocument,
+  type LayoutColumnDocument,
+  type MediaDocument,
+  type QuoteBlockDocument,
+  type TemplateCalloutBlockDocument,
+  type TemplateLayoutColumnDocument,
+  type TemplateMediaDocument,
+  type TemplateQuoteBlockDocument,
   type TemplateScalarValue,
   type TemplateTextValue,
+  type ThemeDocument,
 } from "@/lib/course/schema";
 
 export type TemplateFieldInputType = "text" | "number" | "boolean";
@@ -50,7 +59,7 @@ function formatIssuePath(path: string): string {
 }
 
 function allowsRuntimePlaceholders(path: string): boolean {
-  return path.includes(".body");
+  return path.includes(".body") || path.includes(".callout.text") || path.includes(".quote.text");
 }
 
 function inferTemplateFieldType(value: TemplateScalarValue): TemplateFieldInputType {
@@ -130,6 +139,136 @@ function interpolateValue(
   return interpolateString(value, templateData, path, issues);
 }
 
+function interpolateMedia(
+  value: TemplateMediaDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): MediaDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    type: value.type,
+    src: interpolateString(value.src, templateData, `${path}.src`, issues),
+    alt: value.alt
+      ? interpolateString(value.alt, templateData, `${path}.alt`, issues)
+      : undefined,
+    caption: interpolateTextValue(
+      value.caption,
+      templateData,
+      `${path}.caption`,
+      issues
+    ),
+  };
+}
+
+function interpolateColumn(
+  value: TemplateLayoutColumnDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): LayoutColumnDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    title: value.title
+      ? interpolateString(value.title, templateData, `${path}.title`, issues)
+      : undefined,
+    text: interpolateTextValue(value.text, templateData, `${path}.text`, issues),
+    image: value.image
+      ? interpolateString(value.image, templateData, `${path}.image`, issues)
+      : undefined,
+    video: value.video
+      ? interpolateString(value.video, templateData, `${path}.video`, issues)
+      : undefined,
+  };
+}
+
+function interpolateQuote(
+  value: TemplateQuoteBlockDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): QuoteBlockDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    text:
+      interpolateTextValue(value.text, templateData, `${path}.text`, issues) ?? "",
+    attribution: value.attribution
+      ? interpolateString(
+          value.attribution,
+          templateData,
+          `${path}.attribution`,
+          issues
+        )
+      : undefined,
+  };
+}
+
+function interpolateCallout(
+  value: TemplateCalloutBlockDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): CalloutBlockDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    title: value.title
+      ? interpolateString(value.title, templateData, `${path}.title`, issues)
+      : undefined,
+    text:
+      interpolateTextValue(value.text, templateData, `${path}.text`, issues) ?? "",
+  };
+}
+
+function interpolateTheme(
+  value: ThemeDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  issues: string[]
+): ThemeDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    primary: value.primary
+      ? interpolateString(value.primary, templateData, "course.theme.primary", issues)
+      : undefined,
+    secondary: value.secondary
+      ? interpolateString(
+          value.secondary,
+          templateData,
+          "course.theme.secondary",
+          issues
+        )
+      : undefined,
+    font: value.font
+      ? interpolateString(value.font, templateData, "course.theme.font", issues)
+      : undefined,
+    logo: value.logo
+      ? interpolateString(value.logo, templateData, "course.theme.logo", issues)
+      : undefined,
+    background: value.background
+      ? interpolateString(
+          value.background,
+          templateData,
+          "course.theme.background",
+          issues
+        )
+      : undefined,
+  };
+}
+
 function expandEntries(
   entries: CourseTemplateEntryDocument[],
   blocks: Record<string, CourseTemplateEntryDocument[]>,
@@ -187,27 +326,28 @@ function interpolateNode(
   issues: string[]
 ): Record<string, unknown> {
   const basePath = `nodes[${index}]`;
-  const interpolatedId = interpolateString(node.id, templateData, `${basePath}.id`, issues);
-  const interpolatedTitle = interpolateString(
-    node.title,
-    templateData,
-    `${basePath}.title`,
-    issues
-  );
-  const interpolatedBody = interpolateTextValue(
-    node.body,
-    templateData,
-    `${basePath}.body`,
-    issues
-  );
+  const interpolatedBase = {
+    id: interpolateString(node.id, templateData, `${basePath}.id`, issues),
+    title: interpolateString(node.title, templateData, `${basePath}.title`, issues),
+    body: interpolateTextValue(node.body, templateData, `${basePath}.body`, issues),
+    layout: node.layout,
+    media: interpolateMedia(node.media, templateData, `${basePath}.media`, issues),
+    left: interpolateColumn(node.left, templateData, `${basePath}.left`, issues),
+    right: interpolateColumn(node.right, templateData, `${basePath}.right`, issues),
+    quote: interpolateQuote(node.quote, templateData, `${basePath}.quote`, issues),
+    callout: interpolateCallout(
+      node.callout,
+      templateData,
+      `${basePath}.callout`,
+      issues
+    ),
+  };
 
   switch (node.type) {
     case "content":
       return {
-        id: interpolatedId,
+        ...interpolatedBase,
         type: "content",
-        title: interpolatedTitle,
-        body: interpolatedBody,
         next: interpolateValue(
           node.next,
           templateData,
@@ -216,11 +356,10 @@ function interpolateNode(
         ) as string | undefined,
       };
     case "choice":
+    case "branch":
       return {
-        id: interpolatedId,
-        type: "choice",
-        title: interpolatedTitle,
-        body: interpolatedBody,
+        ...interpolatedBase,
+        type: node.type,
         options: node.options.map((option, optionIndex) => ({
           id: interpolateString(
             option.id,
@@ -250,10 +389,8 @@ function interpolateNode(
       };
     case "quiz":
       return {
-        id: interpolatedId,
+        ...interpolatedBase,
         type: "quiz",
-        title: interpolatedTitle,
-        body: interpolatedBody,
         question: interpolateString(
           node.question,
           templateData,
@@ -307,12 +444,67 @@ function interpolateNode(
           issues
         ) as string | undefined,
       };
+    case "question":
+      return {
+        ...interpolatedBase,
+        type: "question",
+        prompt: interpolateString(
+          node.prompt,
+          templateData,
+          `${basePath}.prompt`,
+          issues
+        ),
+        multiple: node.multiple,
+        options: node.options.map((option, optionIndex) => ({
+          id: interpolateString(
+            option.id,
+            templateData,
+            `${basePath}.options[${optionIndex}].id`,
+            issues
+          ),
+          label: interpolateString(
+            option.label,
+            templateData,
+            `${basePath}.options[${optionIndex}].label`,
+            issues
+          ),
+          correct: option.correct,
+        })),
+        correctScore: interpolateValue(
+          node.correctScore,
+          templateData,
+          `${basePath}.correctScore`,
+          issues
+        ) as string | number | undefined,
+        incorrectScore: interpolateValue(
+          node.incorrectScore,
+          templateData,
+          `${basePath}.incorrectScore`,
+          issues
+        ) as string | number | undefined,
+        passNext: interpolateValue(
+          node.passNext,
+          templateData,
+          `${basePath}.passNext`,
+          issues
+        ) as string | undefined,
+        failNext: interpolateValue(
+          node.failNext,
+          templateData,
+          `${basePath}.failNext`,
+          issues
+        ) as string | undefined,
+        next: interpolateValue(
+          node.next,
+          templateData,
+          `${basePath}.next`,
+          issues
+        ) as string | undefined,
+      };
     case "result":
       return {
-        id: interpolatedId,
+        ...interpolatedBase,
         type: "result",
-        title: interpolatedTitle,
-        body: interpolatedBody,
         outcome: node.outcome,
       };
   }
@@ -363,6 +555,7 @@ export function resolveCourseTemplate(
           issues
         )
       : "",
+    theme: interpolateTheme(sourceDocument.theme, templateData, issues),
     start: interpolateString(
       sourceDocument.start,
       templateData,

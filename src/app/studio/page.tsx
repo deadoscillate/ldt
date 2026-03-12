@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CourseWorkbench } from "@/components/CourseWorkbench";
 import { loadCourseSamples } from "@/lib/course/load-samples";
+import { loadLmsValidationCatalog } from "@/lib/validation/load";
 
 export const metadata: Metadata = {
   title: "Studio",
@@ -10,7 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function StudioPage() {
-  const samples = await loadCourseSamples();
+  const [samples, validationCatalog] = await Promise.all([
+    loadCourseSamples(),
+    loadLmsValidationCatalog(),
+  ]);
 
-  return <CourseWorkbench samples={samples} />;
+  return <CourseWorkbench samples={samples} validationCatalog={validationCatalog} />;
 }

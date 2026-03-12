@@ -118,6 +118,22 @@ export function inspectTemplateFields(source: string): TemplateFieldDefinition[]
   }
 }
 
+export function inspectTemplateFieldsWithOverrides(
+  source: string,
+  overrides: Record<string, TemplateScalarValue>
+): TemplateFieldDefinition[] | null {
+  try {
+    const templateDocument = parseCourseTemplateYaml(source);
+    const resolvedTemplate = resolveCourseTemplate(templateDocument, {
+      templateDataOverrides: overrides,
+    });
+
+    return resolvedTemplate.templateFields;
+  } catch {
+    return null;
+  }
+}
+
 export function parseAndCompileCourseBundle(
   source: string,
   options: ResolveCourseTemplateOptions = {}

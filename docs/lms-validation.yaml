@@ -1,0 +1,44 @@
+scormCloudStatus: passed
+summary: SCORM Cloud validation has passed for launch, completion, score, pass/fail, and resume. Broader LMS validation is still in progress.
+checklist:
+  - Import package successfully
+  - Launch package successfully
+  - Completion status updates
+  - Score reporting works
+  - Pass/fail works if configured
+  - Resume works after relaunch
+  - Record observed quirks or notes
+targets:
+  - id: moodle
+    name: Moodle
+    validationDate: ""
+    version: ""
+    importPassed: false
+    launchPassed: false
+    completionPassed: false
+    scorePassed: false
+    passFailPassed: false
+    resumePassed: false
+    notes: Record SCORM activity settings, gradebook behavior, and any completion quirks here.
+  - id: canvas
+    name: Canvas LMS
+    validationDate: ""
+    version: ""
+    importPassed: false
+    launchPassed: false
+    completionPassed: false
+    scorePassed: false
+    passFailPassed: false
+    resumePassed: false
+    notes: Record module settings, assignment grading behavior, and any launch quirks here.
+  - id: talentlms
+    name: TalentLMS
+    validationDate: ""
+    version: ""
+    importPassed: false
+    launchPassed: false
+    completionPassed: false
+    scorePassed: false
+    passFailPassed: false
+    resumePassed: false
+    notes: Record package import settings, completion rules, and any learner resume quirks here.

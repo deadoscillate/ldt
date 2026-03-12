@@ -1,0 +1,100 @@
+id: workplace-harassment-reporting
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+theme:
+  primary: "{{primaryColor}}"
+  secondary: "{{secondaryColor}}"
+  font: "{{fontFamily}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Workplace Harassment Reporting Basics
+  courseDescription: Practice the immediate actions for documenting and reporting workplace harassment concerns.
+  companyName: Fabrikam Services
+  reportingChannel: HR or the approved conduct channel
+  primaryColor: "#8a2f39"
+  secondaryColor: "#f8eef0"
+  fontFamily: Aptos
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      layout: callout
+      title: "{{courseTitle}}"
+      body: Use facts, documentation, and the approved reporting path.
+      callout:
+        title: Reporting principle
+        text: The source definition makes the reporting flow explicit and repeatable.
+      next: first-response
+  result_block:
+    - id: passed
+      type: result
+      layout: result
+      title: Scenario complete
+      outcome: passed
+      body:
+        - "You followed the approved reporting process for {{companyName}}."
+        - "Final score: {{score}} / {{maxScore}}"
+    - id: failed
+      type: result
+      layout: result
+      title: Review needed
+      outcome: failed
+      body:
+        - "Responsible reporting starts with facts, documentation, and the right channel."
+        - "Final score: {{score}} / {{maxScore}}"
+nodes:
+  - include: intro_block
+  - id: first-response
+    type: branch
+    layout: quote
+    title: First action
+    body: A coworker appears uncomfortable after repeated inappropriate remarks.
+    quote:
+      text: Start with facts, not assumptions.
+      attribution: Conduct response guidance
+    options:
+      - id: document
+        label: Document what happened and use {{reportingChannel}}
+        next: report-essentials
+        score: 0
+      - id: post
+        label: Post about it publicly so leadership notices
+        next: failed
+        score: 0
+  - id: report-essentials
+    type: question
+    layout: question
+    title: Reporting essentials
+    body: Select the actions that support a responsible reporting process.
+    prompt: Which actions belong in a responsible harassment reporting response?
+    multiple: true
+    correctScore: 10
+    incorrectScore: 0
+    passNext: follow-through
+    failNext: failed
+    options:
+      - id: facts
+        label: Record dates, locations, and who was present
+        correct: true
+      - id: preserve
+        label: Preserve relevant messages or evidence
+        correct: true
+      - id: gossip
+        label: Share the story informally for advice
+        correct: false
+  - id: follow-through
+    type: choice
+    layout: text
+    title: Follow-through
+    body: What is the strongest next step?
+    options:
+      - id: channel
+        label: Report through {{reportingChannel}}
+        next: passed
+        score: 0
+      - id: wait
+        label: Wait and see whether it keeps happening
+        next: failed
+        score: 0
+  - include: result_block

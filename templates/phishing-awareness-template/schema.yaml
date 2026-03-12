@@ -1,0 +1,25 @@
+variables:
+  courseTitle:
+    type: text
+    description: Display title used in the module and result screen.
+  courseDescription:
+    type: text
+    description: Short overview shown in the studio and runtime header.
+  companyName:
+    type: text
+    description: Organization name referenced in the scenario.
+  reportingChannel:
+    type: text
+    description: Approved reporting mailbox or team.
+  policyUrl:
+    type: text
+    description: Policy link referenced in remediation copy.
+  primaryColor:
+    type: color
+    description: Theme primary color.
+  secondaryColor:
+    type: color
+    description: Theme secondary color.
+  fontFamily:
+    type: text
+    description: Theme font family.

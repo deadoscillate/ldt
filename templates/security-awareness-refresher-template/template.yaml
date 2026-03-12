@@ -1,0 +1,98 @@
+id: security-awareness-refresher
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+theme:
+  primary: "{{primaryColor}}"
+  secondary: "{{secondaryColor}}"
+  font: "{{fontFamily}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Security Awareness Refresher
+  courseDescription: Reinforce short, repeatable habits that reduce day-to-day security risk.
+  companyName: Tailwind Manufacturing
+  securityTeam: Security Operations
+  policyUrl: https://example.com/security/refresher
+  primaryColor: "#245f45"
+  secondaryColor: "#edf8f3"
+  fontFamily: Aptos
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      layout: video
+      title: "{{courseTitle}}"
+      body: Use a repeatable decision flow for common security situations at {{companyName}}.
+      media:
+        type: video
+        src: https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4
+        caption: Short refresher clip
+      next: first-decision
+  result_block:
+    - id: passed
+      type: result
+      layout: result
+      title: Refresher complete
+      outcome: passed
+      body:
+        - "You completed the refresher for {{companyName}}."
+        - "Final score: {{score}} / {{maxScore}}"
+    - id: failed
+      type: result
+      layout: result
+      title: Review needed
+      outcome: failed
+      body:
+        - "Review the refresher guidance in {{policyUrl}} and try again."
+        - "Final score: {{score}} / {{maxScore}}"
+nodes:
+  - include: intro_block
+  - id: first-decision
+    type: branch
+    layout: text
+    title: Device hygiene
+    body: You step away from your desk for a short meeting. What should happen first?
+    options:
+      - id: lock
+        label: Lock the workstation before leaving
+        next: refresher-question
+        score: 0
+      - id: leave
+        label: Leave it open because the meeting is short
+        next: failed
+        score: 0
+  - id: refresher-question
+    type: question
+    layout: question
+    title: Refresher check
+    body: Choose the action that reduces everyday security risk.
+    prompt: Which action belongs in a basic security refresher?
+    correctScore: 10
+    incorrectScore: 0
+    passNext: wrap-up
+    failNext: failed
+    options:
+      - id: report
+        label: Report suspicious activity to {{securityTeam}}
+        correct: true
+      - id: share
+        label: Share passwords with trusted teammates for convenience
+        correct: false
+  - id: wrap-up
+    type: choice
+    layout: callout
+    title: Follow-through
+    body: How do you close the refresher?
+    callout:
+      title: Habit reminder
+      text: Repeatable security habits reduce risk more reliably than one-off reminders.
+    options:
+      - id: review
+        label: Review the policy at {{policyUrl}} and continue
+        next: passed
+        score: 0
+      - id: ignore
+        label: Ignore the refresher until a problem happens
+        next: failed
+        score: 0
+  - include: result_block

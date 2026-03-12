@@ -175,9 +175,9 @@ test("compiles all shipped sample templates successfully", async () => {
     courseSampleCatalog.map(async (sample) => {
       const filePath = path.join(
         process.cwd(),
-        "src",
-        "samples",
-        sample.fileName
+        "templates",
+        sample.templateDirectory,
+        "template.yaml"
       );
       const source = await readFile(filePath, "utf8");
 

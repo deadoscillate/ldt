@@ -1,4 +1,55 @@
 export type CourseNodeType = "content" | "choice" | "quiz" | "result";
+export type CourseAuthorNodeType =
+  | "content"
+  | "choice"
+  | "branch"
+  | "quiz"
+  | "question"
+  | "result";
+export type CourseLayoutType =
+  | "title"
+  | "text"
+  | "image"
+  | "video"
+  | "two-column"
+  | "image-left"
+  | "image-right"
+  | "quote"
+  | "callout"
+  | "question"
+  | "result";
+
+export interface CompiledTheme {
+  primary: string | null;
+  secondary: string | null;
+  font: string | null;
+  logo: string | null;
+  background: string | null;
+}
+
+export interface CompiledMedia {
+  type: "image" | "video";
+  src: string;
+  alt: string;
+  caption: string;
+}
+
+export interface CompiledQuoteBlock {
+  text: string;
+  attribution: string;
+}
+
+export interface CompiledCalloutBlock {
+  title: string;
+  text: string;
+}
+
+export interface CompiledLayoutColumn {
+  title: string;
+  text: string;
+  image: string | null;
+  video: string | null;
+}
 
 export interface CompiledEdge {
   from: string;
@@ -9,12 +60,20 @@ export interface CompiledEdge {
 interface BaseCompiledNode {
   id: string;
   type: CourseNodeType;
+  sourceType: CourseAuthorNodeType;
   title: string;
   body: string;
+  layout: CourseLayoutType | null;
+  media: CompiledMedia | null;
+  left: CompiledLayoutColumn | null;
+  right: CompiledLayoutColumn | null;
+  quote: CompiledQuoteBlock | null;
+  callout: CompiledCalloutBlock | null;
 }
 
 export interface CompiledContentNode extends BaseCompiledNode {
   type: "content";
+  sourceType: "content";
   next: string | null;
 }
 
@@ -27,6 +86,7 @@ export interface CompiledChoiceOption {
 
 export interface CompiledChoiceNode extends BaseCompiledNode {
   type: "choice";
+  sourceType: "choice" | "branch";
   options: CompiledChoiceOption[];
 }
 
@@ -38,6 +98,7 @@ export interface CompiledQuizOption {
 
 export interface CompiledQuizNode extends BaseCompiledNode {
   type: "quiz";
+  sourceType: "quiz" | "question";
   question: string;
   multiple: boolean;
   options: CompiledQuizOption[];
@@ -50,6 +111,7 @@ export interface CompiledQuizNode extends BaseCompiledNode {
 
 export interface CompiledResultNode extends BaseCompiledNode {
   type: "result";
+  sourceType: "result";
   outcome: "passed" | "failed" | "neutral";
 }
 
@@ -63,6 +125,7 @@ export interface CompiledCourse {
   id: string;
   title: string;
   description: string;
+  theme: CompiledTheme;
   startNodeId: string;
   passingScore: number;
   maxScore: number;

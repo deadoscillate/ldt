@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 
-import { waitlistRequestSchema } from "@/lib/waitlist/schema";
+import { trackClientEvent } from "@/lib/events/client";
+import { waitlistRequestSchema, type LeadType } from "@/lib/intake/schema";
 
 interface WaitlistFeedback {
   tone: "success" | "error";
@@ -12,6 +13,8 @@ interface WaitlistFeedback {
 
 export function WaitlistForm() {
   const [email, setEmail] = useState("");
+  const [leadType, setLeadType] = useState<LeadType>("unknown");
+  const [notes, setNotes] = useState("");
   const [feedback, setFeedback] = useState<WaitlistFeedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -20,6 +23,9 @@ export function WaitlistForm() {
 
     const parsed = waitlistRequestSchema.safeParse({
       email,
+      leadType,
+      notes,
+      referrer: typeof document !== "undefined" ? document.referrer : "",
       source: "landing-page",
     });
 
@@ -49,10 +55,15 @@ export function WaitlistForm() {
       }
 
       setEmail("");
+      setLeadType("unknown");
+      setNotes("");
       setFeedback({
         tone: "success",
-        title: "Thanks",
-        message: "Thanks - you're on the early access list.",
+        title: "Submitted",
+        message: "You're on the early access list.",
+      });
+      trackClientEvent("waitlist_submitted", {
+        leadType: parsed.data.leadType ?? "unknown",
       });
     } catch (error) {
       setFeedback({
@@ -87,6 +98,37 @@ export function WaitlistForm() {
         <button className="primary-button" disabled={isSubmitting} type="submit">
           {isSubmitting ? "Submitting..." : "Request Early Access"}
         </button>
+      </div>
+      <div className="waitlist-form-grid">
+        <div>
+          <label className="waitlist-label" htmlFor="waitlist-lead-type">
+            I&apos;m closest to
+          </label>
+          <select
+            className="waitlist-select"
+            id="waitlist-lead-type"
+            onChange={(event) => setLeadType(event.target.value as LeadType)}
+            value={leadType}
+          >
+            <option value="instructional-designer">Instructional designer</option>
+            <option value="consultant">Consultant</option>
+            <option value="technical-ld">Technical L&amp;D</option>
+            <option value="unknown">Prefer not to say</option>
+          </select>
+        </div>
+        <div>
+          <label className="waitlist-label" htmlFor="waitlist-notes">
+            Notes (optional)
+          </label>
+          <textarea
+            className="feedback-textarea waitlist-notes-textarea"
+            id="waitlist-notes"
+            onChange={(event) => setNotes(event.target.value)}
+            placeholder="Anything useful to know about your LMS, team, or use case?"
+            rows={3}
+            value={notes}
+          />
+        </div>
       </div>
       <p className="waitlist-note">
         No login required. No LMS setup required. Early feedback welcome.

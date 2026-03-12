@@ -6,11 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --test src/lib/course/template.test.ts",
+    "test": "tsx --test src/lib/course/template.test.ts src/lib/course/builder.test.ts src/lib/course/source-files.test.ts src/lib/course/inspector.test.ts src/lib/validation/load.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
+    "@vercel/blob": "^2.3.1",
     "js-yaml": "4.1.1",
     "jszip": "3.10.1",
     "next": "16.1.6",

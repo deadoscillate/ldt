@@ -1,0 +1,100 @@
+id: customer-service-escalation
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+theme:
+  primary: "{{primaryColor}}"
+  secondary: "{{secondaryColor}}"
+  font: "{{fontFamily}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Customer Service Escalation Essentials
+  courseDescription: Practice a consistent escalation flow when a customer needs support beyond the first response.
+  companyName: Alpine Retail
+  escalationDesk: Escalations Desk
+  escalationEmail: escalations@alpineretail.example
+  primaryColor: "#7b3f00"
+  secondaryColor: "#f7f3eb"
+  fontFamily: Aptos
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      layout: two-column
+      title: "{{courseTitle}}"
+      body: Use a repeatable escalation workflow instead of improvising each handoff.
+      left:
+        title: Situation
+        text: A customer has received the wrong order and is already frustrated.
+      right:
+        title: Goal
+        text: De-escalate, confirm the facts, and route the issue to {{escalationDesk}}.
+      next: first-response
+  result_block:
+    - id: passed
+      type: result
+      layout: result
+      title: Escalation complete
+      outcome: passed
+      body:
+        - "You completed the escalation flow for {{companyName}}."
+        - "Final score: {{score}} / {{maxScore}}"
+    - id: failed
+      type: result
+      layout: result
+      title: Review needed
+      outcome: failed
+      body:
+        - "Strong service escalation lowers tension and creates a clean handoff."
+        - "Final score: {{score}} / {{maxScore}}"
+nodes:
+  - include: intro_block
+  - id: first-response
+    type: branch
+    layout: text
+    title: Opening response
+    body: What should you say first?
+    options:
+      - id: acknowledge
+        label: Acknowledge the frustration and promise to help
+        next: escalation-question
+        score: 0
+      - id: policy
+        label: Start by reading the return policy
+        next: failed
+        score: 0
+  - id: escalation-question
+    type: question
+    layout: question
+    title: Best escalation statement
+    body: Choose the reply that shows ownership and prepares for a clean handoff.
+    prompt: Which response is the strongest escalation move?
+    correctScore: 10
+    incorrectScore: 0
+    passNext: wrap-up
+    failNext: failed
+    options:
+      - id: best
+        label: I can help with this. Let me confirm the details and route it to {{escalationDesk}}.
+        correct: true
+      - id: weak
+        label: Someone should probably look into this later.
+        correct: false
+  - id: wrap-up
+    type: choice
+    layout: callout
+    title: Handoff plan
+    body: How do you finish the escalation?
+    callout:
+      title: Repeatable service rule
+      text: Give the next owner context, explain the handoff, and share the follow-up channel.
+    options:
+      - id: complete
+        label: Confirm the handoff and share {{escalationEmail}}
+        next: passed
+        score: 0
+      - id: blind
+        label: Transfer the customer without context
+        next: failed
+        score: 0
+  - include: result_block

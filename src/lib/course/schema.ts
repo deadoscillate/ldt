@@ -1,9 +1,43 @@
 import { z } from "zod";
 
+import type { CourseLayoutType } from "@/lib/course/types";
+
 export type TemplateScalarValue = string | number | boolean;
+
+export interface ThemeDocument {
+  primary?: string;
+  secondary?: string;
+  font?: string;
+  logo?: string;
+  background?: string;
+}
 
 export interface BlockIncludeDocument {
   include: string;
+}
+
+export interface MediaDocument {
+  type: "image" | "video";
+  src: string;
+  alt?: string;
+  caption?: string;
+}
+
+export interface QuoteBlockDocument {
+  text: string;
+  attribution?: string;
+}
+
+export interface CalloutBlockDocument {
+  title?: string;
+  text: string;
+}
+
+export interface LayoutColumnDocument {
+  title?: string;
+  text?: string;
+  image?: string;
+  video?: string;
 }
 
 export interface ChoiceOptionDocument {
@@ -19,27 +53,35 @@ export interface QuizOptionDocument {
   correct: boolean;
 }
 
-export interface ContentNodeDocument {
+interface BaseNodeDocument {
   id: string;
-  type: "content";
   title: string;
   body?: string;
+  layout?: CourseLayoutType;
+  media?: MediaDocument;
+  left?: LayoutColumnDocument;
+  right?: LayoutColumnDocument;
+  quote?: QuoteBlockDocument;
+  callout?: CalloutBlockDocument;
+}
+
+export interface ContentNodeDocument extends BaseNodeDocument {
+  type: "content";
   next?: string;
 }
 
-export interface ChoiceNodeDocument {
-  id: string;
+export interface ChoiceNodeDocument extends BaseNodeDocument {
   type: "choice";
-  title: string;
-  body?: string;
   options: ChoiceOptionDocument[];
 }
 
-export interface QuizNodeDocument {
-  id: string;
+export interface BranchNodeDocument extends BaseNodeDocument {
+  type: "branch";
+  options: ChoiceOptionDocument[];
+}
+
+export interface QuizNodeDocument extends BaseNodeDocument {
   type: "quiz";
-  title: string;
-  body?: string;
   question: string;
   multiple?: boolean;
   options: QuizOptionDocument[];
@@ -50,30 +92,78 @@ export interface QuizNodeDocument {
   next?: string;
 }
 
-export interface ResultNodeDocument {
-  id: string;
+export interface QuestionNodeDocument extends BaseNodeDocument {
+  type: "question";
+  prompt: string;
+  multiple?: boolean;
+  options: QuizOptionDocument[];
+  correctScore?: number;
+  incorrectScore?: number;
+  passNext?: string;
+  failNext?: string;
+  next?: string;
+}
+
+export interface ResultNodeDocument extends BaseNodeDocument {
   type: "result";
-  title: string;
-  body?: string;
   outcome?: "passed" | "failed" | "neutral";
 }
 
 export type CourseDocumentNode =
   | ContentNodeDocument
   | ChoiceNodeDocument
+  | BranchNodeDocument
   | QuizNodeDocument
+  | QuestionNodeDocument
   | ResultNodeDocument;
 
 export interface CourseDocument {
   id: string;
   title: string;
   description: string;
+  theme?: ThemeDocument;
   start: string;
   passingScore: number;
   nodes: CourseDocumentNode[];
 }
 
 export type TemplateTextValue = string | string[];
+
+export interface TemplateMediaDocument {
+  type: "image" | "video";
+  src: string;
+  alt?: string;
+  caption?: TemplateTextValue;
+}
+
+export interface TemplateQuoteBlockDocument {
+  text: TemplateTextValue;
+  attribution?: string;
+}
+
+export interface TemplateCalloutBlockDocument {
+  title?: string;
+  text: TemplateTextValue;
+}
+
+export interface TemplateLayoutColumnDocument {
+  title?: string;
+  text?: TemplateTextValue;
+  image?: string;
+  video?: string;
+}
+
+interface BaseTemplateNodeDocument {
+  id: string;
+  title: string;
+  body?: TemplateTextValue;
+  layout?: CourseLayoutType;
+  media?: TemplateMediaDocument;
+  left?: TemplateLayoutColumnDocument;
+  right?: TemplateLayoutColumnDocument;
+  quote?: TemplateQuoteBlockDocument;
+  callout?: TemplateCalloutBlockDocument;
+}
 
 export interface TemplateChoiceOptionDocument {
   id: string;
@@ -88,27 +178,23 @@ export interface TemplateQuizOptionDocument {
   correct: boolean;
 }
 
-export interface TemplateContentNodeDocument {
-  id: string;
+export interface TemplateContentNodeDocument extends BaseTemplateNodeDocument {
   type: "content";
-  title: string;
-  body?: TemplateTextValue;
   next?: string;
 }
 
-export interface TemplateChoiceNodeDocument {
-  id: string;
+export interface TemplateChoiceNodeDocument extends BaseTemplateNodeDocument {
   type: "choice";
-  title: string;
-  body?: TemplateTextValue;
   options: TemplateChoiceOptionDocument[];
 }
 
-export interface TemplateQuizNodeDocument {
-  id: string;
+export interface TemplateBranchNodeDocument extends BaseTemplateNodeDocument {
+  type: "branch";
+  options: TemplateChoiceOptionDocument[];
+}
+
+export interface TemplateQuizNodeDocument extends BaseTemplateNodeDocument {
   type: "quiz";
-  title: string;
-  body?: TemplateTextValue;
   question: string;
   multiple?: boolean;
   options: TemplateQuizOptionDocument[];
@@ -119,18 +205,29 @@ export interface TemplateQuizNodeDocument {
   next?: string;
 }
 
-export interface TemplateResultNodeDocument {
-  id: string;
+export interface TemplateQuestionNodeDocument extends BaseTemplateNodeDocument {
+  type: "question";
+  prompt: string;
+  multiple?: boolean;
+  options: TemplateQuizOptionDocument[];
+  correctScore?: string | number;
+  incorrectScore?: string | number;
+  passNext?: string;
+  failNext?: string;
+  next?: string;
+}
+
+export interface TemplateResultNodeDocument extends BaseTemplateNodeDocument {
   type: "result";
-  title: string;
-  body?: TemplateTextValue;
   outcome?: "passed" | "failed" | "neutral";
 }
 
 export type CourseTemplateNodeDocument =
   | TemplateContentNodeDocument
   | TemplateChoiceNodeDocument
+  | TemplateBranchNodeDocument
   | TemplateQuizNodeDocument
+  | TemplateQuestionNodeDocument
   | TemplateResultNodeDocument;
 
 export type CourseTemplateEntryDocument =
@@ -141,6 +238,7 @@ export interface CourseTemplateDocument {
   id: string;
   title: string;
   description?: string;
+  theme?: ThemeDocument;
   start: string;
   passingScore?: string | number;
   templateData?: Record<string, TemplateScalarValue>;
@@ -167,6 +265,62 @@ const numberSchema = z.coerce
   .number()
   .refine(Number.isFinite, "Expected a finite number.");
 
+const layoutTypeSchema = z.enum([
+  "title",
+  "text",
+  "image",
+  "video",
+  "two-column",
+  "image-left",
+  "image-right",
+  "quote",
+  "callout",
+  "question",
+  "result",
+]);
+
+const themeSchema = z
+  .object({
+    primary: z.string().trim().min(1).optional(),
+    secondary: z.string().trim().min(1).optional(),
+    font: z.string().trim().min(1).optional(),
+    logo: z.string().trim().min(1).optional(),
+    background: z.string().trim().min(1).optional(),
+  })
+  .strict();
+
+const mediaSchema = z
+  .object({
+    type: z.enum(["image", "video"]),
+    src: templateStringSchema,
+    alt: z.string().optional(),
+    caption: z.string().optional(),
+  })
+  .strict();
+
+const quoteSchema = z
+  .object({
+    text: templateStringSchema,
+    attribution: z.string().optional(),
+  })
+  .strict();
+
+const calloutSchema = z
+  .object({
+    title: z.string().optional(),
+    text: templateStringSchema,
+  })
+  .strict();
+
+const layoutColumnSchema = z
+  .object({
+    title: z.string().optional(),
+    text: z.string().optional(),
+    image: z.string().optional(),
+    video: z.string().optional(),
+  })
+  .strict();
+
 const choiceOptionSchema = z
   .object({
     id: identifierSchema,
@@ -184,6 +338,15 @@ const quizOptionSchema = z
   })
   .strict();
 
+const presentationSchema = {
+  layout: layoutTypeSchema.optional(),
+  media: mediaSchema.optional(),
+  left: layoutColumnSchema.optional(),
+  right: layoutColumnSchema.optional(),
+  quote: quoteSchema.optional(),
+  callout: calloutSchema.optional(),
+} as const;
+
 const contentNodeSchema = z
   .object({
     id: identifierSchema,
@@ -191,6 +354,7 @@ const contentNodeSchema = z
     title: templateStringSchema,
     body: z.string().optional(),
     next: identifierSchema.optional(),
+    ...presentationSchema,
   })
   .strict();
 
@@ -201,6 +365,18 @@ const choiceNodeSchema = z
     title: templateStringSchema,
     body: z.string().optional(),
     options: z.array(choiceOptionSchema).min(1, "At least one option is required."),
+    ...presentationSchema,
+  })
+  .strict();
+
+const branchNodeSchema = z
+  .object({
+    id: identifierSchema,
+    type: z.literal("branch"),
+    title: templateStringSchema,
+    body: z.string().optional(),
+    options: z.array(choiceOptionSchema).min(1, "At least one option is required."),
+    ...presentationSchema,
   })
   .strict();
 
@@ -218,6 +394,25 @@ const quizNodeSchema = z
     passNext: identifierSchema.optional(),
     failNext: identifierSchema.optional(),
     next: identifierSchema.optional(),
+    ...presentationSchema,
+  })
+  .strict();
+
+const questionNodeSchema = z
+  .object({
+    id: identifierSchema,
+    type: z.literal("question"),
+    title: templateStringSchema,
+    body: z.string().optional(),
+    prompt: templateStringSchema,
+    multiple: z.boolean().default(false),
+    options: z.array(quizOptionSchema).min(2, "At least two options are required."),
+    correctScore: numberSchema.default(10),
+    incorrectScore: numberSchema.default(0),
+    passNext: identifierSchema.optional(),
+    failNext: identifierSchema.optional(),
+    next: identifierSchema.optional(),
+    ...presentationSchema,
   })
   .strict();
 
@@ -228,13 +423,16 @@ const resultNodeSchema = z
     title: templateStringSchema,
     body: z.string().optional(),
     outcome: z.enum(["passed", "failed", "neutral"]).default("neutral"),
+    ...presentationSchema,
   })
   .strict();
 
 export const courseNodeSchema = z.discriminatedUnion("type", [
   contentNodeSchema,
   choiceNodeSchema,
+  branchNodeSchema,
   quizNodeSchema,
+  questionNodeSchema,
   resultNodeSchema,
 ]);
 
@@ -243,11 +441,53 @@ export const courseDocumentSchema = z
     id: identifierSchema,
     title: templateStringSchema,
     description: z.string().optional().default(""),
+    theme: themeSchema.optional(),
     start: identifierSchema,
     passingScore: numberSchema.default(0),
     nodes: z.array(courseNodeSchema).min(1, "At least one node is required."),
   })
   .strict();
+
+const templateMediaSchema = z
+  .object({
+    type: z.enum(["image", "video"]),
+    src: templateStringSchema,
+    alt: z.string().optional(),
+    caption: textBlockSchema.optional(),
+  })
+  .strict();
+
+const templateQuoteSchema = z
+  .object({
+    text: textBlockSchema,
+    attribution: z.string().optional(),
+  })
+  .strict();
+
+const templateCalloutSchema = z
+  .object({
+    title: z.string().optional(),
+    text: textBlockSchema,
+  })
+  .strict();
+
+const templateLayoutColumnSchema = z
+  .object({
+    title: z.string().optional(),
+    text: textBlockSchema.optional(),
+    image: z.string().optional(),
+    video: z.string().optional(),
+  })
+  .strict();
+
+const templatePresentationSchema = {
+  layout: layoutTypeSchema.optional(),
+  media: templateMediaSchema.optional(),
+  left: templateLayoutColumnSchema.optional(),
+  right: templateLayoutColumnSchema.optional(),
+  quote: templateQuoteSchema.optional(),
+  callout: templateCalloutSchema.optional(),
+} as const;
 
 const templateChoiceOptionSchema = z
   .object({
@@ -273,6 +513,7 @@ const templateContentNodeSchema = z
     title: templateStringSchema,
     body: textBlockSchema.optional(),
     next: templateStringSchema.optional(),
+    ...templatePresentationSchema,
   })
   .strict();
 
@@ -285,6 +526,20 @@ const templateChoiceNodeSchema = z
     options: z
       .array(templateChoiceOptionSchema)
       .min(1, "At least one option is required."),
+    ...templatePresentationSchema,
+  })
+  .strict();
+
+const templateBranchNodeSchema = z
+  .object({
+    id: templateStringSchema,
+    type: z.literal("branch"),
+    title: templateStringSchema,
+    body: textBlockSchema.optional(),
+    options: z
+      .array(templateChoiceOptionSchema)
+      .min(1, "At least one option is required."),
+    ...templatePresentationSchema,
   })
   .strict();
 
@@ -304,6 +559,27 @@ const templateQuizNodeSchema = z
     passNext: templateStringSchema.optional(),
     failNext: templateStringSchema.optional(),
     next: templateStringSchema.optional(),
+    ...templatePresentationSchema,
+  })
+  .strict();
+
+const templateQuestionNodeSchema = z
+  .object({
+    id: templateStringSchema,
+    type: z.literal("question"),
+    title: templateStringSchema,
+    body: textBlockSchema.optional(),
+    prompt: templateStringSchema,
+    multiple: z.boolean().default(false),
+    options: z
+      .array(templateQuizOptionSchema)
+      .min(2, "At least two options are required."),
+    correctScore: templateNumberSchema.default(10),
+    incorrectScore: templateNumberSchema.default(0),
+    passNext: templateStringSchema.optional(),
+    failNext: templateStringSchema.optional(),
+    next: templateStringSchema.optional(),
+    ...templatePresentationSchema,
   })
   .strict();
 
@@ -314,13 +590,16 @@ const templateResultNodeSchema = z
     title: templateStringSchema,
     body: textBlockSchema.optional(),
     outcome: z.enum(["passed", "failed", "neutral"]).default("neutral"),
+    ...templatePresentationSchema,
   })
   .strict();
 
 export const courseTemplateNodeSchema = z.discriminatedUnion("type", [
   templateContentNodeSchema,
   templateChoiceNodeSchema,
+  templateBranchNodeSchema,
   templateQuizNodeSchema,
+  templateQuestionNodeSchema,
   templateResultNodeSchema,
 ]);
 
@@ -343,6 +622,7 @@ export const courseTemplateDocumentSchema: z.ZodType<CourseTemplateDocument> = z
     id: templateStringSchema,
     title: templateStringSchema,
     description: z.string().optional().default(""),
+    theme: themeSchema.optional(),
     start: templateStringSchema,
     passingScore: templateNumberSchema.default(0),
     templateData: templateDataSchema.optional().default({}),

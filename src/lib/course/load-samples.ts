@@ -9,16 +9,33 @@ import {
 export async function loadCourseSamples(): Promise<CourseSample[]> {
   return Promise.all(
     courseSampleCatalog.map(async (sample) => {
-      const filePath = path.join(
+      const templateDirectory = path.join(
         process.cwd(),
-        "src",
-        "samples",
-        sample.fileName
+        "templates",
+        sample.templateDirectory
+      );
+      const courseDirectory = path.join(
+        process.cwd(),
+        "courses",
+        sample.courseDirectory
       );
 
       return {
         ...sample,
-        yaml: await readFile(filePath, "utf8"),
+        yaml: await readFile(path.join(templateDirectory, "template.yaml"), "utf8"),
+        templateDataYaml: await readFile(
+          path.join(courseDirectory, "template-data.yaml"),
+          "utf8"
+        ),
+        templateReadme: await readFile(
+          path.join(templateDirectory, "README.md"),
+          "utf8"
+        ),
+        templateSchemaYaml: await readFile(
+          path.join(templateDirectory, "schema.yaml"),
+          "utf8"
+        ),
+        courseReadme: await readFile(path.join(courseDirectory, "README.md"), "utf8"),
       };
     })
   );

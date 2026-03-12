@@ -36,6 +36,9 @@ export function buildScormRuntimeStyles(): string {
   --success: #2a6b49;
   --danger: #8a2f39;
   --shadow: 0 18px 40px rgba(31, 26, 20, 0.08);
+  --course-primary: var(--accent);
+  --course-background: var(--panel);
+  --course-font: "Aptos", "Segoe UI", sans-serif;
 }
 
 * {
@@ -44,7 +47,7 @@ export function buildScormRuntimeStyles(): string {
 
 body {
   margin: 0;
-  font-family: "Aptos", "Segoe UI", sans-serif;
+  font-family: var(--course-font);
   background:
     radial-gradient(circle at top right, rgba(164, 72, 29, 0.14), transparent 32rem),
     linear-gradient(180deg, #fbf8f3 0%, var(--bg) 100%);
@@ -59,7 +62,7 @@ body {
 .card {
   max-width: 860px;
   margin: 0 auto;
-  background: var(--panel);
+  background: var(--course-background);
   border: 1px solid var(--line);
   border-radius: 1.5rem;
   box-shadow: var(--shadow);
@@ -110,14 +113,14 @@ button {
   border: 0;
   border-radius: 0.9rem;
   padding: 0.9rem 1rem;
-  background: var(--accent);
+  background: var(--course-primary);
   color: white;
   font: inherit;
   cursor: pointer;
 }
 
 button:hover {
-  background: var(--accent-dark);
+  filter: brightness(0.94);
 }
 
 button:disabled {
@@ -157,6 +160,75 @@ button.secondary {
 
 .status-failed {
   color: var(--danger);
+}
+
+.logo {
+  display: block;
+  max-width: 8rem;
+  max-height: 3rem;
+  margin-bottom: 0.85rem;
+}
+
+.layout-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.layout-column {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.media-block {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.media-block img,
+.media-block video,
+.layout-column img,
+.layout-column video {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.media-block figcaption {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.quote-block {
+  margin: 1rem 0 0;
+  padding: 1rem 1.15rem;
+  border-left: 4px solid var(--course-primary);
+  border-radius: 0 1rem 1rem 0;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.quote-block p,
+.callout-block p {
+  margin: 0;
+}
+
+.quote-block footer {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.callout-block {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(164, 72, 29, 0.08), rgba(255, 255, 255, 0.9));
 }
 
 .debug-panel {
@@ -210,6 +282,12 @@ button.secondary {
 @media (min-width: 860px) {
   .debug-grid {
     grid-template-columns: 1fr 1.4fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .layout-grid {
+    grid-template-columns: 1fr;
   }
 }
 `;
@@ -311,6 +389,192 @@ function interpolateText(text, course, state) {
   return (text || "").replace(/\\{\\{\\s*([a-zA-Z0-9_]+)\\s*\\}\\}/g, function (match, key) {
     return Object.prototype.hasOwnProperty.call(tokens, key) ? tokens[key] : match;
   });
+}
+
+function applyCourseTheme(course) {
+  if (!course || !course.theme) {
+    return;
+  }
+
+  if (course.theme.primary) {
+    document.documentElement.style.setProperty("--course-primary", course.theme.primary);
+  }
+
+  if (course.theme.background) {
+    document.documentElement.style.setProperty("--course-background", course.theme.background);
+  }
+
+  if (course.theme.font) {
+    document.documentElement.style.setProperty("--course-font", course.theme.font);
+  }
+}
+
+function createMediaBlock(media) {
+  if (!media || !media.src) {
+    return null;
+  }
+
+  var figure = document.createElement("figure");
+  figure.className = "media-block";
+  var element;
+
+  if (media.type === "video") {
+    element = document.createElement("video");
+    element.controls = true;
+    element.src = media.src;
+  } else {
+    element = document.createElement("img");
+    element.src = media.src;
+    element.alt = media.alt || "";
+  }
+
+  figure.appendChild(element);
+
+  if (media.caption) {
+    var caption = document.createElement("figcaption");
+    caption.textContent = media.caption;
+    figure.appendChild(caption);
+  }
+
+  return figure;
+}
+
+function createLayoutColumn(column, course, state) {
+  if (!column) {
+    return null;
+  }
+
+  var wrapper = document.createElement("div");
+  wrapper.className = "layout-column";
+
+  if (column.title) {
+    var title = document.createElement("strong");
+    title.textContent = interpolateText(column.title, course, state);
+    wrapper.appendChild(title);
+  }
+
+  if (column.text) {
+    var text = document.createElement("div");
+    text.className = "body";
+    text.textContent = interpolateText(column.text, course, state);
+    wrapper.appendChild(text);
+  }
+
+  if (column.image) {
+    var image = document.createElement("img");
+    image.src = column.image;
+    image.alt = "";
+    wrapper.appendChild(image);
+  }
+
+  if (column.video) {
+    var video = document.createElement("video");
+    video.controls = true;
+    video.src = column.video;
+    wrapper.appendChild(video);
+  }
+
+  return wrapper;
+}
+
+function appendDefaultPresentation(container, node, course, state) {
+  if (node.body) {
+    var bodyBlock = document.createElement("div");
+    bodyBlock.className = "body";
+    bodyBlock.textContent = interpolateText(node.body, course, state);
+    container.appendChild(bodyBlock);
+  }
+
+  var media = createMediaBlock(node.media);
+
+  if (media) {
+    container.appendChild(media);
+  }
+
+  if (node.quote && node.quote.text) {
+    var quote = document.createElement("blockquote");
+    quote.className = "quote-block";
+    var quoteText = document.createElement("p");
+    quoteText.textContent = interpolateText(node.quote.text, course, state);
+    quote.appendChild(quoteText);
+
+    if (node.quote.attribution) {
+      var footer = document.createElement("footer");
+      footer.textContent = interpolateText(node.quote.attribution, course, state);
+      quote.appendChild(footer);
+    }
+
+    container.appendChild(quote);
+  }
+
+  if (node.callout && node.callout.text) {
+    var callout = document.createElement("div");
+    callout.className = "callout-block";
+
+    if (node.callout.title) {
+      var calloutTitle = document.createElement("strong");
+      calloutTitle.textContent = interpolateText(node.callout.title, course, state);
+      callout.appendChild(calloutTitle);
+    }
+
+    var calloutText = document.createElement("p");
+    calloutText.textContent = interpolateText(node.callout.text, course, state);
+    callout.appendChild(calloutText);
+    container.appendChild(callout);
+  }
+}
+
+function renderNodePresentation(container, node, course, state) {
+  if (node.layout === "two-column" || node.layout === "image-left" || node.layout === "image-right") {
+    var grid = document.createElement("div");
+    grid.className = "layout-grid";
+    var left = document.createElement("div");
+    var right = document.createElement("div");
+
+    if (node.layout === "image-left") {
+      var imageLeft = createMediaBlock(node.media);
+      if (imageLeft) {
+        left.appendChild(imageLeft);
+      }
+
+      var imageLeftRightColumn = createLayoutColumn(node.right, course, state);
+      if (imageLeftRightColumn) {
+        right.appendChild(imageLeftRightColumn);
+      } else {
+        appendDefaultPresentation(right, node, course, state);
+      }
+    } else if (node.layout === "image-right") {
+      var imageRightLeftColumn = createLayoutColumn(node.left, course, state);
+      if (imageRightLeftColumn) {
+        left.appendChild(imageRightLeftColumn);
+      } else {
+        appendDefaultPresentation(left, node, course, state);
+      }
+
+      var imageRight = createMediaBlock(node.media);
+      if (imageRight) {
+        right.appendChild(imageRight);
+      }
+    } else {
+      var leftColumn = createLayoutColumn(node.left, course, state);
+      var rightColumn = createLayoutColumn(node.right, course, state);
+
+      if (leftColumn) {
+        left.appendChild(leftColumn);
+      }
+
+      if (rightColumn) {
+        right.appendChild(rightColumn);
+      }
+    }
+
+    grid.appendChild(left);
+    grid.appendChild(right);
+    container.appendChild(grid);
+    return;
+  }
+
+  appendDefaultPresentation(container, node, course, state);
 }
 
 function deriveLessonStatus(course, state) {
@@ -591,6 +855,14 @@ function createRenderer(root, runtime, course) {
     eyebrow.className = "eyebrow";
     eyebrow.textContent = "Web-native SCORM runtime";
 
+    if (course.theme && course.theme.logo) {
+      var logo = document.createElement("img");
+      logo.className = "logo";
+      logo.src = course.theme.logo;
+      logo.alt = course.title + " logo";
+      root.appendChild(logo);
+    }
+
     var title = document.createElement("h1");
     title.className = "title " + statusClass;
     title.textContent = node.title;
@@ -610,8 +882,6 @@ function createRenderer(root, runtime, course) {
     });
 
     var body = document.createElement("div");
-    body.className = "body";
-    body.textContent = interpolateText(node.body || "", course, snapshot.state);
 
     var actions = document.createElement("div");
     actions.className = "actions";
@@ -638,10 +908,6 @@ function createRenderer(root, runtime, course) {
     }
 
     if (node.type === "quiz") {
-      body.textContent = node.body
-        ? interpolateText(node.body, course, snapshot.state) + "\\n\\n" + node.question
-        : node.question;
-
       var optionList = document.createElement("div");
       optionList.className = "quiz-options";
       var submitButton = document.createElement("button");
@@ -703,6 +969,20 @@ function createRenderer(root, runtime, course) {
     root.appendChild(eyebrow);
     root.appendChild(title);
     root.appendChild(meta);
+    renderNodePresentation(body, node, course, snapshot.state);
+
+    if (node.type === "quiz") {
+      var prompt = document.createElement("div");
+      prompt.className = "callout-block";
+      var promptTitle = document.createElement("strong");
+      promptTitle.textContent = "Question";
+      var promptBody = document.createElement("p");
+      promptBody.textContent = node.question;
+      prompt.appendChild(promptTitle);
+      prompt.appendChild(promptBody);
+      body.appendChild(prompt);
+    }
+
     root.appendChild(body);
     root.appendChild(actions);
   }
@@ -812,6 +1092,7 @@ fetch("assets/course.json")
     return response.json();
   })
   .then(function (course) {
+    applyCourseTheme(course);
     var adapter = createScormAdapter(course, {
       debug: scormDebugRequested()
     });

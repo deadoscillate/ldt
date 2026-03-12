@@ -1,11 +1,8 @@
-import { appendFile, mkdir } from "node:fs/promises";
-import path from "node:path";
-
 import { NextResponse } from "next/server";
 
-import { waitlistRequestSchema } from "@/lib/waitlist/schema";
-
-const waitlistFilePath = path.join(process.cwd(), "data", "waitlist-entries.jsonl");
+import { sendWaitlistConfirmationEmail } from "@/lib/intake/email";
+import { waitlistRequestSchema } from "@/lib/intake/schema";
+import { appendIntakeEntry, createWaitlistEntry } from "@/lib/intake/store";
 
 export async function POST(request: Request) {
   let payload: unknown;
@@ -30,29 +27,36 @@ export async function POST(request: Request) {
     );
   }
 
-  const entry = {
-    email: parsed.data.email.toLowerCase(),
-    source: parsed.data.source ?? "landing-page",
-    submittedAt: new Date().toISOString(),
-    userAgent: request.headers.get("user-agent") ?? "",
-  };
-
-  console.info("[waitlist] submission", entry);
-
-  let storage: "file" | "log" = "log";
-
   try {
-    // Persist locally when possible, but keep a server log fallback for simple deployments.
-    await mkdir(path.dirname(waitlistFilePath), { recursive: true });
-    await appendFile(waitlistFilePath, `${JSON.stringify(entry)}\n`, "utf8");
-    storage = "file";
-  } catch (error) {
-    console.warn("[waitlist] file persistence failed; submission kept in logs", error);
-  }
+    const entry = createWaitlistEntry({
+      email: parsed.data.email,
+      leadType: parsed.data.leadType,
+      notes: parsed.data.notes,
+      referrer: parsed.data.referrer,
+      source: parsed.data.source,
+    });
+    const backend = await appendIntakeEntry(entry);
+    const emailResult = await sendWaitlistConfirmationEmail(entry.email);
 
-  return NextResponse.json({
-    ok: true,
-    storage,
-    message: "Thanks - you're on the early access list.",
-  });
+    if (emailResult.enabled && !emailResult.sent && emailResult.error) {
+      console.error("Waitlist confirmation email failed:", emailResult.error);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      backend,
+      emailSent: emailResult.sent,
+      message: "You're on the early access list.",
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "The waitlist request could not be saved.",
+      },
+      { status: 500 }
+    );
+  }
 }

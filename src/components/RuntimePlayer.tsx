@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
+import { NodePresentation } from "@/components/NodePresentation";
 import type { CompiledCourse, CompiledQuizNode } from "@/lib/course/types";
 import {
   advanceContentNode,
@@ -41,6 +42,28 @@ function buildInitialState(course: CompiledCourse): RuntimeState {
   return initializeRuntime(course);
 }
 
+function buildThemeStyle(course: CompiledCourse): CSSProperties {
+  const style: CSSProperties & Record<string, string> = {};
+
+  if (course.theme.primary) {
+    style["--course-primary"] = course.theme.primary;
+  }
+
+  if (course.theme.secondary) {
+    style["--course-secondary"] = course.theme.secondary;
+  }
+
+  if (course.theme.background) {
+    style["--course-background"] = course.theme.background;
+  }
+
+  if (course.theme.font) {
+    style["--course-font"] = course.theme.font;
+  }
+
+  return style;
+}
+
 export function RuntimePlayer({ course }: RuntimePlayerProps) {
   const [runtimeState, setRuntimeState] = useState<RuntimeState>(() =>
     buildInitialState(course)
@@ -72,6 +95,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       : runtimeState.completed
         ? "Completed"
         : "In Progress";
+  const themeStyle = buildThemeStyle(course);
 
   useEffect(() => {
     if (currentNode.type !== "quiz") {
@@ -130,10 +154,17 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
   }
 
   return (
-    <section className="panel runtime-panel">
+    <section className="panel runtime-panel" style={themeStyle}>
       <div className="panel-header runtime-panel-header">
         <div className="runtime-title-block">
-          <p className="eyebrow">Preview</p>
+          <p className="eyebrow">Compiled Preview</p>
+          {course.theme.logo ? (
+            <img
+              alt={`${course.title} logo`}
+              className="runtime-logo"
+              src={course.theme.logo}
+            />
+          ) : null}
           <h2>{course.title}</h2>
           {course.description ? (
             <p className="panel-copy runtime-subcopy">{course.description}</p>
@@ -149,6 +180,10 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
         <div className="runtime-status-card">
           <span className="runtime-status-label">Current node</span>
           <strong>{runtimeState.currentNodeId}</strong>
+        </div>
+        <div className="runtime-status-card">
+          <span className="runtime-status-label">Node type</span>
+          <strong>{currentNode.sourceType}</strong>
         </div>
         <div className="runtime-status-card">
           <span className="runtime-status-label">Step</span>
@@ -169,14 +204,14 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       </div>
 
       <p className="runtime-tracking-note">
-        Preview status mirrors the learner progress and score that SCORM export
-        reports to an LMS.
+        This compiled preview is rendered from the validated source definition and
+        mirrors the learner progress and score that SCORM export reports to an LMS.
       </p>
 
       <article className="node-card">
         <header className="node-header">
           <div>
-            <p className="eyebrow">Current Node</p>
+          <p className="eyebrow">Rendered Node</p>
             <h3>{currentNode.title}</h3>
           </div>
           {currentNode.type === "result" ? (
@@ -194,7 +229,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
           ) : null}
         </header>
 
-        {body ? <p className="node-body">{body}</p> : null}
+        <NodePresentation body={body} course={course} node={currentNode} />
 
         {currentNode.type === "content" ? (
           <div className="action-stack runtime-action-stack">

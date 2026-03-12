@@ -5,13 +5,13 @@ import { loadCourseSamples } from "@/lib/course/load-samples";
 import { parseAndCompileCourse } from "@/lib/course/parse";
 
 export const metadata: Metadata = {
-  title: "Structured YAML to SCORM",
+  title: "LDT Engine | Structured SCORM Authoring",
   description:
-    "LDT Engine is a web-native SCORM course engine for YAML authoring, browser preview, reusable templates, and SCORM 1.2 export.",
+    "LDT Engine is a structured authoring system for branching training modules with YAML source, browser preview, reusable templates, and SCORM 1.2 export.",
   openGraph: {
-    title: "Structured YAML to SCORM | LDT Engine",
+    title: "LDT Engine | Structured SCORM Authoring",
     description:
-      "Write branching training modules in YAML, preview them in the browser, and export validated SCORM 1.2 packages.",
+      "Write branching training modules in YAML, preview them in the browser, and export validated SCORM 1.2 packages from structured source.",
     type: "website",
     siteName: "LDT Engine",
   },

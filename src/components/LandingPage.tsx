@@ -1,6 +1,10 @@
 import Link from "next/link";
 
+import { FeedbackForm } from "@/components/FeedbackForm";
+import { DemoLaunchTracker } from "@/components/DemoLaunchTracker";
+import { LandingViewTracker } from "@/components/LandingViewTracker";
 import { RuntimePlayer } from "@/components/RuntimePlayer";
+import { TrackedLink } from "@/components/TrackedLink";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { WorkflowSteps } from "@/components/WorkflowSteps";
 import type { CourseSample } from "@/lib/course/sample-catalog";
@@ -65,11 +69,32 @@ const comparisonRows = [
   },
 ];
 
+const betaScopeItems = [
+  "YAML authoring for branching training modules.",
+  "Browser preview with local save and restart.",
+  "SCORM 1.2 export from validated course definitions.",
+  "SCORM Cloud validation for launch, completion, score, pass/fail, and resume.",
+  "Broader LMS testing is still in progress.",
+];
+
+const structuredAuthoringPoints = [
+  "Readable YAML source files stay as the system of record.",
+  "Compiled preview and SCORM packages are generated from validated source.",
+  "Templates and variables make repeated course families faster to ship.",
+  "Plain-text source works naturally with Git, review, and version history.",
+];
+
 const roadmapItems = [
   "Broader LMS validation beyond SCORM Cloud.",
   "Reusable template packs for common training scenarios.",
   "Improved authoring workflow inside the studio.",
   "Additional deployment hardening for production teams.",
+];
+
+const recentProgressItems = [
+  "SCORM Cloud validation completed for launch, completion, score, pass/fail, and resume.",
+  "Resume behavior and completion state handling were hardened for SCORM 1.2 delivery.",
+  "Template-driven authoring with reusable blocks and placeholders was added to the studio.",
 ];
 
 export function LandingPage({
@@ -82,21 +107,29 @@ export function LandingPage({
 
   return (
     <main className="landing-shell">
+      <LandingViewTracker />
       <header className="landing-nav">
         <Link className="brand-link" href="/">
           LDT Engine
         </Link>
         <nav className="landing-nav-links" aria-label="Primary">
           <a href="#product">Product</a>
+          <a href="#structured">Structured</a>
           <a href="#proof">Proof</a>
-          <a href="#demo">Demo</a>
+          <a href="#beta-scope">Beta Scope</a>
+          <a href="#updates">Updates</a>
           <a href="#waitlist">Waitlist</a>
           <a className="ghost-button button-link" href="#waitlist">
             Request Early Access
           </a>
-          <Link className="primary-button button-link" href="/studio">
+          <TrackedLink
+            className="primary-button button-link"
+            eventMetadata={{ placement: "header" }}
+            eventName="open_studio_clicked"
+            href="/studio"
+          >
             Open Studio
-          </Link>
+          </TrackedLink>
         </nav>
       </header>
 
@@ -112,15 +145,21 @@ export function LandingPage({
             standards-compliant SCORM for any LMS.
           </p>
           <div className="hero-actions">
-            <Link className="primary-button button-link" href="/studio">
+            <TrackedLink
+              className="primary-button button-link"
+              eventMetadata={{ placement: "hero" }}
+              eventName="open_studio_clicked"
+              href="/studio"
+            >
               Open Studio
-            </Link>
+            </TrackedLink>
             <a className="ghost-button button-link" href="#waitlist">
               Request Early Access
             </a>
           </div>
           <p className="landing-hero-note">
-            No login or LMS setup required to try the studio. Early feedback is welcome.
+            Try the studio now, or join the list for beta updates and broader LMS
+            validation results.
           </p>
           <WorkflowSteps steps={["YAML", "Preview", "SCORM", "LMS"]} />
         </div>
@@ -159,6 +198,32 @@ export function LandingPage({
             </span>
           ))}
         </div>
+      </section>
+
+      <section className="landing-section">
+        <article className="panel landing-share-card">
+          <p className="eyebrow">Demo Summary</p>
+          <h2>LDT Engine turns structured YAML into validated SCORM output</h2>
+          <p className="panel-copy">
+            Web-native authoring for branching training modules with instant preview,
+            SCORM 1.2 export, and SCORM Cloud validation already completed for the core
+            LMS behaviors.
+          </p>
+          <WorkflowSteps steps={["YAML", "Preview", "SCORM", "LMS"]} />
+          <div className="summary-inline-list">
+            <span className="summary-inline-pill">Launch validated</span>
+            <span className="summary-inline-pill">Score validated</span>
+            <span className="summary-inline-pill">Resume validated</span>
+          </div>
+          <TrackedLink
+            className="primary-button button-link"
+            eventMetadata={{ placement: "summary-card" }}
+            eventName="open_studio_clicked"
+            href="/studio"
+          >
+            Open Studio
+          </TrackedLink>
+        </article>
       </section>
 
       <section className="landing-section">
@@ -212,6 +277,60 @@ export function LandingPage({
         </div>
       </section>
 
+      <section className="landing-section" id="structured">
+        <div className="section-heading">
+          <p className="eyebrow">Structured Authoring</p>
+          <h2>Readable source files, compiled preview, repeatable SCORM output</h2>
+          <p className="panel-copy">
+            LDT Engine is built around a source-and-build workflow. Templates, theme,
+            branching, and variables live in source. Preview and SCORM export are
+            compiled outputs, not separate authoring systems.
+          </p>
+        </div>
+
+        <div className="feature-grid">
+          {structuredAuthoringPoints.map((item) => (
+            <article className="panel feature-card" key={item}>
+              <p className="panel-copy">{item}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="landing-section" id="beta-scope">
+        <div className="section-heading">
+          <p className="eyebrow">Current Beta Scope</p>
+          <h2>What the beta already does well</h2>
+          <p className="panel-copy">
+            The current scope is focused on authoring, validation, preview, and SCORM
+            packaging for repeatable branching modules.
+          </p>
+        </div>
+
+        <article className="panel beta-scope-panel">
+          <ul className="beta-scope-list">
+            {betaScopeItems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+      </section>
+
+      <section className="landing-section" id="updates">
+        <div className="section-heading">
+          <p className="eyebrow">Recent Progress</p>
+          <h2>Recent improvements shipped into the beta</h2>
+        </div>
+
+        <div className="roadmap-grid">
+          {recentProgressItems.map((item) => (
+            <article className="panel roadmap-card" key={item}>
+              <p className="panel-copy">{item}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="landing-section" id="demo">
         <div className="section-heading">
           <p className="eyebrow">Demo</p>
@@ -228,7 +347,9 @@ export function LandingPage({
             <div className="editor-shell demo-editor-shell">
               <div className="editor-toolbar">
                 <span className="editor-file">
-                  {featuredSample?.fileName ?? "sample-course.yaml"}
+                  {featuredSample
+                    ? `${featuredSample.templateDirectory}/template.yaml`
+                    : "template.yaml"}
                 </span>
                 <span className="editor-language">YAML</span>
               </div>
@@ -273,14 +394,20 @@ export function LandingPage({
           </article>
 
           <div className="demo-preview-frame">
+            <DemoLaunchTracker />
             <RuntimePlayer course={featuredCourse} />
           </div>
         </div>
 
         <div className="demo-footer">
-          <Link className="primary-button button-link" href="/studio">
+          <TrackedLink
+            className="primary-button button-link"
+            eventMetadata={{ placement: "demo-footer" }}
+            eventName="open_studio_clicked"
+            href="/studio"
+          >
             Open Studio
-          </Link>
+          </TrackedLink>
         </div>
       </section>
 
@@ -389,17 +516,22 @@ export function LandingPage({
       </section>
 
       <section className="landing-section" id="waitlist">
-        <div className="waitlist-layout">
-          <div className="section-heading">
-            <p className="eyebrow">Waitlist</p>
-            <h2>Request early access</h2>
+        <div className="waitlist-layout waitlist-feedback-layout">
+          <div className="section-heading waitlist-heading-block">
+            <p className="eyebrow">Beta Access</p>
+            <h2>Try the studio now or leave a quick signal</h2>
             <p className="panel-copy">
-              Share an email address to hear about early tester access, product
-              updates, and broader LMS validation results.
+              Join the beta list for updates, or leave a short note about what you
+              would need before using this on a real project.
             </p>
           </div>
           <article className="panel waitlist-panel">
+            <p className="eyebrow">Request Early Access</p>
             <WaitlistForm />
+          </article>
+          <article className="panel waitlist-panel">
+            <p className="eyebrow">Quick Feedback</p>
+            <FeedbackForm />
           </article>
         </div>
       </section>
@@ -414,7 +546,13 @@ export function LandingPage({
         </div>
         <div className="footer-links">
           <a href="mailto:contact@ldtengine.app">contact@ldtengine.app</a>
-          <Link href="/studio">Open Studio</Link>
+          <TrackedLink
+            eventMetadata={{ placement: "footer" }}
+            eventName="open_studio_clicked"
+            href="/studio"
+          >
+            Open Studio
+          </TrackedLink>
           <a href="https://github.com/deadoscillate/ldt">GitHub</a>
         </div>
       </footer>

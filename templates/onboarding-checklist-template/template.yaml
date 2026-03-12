@@ -1,0 +1,98 @@
+id: onboarding-checklist
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+theme:
+  primary: "{{primaryColor}}"
+  secondary: "{{secondaryColor}}"
+  font: "{{fontFamily}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Onboarding Checklist Essentials
+  courseDescription: Guide a new hire through the first branching onboarding decisions.
+  companyName: Contoso Logistics
+  managerRole: Team lead
+  handbookUrl: https://example.com/hr/handbook
+  primaryColor: "#1f6feb"
+  secondaryColor: "#eef5ff"
+  fontFamily: Aptos
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      layout: image-left
+      title: "{{courseTitle}}"
+      body: "A new teammate is joining {{companyName}}. Use the structured onboarding checklist to guide them through day one."
+      media:
+        type: image
+        src: https://placehold.co/720x420/png?text=Onboarding
+        alt: Onboarding checklist illustration
+      next: first-step
+  result_block:
+    - id: passed
+      type: result
+      layout: result
+      title: Onboarding complete
+      outcome: passed
+      body:
+        - "You used the repeatable onboarding path for {{companyName}}."
+        - "Final score: {{score}} / {{maxScore}}"
+    - id: failed
+      type: result
+      layout: result
+      title: Review needed
+      outcome: failed
+      body:
+        - "Use the handbook and the checklist to keep onboarding consistent."
+        - "Final score: {{score}} / {{maxScore}}"
+nodes:
+  - include: intro_block
+  - id: first-step
+    type: branch
+    layout: text
+    title: First onboarding step
+    body: What should happen first?
+    options:
+      - id: access
+        label: Confirm access, introductions, and the day-one agenda
+        next: checklist-question
+        score: 0
+      - id: improvise
+        label: Let the new hire figure it out as they go
+        next: failed
+        score: 0
+  - id: checklist-question
+    type: question
+    layout: question
+    title: Checklist review
+    body: Choose the repeatable onboarding practice.
+    prompt: Which action keeps onboarding structured and consistent?
+    correctScore: 10
+    incorrectScore: 0
+    passNext: wrap-up
+    failNext: failed
+    options:
+      - id: handbook
+        label: Review the handbook at {{handbookUrl}} with the {{managerRole}}
+        correct: true
+      - id: ad-hoc
+        label: Skip documentation and rely on memory
+        correct: false
+  - id: wrap-up
+    type: choice
+    layout: callout
+    title: Final onboarding step
+    body: Close the first-day checklist with a clear next step.
+    callout:
+      title: Repeatable onboarding rule
+      text: Confirm ownership, deadlines, and the next check-in.
+    options:
+      - id: schedule
+        label: Schedule the next check-in and document open tasks
+        next: passed
+        score: 0
+      - id: vague
+        label: Tell the new hire someone will reach out eventually
+        next: failed
+        score: 0
+  - include: result_block

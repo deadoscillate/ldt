@@ -1,16 +1,24 @@
 import type {
+  BranchNodeDocument,
   ChoiceNodeDocument,
   ContentNodeDocument,
   CourseDocument,
   CourseDocumentNode,
+  QuestionNodeDocument,
   QuizNodeDocument,
   ResultNodeDocument,
+  ThemeDocument,
 } from "@/lib/course/schema";
 import type {
+  CompiledCalloutBlock,
   CompiledCourse,
   CompiledEdge,
+  CompiledLayoutColumn,
+  CompiledMedia,
   CompiledNode,
+  CompiledQuoteBlock,
   CompiledQuizNode,
+  CompiledTheme,
 } from "@/lib/course/types";
 
 export class CourseCompilationError extends Error {
@@ -26,8 +34,10 @@ export class CourseCompilationError extends Error {
 function nodeMaxScore(node: CourseDocumentNode): number {
   switch (node.type) {
     case "choice":
+    case "branch":
       return Math.max(0, ...node.options.map((option) => option.score ?? 0));
     case "quiz":
+    case "question":
       return Math.max(0, node.correctScore ?? 0);
     default:
       return 0;
@@ -54,22 +64,86 @@ function pushEdge(
   edges.push({ from, to, label });
 }
 
-function compileContentNode(node: ContentNodeDocument): CompiledNode {
+function normalizeMedia(node: CourseDocumentNode): CompiledMedia | null {
+  if (!node.media) {
+    return null;
+  }
+
+  return {
+    type: node.media.type,
+    src: node.media.src,
+    alt: node.media.alt ?? "",
+    caption: node.media.caption ?? "",
+  };
+}
+
+function normalizeColumn(
+  column: CourseDocumentNode["left"] | CourseDocumentNode["right"]
+): CompiledLayoutColumn | null {
+  if (!column) {
+    return null;
+  }
+
+  return {
+    title: column.title ?? "",
+    text: column.text ?? "",
+    image: column.image ?? null,
+    video: column.video ?? null,
+  };
+}
+
+function normalizeQuote(node: CourseDocumentNode): CompiledQuoteBlock | null {
+  if (!node.quote) {
+    return null;
+  }
+
+  return {
+    text: node.quote.text,
+    attribution: node.quote.attribution ?? "",
+  };
+}
+
+function normalizeCallout(node: CourseDocumentNode): CompiledCalloutBlock | null {
+  if (!node.callout) {
+    return null;
+  }
+
+  return {
+    title: node.callout.title ?? "",
+    text: node.callout.text,
+  };
+}
+
+function createBaseNode(node: CourseDocumentNode) {
   return {
     id: node.id,
-    type: "content",
     title: node.title,
     body: node.body ?? "",
+    layout: node.layout ?? null,
+    media: normalizeMedia(node),
+    left: normalizeColumn(node.left),
+    right: normalizeColumn(node.right),
+    quote: normalizeQuote(node),
+    callout: normalizeCallout(node),
+  };
+}
+
+function compileContentNode(node: ContentNodeDocument): CompiledNode {
+  return {
+    ...createBaseNode(node),
+    type: "content",
+    sourceType: "content",
     next: node.next ?? null,
   };
 }
 
-function compileChoiceNode(node: ChoiceNodeDocument): CompiledNode {
+function compileChoiceLikeNode(
+  node: ChoiceNodeDocument | BranchNodeDocument
+): CompiledNode {
   return {
-    id: node.id,
+    ...createBaseNode(node),
     type: "choice",
-    title: node.title,
-    body: node.body ?? "",
+    sourceType: node.type,
     options: node.options.map((option) => ({
       id: option.id,
       label: option.label,
@@ -79,13 +153,14 @@ function compileChoiceNode(node: ChoiceNodeDocument): CompiledNode {
   };
 }
 
-function compileQuizNode(node: QuizNodeDocument): CompiledQuizNode {
+function compileQuizLikeNode(
+  node: QuizNodeDocument | QuestionNodeDocument
+): CompiledQuizNode {
   return {
-    id: node.id,
+    ...createBaseNode(node),
     type: "quiz",
-    title: node.title,
-    body: node.body ?? "",
-    question: node.question,
+    sourceType: node.type,
+    question: node.type === "question" ? node.prompt : node.question,
     multiple: node.multiple ?? false,
     options: node.options.map((option) => ({
       id: option.id,
@@ -102,10 +177,9 @@ function compileQuizNode(node: QuizNodeDocument): CompiledQuizNode {
 
 function compileResultNode(node: ResultNodeDocument): CompiledNode {
   return {
-    id: node.id,
+    ...createBaseNode(node),
     type: "result",
-    title: node.title,
-    body: node.body ?? "",
+    sourceType: "result",
     outcome: node.outcome ?? "neutral",
   };
 }
@@ -115,22 +189,89 @@ function compileNode(node: CourseDocumentNode): CompiledNode {
     case "content":
       return compileContentNode(node);
     case "choice":
-      return compileChoiceNode(node);
+    case "branch":
+      return compileChoiceLikeNode(node);
     case "quiz":
-      return compileQuizNode(node);
+    case "question":
+      return compileQuizLikeNode(node);
     case "result":
       return compileResultNode(node);
   }
 }
 
+function normalizeTheme(theme: ThemeDocument | undefined): CompiledTheme {
+  return {
+    primary: theme?.primary ?? null,
+    secondary: theme?.secondary ?? null,
+    font: theme?.font ?? null,
+    logo: theme?.logo ?? null,
+    background: theme?.background ?? null,
+  };
+}
+
+function validateLayoutConfiguration(
+  node: CourseDocumentNode,
+  issues: string[]
+): void {
+  switch (node.layout) {
+    case "image":
+    case "video":
+      if (!node.media) {
+        issues.push(
+          `Node "${node.id}" uses layout "${node.layout}" but does not define media.`
+        );
+      }
+      break;
+    case "two-column":
+    case "image-left":
+    case "image-right":
+      if (!node.left && !node.right && !node.media) {
+        issues.push(
+          `Node "${node.id}" uses layout "${node.layout}" but does not define left/right column content.`
+        );
+      }
+      break;
+    case "quote":
+      if (!node.quote) {
+        issues.push(`Node "${node.id}" uses layout "quote" but does not define quote text.`);
+      }
+      break;
+    case "callout":
+      if (!node.callout) {
+        issues.push(
+          `Node "${node.id}" uses layout "callout" but does not define callout content.`
+        );
+      }
+      break;
+    case "question":
+      if (node.type !== "quiz" && node.type !== "question") {
+        issues.push(
+          `Node "${node.id}" uses layout "question" but is not a quiz or question node.`
+        );
+      }
+      break;
+    case "result":
+      if (node.type !== "result") {
+        issues.push(
+          `Node "${node.id}" uses layout "result" but is not a result node.`
+        );
+      }
+      break;
+    default:
+      break;
+  }
+}
+
 function validateNodeSpecificRules(node: CourseDocumentNode, issues: string[]): void {
-  if (node.type === "quiz") {
+  if (node.type === "quiz" || node.type === "question") {
     const correctOptions = node.options.filter((option) => option.correct);
 
     if (correctOptions.length === 0) {
       issues.push(`Quiz "${node.id}" must mark at least one option as correct.`);
     }
   }
+
+  validateLayoutConfiguration(node, issues);
 }
 
 export function compileCourse(document: CourseDocument): CompiledCourse {
@@ -164,6 +305,7 @@ export function compileCourse(document: CourseDocument): CompiledCourse {
         pushEdge(edges, issues, nodeIds, node.id, node.next, "next");
         break;
       case "choice":
+      case "branch":
         for (const option of node.options) {
           pushEdge(
             edges,
@@ -176,6 +318,7 @@ export function compileCourse(document: CourseDocument): CompiledCourse {
         }
         break;
       case "quiz":
+      case "question":
         pushEdge(edges, issues, nodeIds, node.id, node.passNext, "passNext");
         pushEdge(edges, issues, nodeIds, node.id, node.failNext, "failNext");
         pushEdge(edges, issues, nodeIds, node.id, node.next, "next");
@@ -204,6 +347,7 @@ export function compileCourse(document: CourseDocument): CompiledCourse {
     id: document.id,
     title: document.title,
     description: document.description ?? "",
+    theme: normalizeTheme(document.theme),
     startNodeId: document.start,
     passingScore: document.passingScore,
     maxScore,

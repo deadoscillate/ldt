@@ -1,0 +1,107 @@
+id: phishing-awareness
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+theme:
+  primary: "{{primaryColor}}"
+  secondary: "{{secondaryColor}}"
+  font: "{{fontFamily}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Phishing Awareness Essentials
+  courseDescription: Help learners recognize phishing signals and follow the approved reporting path.
+  companyName: Northwind Health
+  reportingChannel: security@northwindhealth.example
+  policyUrl: https://example.com/security/phishing
+  primaryColor: "#a4481d"
+  secondaryColor: "#f4efe7"
+  fontFamily: Aptos
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      layout: image-right
+      title: "{{courseTitle}}"
+      body:
+        - "A suspicious message appears to come from leadership at {{companyName}}."
+        - "Use the structured flow to inspect, question, and report it."
+      media:
+        type: image
+        src: https://placehold.co/720x420/png?text=Phishing+Inbox
+        alt: Suspicious inbox example
+      next: inspect-email
+  result_block:
+    - id: passed
+      type: result
+      layout: result
+      title: Scenario complete
+      outcome: passed
+      body:
+        - "You used the approved phishing response for {{companyName}}."
+        - "Final score: {{score}} / {{maxScore}}"
+    - id: failed
+      type: result
+      layout: result
+      title: Review needed
+      outcome: failed
+      body:
+        - "Review the reporting path in {{policyUrl}} and try again."
+        - "Final score: {{score}} / {{maxScore}}"
+nodes:
+  - include: intro_block
+  - id: inspect-email
+    type: branch
+    layout: callout
+    title: First move
+    body: Which action should happen before you click or reply?
+    callout:
+      title: Structured rule
+      text: Pause, inspect the request, then use the approved reporting path.
+    options:
+      - id: inspect
+        label: Inspect the sender, links, and request
+        next: red-flags
+        score: 0
+      - id: click
+        label: Click the request immediately
+        next: failed
+        score: 0
+  - id: red-flags
+    type: question
+    layout: question
+    title: Spot the red flags
+    body: Select every warning sign that should make you suspicious.
+    prompt: Which details are phishing red flags?
+    multiple: true
+    correctScore: 10
+    incorrectScore: 0
+    passNext: report
+    failNext: failed
+    options:
+      - id: urgent
+        label: The message uses urgency and pressure
+        correct: true
+      - id: sender
+        label: The sender domain is slightly misspelled
+        correct: true
+      - id: logo
+        label: The email includes the company logo
+        correct: false
+  - id: report
+    type: choice
+    layout: quote
+    title: Best next action
+    body: "The safest next step is to report the message through {{reportingChannel}}."
+    quote:
+      text: Suspicious requests should be reported, not forwarded or answered.
+      attribution: Security awareness policy
+    options:
+      - id: approved
+        label: Report it to {{reportingChannel}}
+        next: passed
+        score: 0
+      - id: ask
+        label: Reply and ask whether it is legitimate
+        next: failed
+        score: 0
+  - include: result_block
