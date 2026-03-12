@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { DemoLaunchTracker } from "@/components/DemoLaunchTracker";
 import { LandingViewTracker } from "@/components/LandingViewTracker";
+import { ProofSummaryCard } from "@/components/ProofSummaryCard";
 import { RuntimePlayer } from "@/components/RuntimePlayer";
 import { TrackedLink } from "@/components/TrackedLink";
 import { WaitlistForm } from "@/components/WaitlistForm";
@@ -10,12 +11,18 @@ import { WorkflowSteps } from "@/components/WorkflowSteps";
 import type { CourseSample } from "@/lib/course/sample-catalog";
 import type { CompiledCourse } from "@/lib/course/types";
 import { SCORM_PACKAGE_CONTENTS } from "@/lib/export/scorm-export";
+import {
+  buildPlatformProofSummary,
+  getLatestValidationRecord,
+} from "@/lib/validation/proof";
+import type { LmsValidationCatalog } from "@/lib/validation/schema";
 
 interface LandingPageProps {
   samples: CourseSample[];
   featuredCourse: CompiledCourse;
   featuredSnippet: string;
   featuredSource: string;
+  validationCatalog: LmsValidationCatalog;
 }
 
 const featureCards = [
@@ -44,13 +51,6 @@ const audienceCards = [
   "Technical L&D teams who want structured authoring instead of manual slide assembly.",
 ];
 
-const validationChecklist = [
-  "SCORM Cloud launch validated",
-  "Completion and pass/fail validated",
-  "Score reporting validated",
-  "Resume behavior validated",
-];
-
 const comparisonRows = [
   {
     label: "Authoring model",
@@ -67,14 +67,6 @@ const comparisonRows = [
     thisTool: "Template-driven branching scenarios",
     traditional: "Rebuild and re-export similar modules repeatedly",
   },
-];
-
-const betaScopeItems = [
-  "YAML authoring for branching training modules.",
-  "Browser preview with local save and restart.",
-  "SCORM 1.2 export from validated course definitions.",
-  "SCORM Cloud validation for launch, completion, score, pass/fail, and resume.",
-  "Broader LMS testing is still in progress.",
 ];
 
 const structuredAuthoringPoints = [
@@ -102,8 +94,16 @@ export function LandingPage({
   featuredCourse,
   featuredSnippet,
   featuredSource,
+  validationCatalog,
 }: LandingPageProps) {
   const featuredSample = samples[0];
+  const scormCloudPlatform = validationCatalog.platforms.find(
+    (platform) => platform.id === "scorm-cloud"
+  );
+  const scormCloudRecord = scormCloudPlatform
+    ? getLatestValidationRecord(scormCloudPlatform)
+    : null;
+  const proofSummary = validationCatalog.platforms.map(buildPlatformProofSummary);
 
   return (
     <main className="landing-shell">
@@ -115,7 +115,7 @@ export function LandingPage({
         <nav className="landing-nav-links" aria-label="Primary">
           <a href="#product">Product</a>
           <a href="#structured">Structured</a>
-          <a href="#proof">Proof</a>
+          <Link href="/validation">Validation</Link>
           <a href="#beta-scope">Beta Scope</a>
           <a href="#updates">Updates</a>
           <a href="#waitlist">Waitlist</a>
@@ -167,63 +167,43 @@ export function LandingPage({
         <aside className="panel landing-hero-panel">
           <p className="eyebrow">Current validation</p>
           <h2>SCORM Cloud validated before broader LMS rollout</h2>
-          <p className="panel-copy">
-            SCORM launch, completion, score, pass/fail, and resume behavior have
-            been validated in SCORM Cloud. Broader LMS interoperability testing
-            is ongoing.
-          </p>
+          <p className="panel-copy">{validationCatalog.summary}</p>
           <div className="trust-grid">
-            <span className="trust-pill">Launch passed</span>
-            <span className="trust-pill">Completion passed</span>
-            <span className="trust-pill">Score passed</span>
-            <span className="trust-pill">Pass/fail passed</span>
-            <span className="trust-pill">Resume passed</span>
+            {scormCloudRecord
+              ? Object.entries(scormCloudRecord.behaviors)
+                  .filter(([, status]) => status === "passed")
+                  .map(([behaviorKey]) => (
+                    <span className="trust-pill" key={behaviorKey}>
+                      {behaviorKey === "passFail"
+                        ? "Pass/fail passed"
+                        : `${behaviorKey.charAt(0).toUpperCase()}${behaviorKey.slice(1)} passed`}
+                    </span>
+                  ))
+              : null}
           </div>
+          <Link className="inline-link-button" href="/validation">
+            View proof center
+          </Link>
         </aside>
       </section>
 
       <section className="landing-proof-band panel" id="proof">
         <div className="landing-proof-copy">
           <p className="eyebrow">Proof</p>
-          <h2>Validated behavior, presented honestly</h2>
-          <p className="panel-copy">
-            The current product has passed SCORM Cloud checks for the core LMS behaviors
-            early testers care about most.
-          </p>
+          <h2>Validated behavior, presented platform by platform</h2>
+          <p className="panel-copy">{validationCatalog.philosophy}</p>
         </div>
         <div className="proof-checklist" aria-label="Validation checklist">
-          {validationChecklist.map((item) => (
-            <span className="proof-item" key={item}>
-              {item}
+          {proofSummary.map((item) => (
+            <span className="proof-item" key={item.id}>
+              {item.name}: {item.status.replace("_", " ")}
             </span>
           ))}
         </div>
       </section>
 
       <section className="landing-section">
-        <article className="panel landing-share-card">
-          <p className="eyebrow">Demo Summary</p>
-          <h2>LDT Engine turns structured YAML into validated SCORM output</h2>
-          <p className="panel-copy">
-            Web-native authoring for branching training modules with instant preview,
-            SCORM 1.2 export, and SCORM Cloud validation already completed for the core
-            LMS behaviors.
-          </p>
-          <WorkflowSteps steps={["YAML", "Preview", "SCORM", "LMS"]} />
-          <div className="summary-inline-list">
-            <span className="summary-inline-pill">Launch validated</span>
-            <span className="summary-inline-pill">Score validated</span>
-            <span className="summary-inline-pill">Resume validated</span>
-          </div>
-          <TrackedLink
-            className="primary-button button-link"
-            eventMetadata={{ placement: "summary-card" }}
-            eventName="open_studio_clicked"
-            href="/studio"
-          >
-            Open Studio
-          </TrackedLink>
-        </article>
+        <ProofSummaryCard catalog={validationCatalog} />
       </section>
 
       <section className="landing-section">
@@ -282,9 +262,10 @@ export function LandingPage({
           <p className="eyebrow">Structured Authoring</p>
           <h2>Readable source files, compiled preview, repeatable SCORM output</h2>
           <p className="panel-copy">
-            LDT Engine is built around a source-and-build workflow. Templates, theme,
-            branching, and variables live in source. Preview and SCORM export are
-            compiled outputs, not separate authoring systems.
+            LDT Engine is built around a source-and-build workflow. Branching logic,
+            templates, variable sets, and reusable theme packs stay in source files.
+            Preview and SCORM export are compiled outputs, not separate authoring
+            systems.
           </p>
         </div>
 
@@ -309,7 +290,7 @@ export function LandingPage({
 
         <article className="panel beta-scope-panel">
           <ul className="beta-scope-list">
-            {betaScopeItems.map((item) => (
+            {validationCatalog.betaScope.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
@@ -488,10 +469,12 @@ export function LandingPage({
         <article className="panel trust-panel">
           <p className="eyebrow">Trust</p>
           <h2>Validated in SCORM Cloud with honest scope</h2>
+          <p className="panel-copy">{validationCatalog.summary}</p>
           <p className="panel-copy">
-            SCORM launch, completion, score, pass/fail, and resume behavior have
-            been validated in SCORM Cloud. Broader LMS interoperability testing
-            is ongoing.
+            Current platform status:{" "}
+            {proofSummary
+              .map((item) => `${item.name} ${item.status.replace("_", " ")}`)
+              .join(" | ")}
           </p>
         </article>
       </section>
@@ -546,6 +529,7 @@ export function LandingPage({
         </div>
         <div className="footer-links">
           <a href="mailto:contact@ldtengine.app">contact@ldtengine.app</a>
+          <Link href="/validation">Validation</Link>
           <TrackedLink
             eventMetadata={{ placement: "footer" }}
             eventName="open_studio_clicked"

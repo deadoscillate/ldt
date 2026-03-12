@@ -1,0 +1,10 @@
+id: hospital
+title: Hospital conduct reporting
+description: Reporting workflow tailored to patient-facing teams and the hospital conduct hotline.
+templateId: conduct-reporting
+notes: Focus this variant on charge nurses, supervisors, and clinical support teams.
+values:
+  courseTitle: Hospital Conduct Reporting Basics
+  courseDescription: Practice documenting and escalating workplace conduct concerns in a clinical environment.
+  companyName: Northwind Regional Hospital
+  reportingChannel: HR, supervisor, or the conduct hotline

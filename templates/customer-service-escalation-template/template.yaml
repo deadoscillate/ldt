@@ -1,10 +1,6 @@
 id: customer-service-escalation
 title: "{{courseTitle}}"
 description: "{{courseDescription}}"
-theme:
-  primary: "{{primaryColor}}"
-  secondary: "{{secondaryColor}}"
-  font: "{{fontFamily}}"
 start: intro
 passingScore: 10
 templateData:
@@ -13,9 +9,6 @@ templateData:
   companyName: Alpine Retail
   escalationDesk: Escalations Desk
   escalationEmail: escalations@alpineretail.example
-  primaryColor: "#7b3f00"
-  secondaryColor: "#f7f3eb"
-  fontFamily: Aptos
 blocks:
   intro_block:
     - id: intro

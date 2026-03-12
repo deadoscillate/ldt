@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { LandingPage } from "@/components/LandingPage";
 import { loadCourseSamples } from "@/lib/course/load-samples";
 import { parseAndCompileCourse } from "@/lib/course/parse";
+import { applyThemePackToCourse } from "@/lib/theme/apply";
+import { loadThemePacks } from "@/lib/theme/load-theme-packs";
+import { loadLmsValidationCatalog } from "@/lib/validation/load";
 
 export const metadata: Metadata = {
   title: "LDT Engine | Structured SCORM Authoring",
@@ -42,17 +45,29 @@ function buildFeaturedSnippet(source: string): string {
 }
 
 export default async function Home() {
-  const samples = await loadCourseSamples();
+  const [samples, themePacks, validationCatalog] = await Promise.all([
+    loadCourseSamples(),
+    loadThemePacks(),
+    loadLmsValidationCatalog(),
+  ]);
   const featuredSample = samples[0];
+  const defaultThemePack =
+    themePacks.find((themePack) => themePack.id === "default") ?? themePacks[0];
 
   if (!featuredSample) {
     throw new Error("At least one sample course is required for the landing page.");
   }
 
-  const featuredCourse = {
-    ...parseAndCompileCourse(featuredSample.yaml),
-    id: `${featuredSample.id}-landing-demo`,
-  };
+  const featuredCourse = applyThemePackToCourse(
+    {
+      ...parseAndCompileCourse(featuredSample.yaml),
+      id: `${featuredSample.id}-landing-demo`,
+    },
+    defaultThemePack,
+    {
+      assetMode: "preview",
+    }
+  );
 
   return (
     <LandingPage
@@ -60,6 +75,7 @@ export default async function Home() {
       featuredSource={featuredSample.yaml}
       featuredSnippet={buildFeaturedSnippet(featuredSample.yaml)}
       samples={samples}
+      validationCatalog={validationCatalog}
     />
   );
 }

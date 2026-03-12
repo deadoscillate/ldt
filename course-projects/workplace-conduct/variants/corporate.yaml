@@ -1,0 +1,10 @@
+id: corporate
+title: Corporate conduct reporting
+description: Reporting workflow tailored to office-based teams and HR business partners.
+templateId: conduct-reporting
+notes: Useful for annual conduct refreshers in office and hybrid environments.
+values:
+  courseTitle: Corporate Workplace Conduct Reporting
+  courseDescription: Practice documenting and escalating workplace conduct concerns in an office environment.
+  companyName: Fabrikam Services
+  reportingChannel: HR business partner or the approved conduct channel

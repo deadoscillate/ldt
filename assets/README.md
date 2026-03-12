@@ -1,3 +1,5 @@
-# Source vs Build Assets
+# Shared Assets
 
-Use `courses/` and `templates/` for authored source files. Treat exported SCORM packages as build artifacts rather than editable source.
+Use this directory for repo-level shared assets such as screenshots, logos, or starter visuals that are not owned by a single course project or theme pack.
+
+Keep project-specific assets inside the relevant `course-projects/<project>/assets/` directory whenever possible.

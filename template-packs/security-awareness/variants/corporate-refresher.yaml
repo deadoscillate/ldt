@@ -1,0 +1,11 @@
+id: corporate-refresher
+title: Corporate office refresher
+description: Refresher variant for office-based teams handling regular email and file-sharing workflows.
+templateId: security-awareness-refresher
+notes: Keeps the same structure while shifting policy references to the corporate environment.
+values:
+  courseTitle: Corporate Security Awareness Refresher
+  courseDescription: Reinforce repeatable security habits for office-based teams and distributed managers.
+  companyName: Fabrikam Corporate Services
+  securityTeam: Corporate Security Team
+  policyUrl: https://fabrikam.example/security/refresher

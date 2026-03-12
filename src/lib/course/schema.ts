@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { CourseLayoutType } from "@/lib/course/types";
+import { COURSE_LAYOUT_TYPES, type CourseLayoutType } from "@/lib/course/types";
 
 export type TemplateScalarValue = string | number | boolean;
 
@@ -265,19 +265,7 @@ const numberSchema = z.coerce
   .number()
   .refine(Number.isFinite, "Expected a finite number.");
 
-const layoutTypeSchema = z.enum([
-  "title",
-  "text",
-  "image",
-  "video",
-  "two-column",
-  "image-left",
-  "image-right",
-  "quote",
-  "callout",
-  "question",
-  "result",
-]);
+const layoutTypeSchema = z.enum(COURSE_LAYOUT_TYPES);
 
 const themeSchema = z
   .object({

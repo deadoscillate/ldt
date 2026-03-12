@@ -1,0 +1,11 @@
+id: frontline-refresher
+title: Frontline team refresher
+description: Short refresher focused on field and warehouse staff.
+templateId: security-awareness-refresher
+notes: Useful for short recurring training where computer access is intermittent.
+values:
+  courseTitle: Frontline Security Refresher
+  courseDescription: Reinforce short, repeatable habits for field and warehouse teams.
+  companyName: Tailwind Fulfillment
+  securityTeam: Security Operations
+  policyUrl: https://tailwind.example/security/frontline

@@ -2,6 +2,13 @@ import { ZodError } from "zod";
 
 import { CourseTemplateResolutionError } from "@/lib/course/errors";
 import {
+  buildTemplateFieldDefinitions,
+  validateTemplateVariableValues,
+  type TemplateFieldDefinition,
+  type TemplateFieldInputType,
+  type TemplateVariableSchema,
+} from "@/lib/course/template-variables";
+import {
   courseDocumentSchema,
   type BlockIncludeDocument,
   type CalloutBlockDocument,
@@ -20,17 +27,15 @@ import {
   type TemplateTextValue,
   type ThemeDocument,
 } from "@/lib/course/schema";
-
-export type TemplateFieldInputType = "text" | "number" | "boolean";
-
-export interface TemplateFieldDefinition {
-  key: string;
-  value: TemplateScalarValue;
-  inputType: TemplateFieldInputType;
-}
+export type {
+  TemplateFieldDefinition,
+  TemplateFieldInputType,
+  TemplateVariableSchema,
+} from "@/lib/course/template-variables";
 
 export interface ResolveCourseTemplateOptions {
   templateDataOverrides?: Record<string, TemplateScalarValue>;
+  variableSchema?: TemplateVariableSchema | null;
 }
 
 export interface ResolvedCourseTemplate {
@@ -60,27 +65,6 @@ function formatIssuePath(path: string): string {
 
 function allowsRuntimePlaceholders(path: string): boolean {
   return path.includes(".body") || path.includes(".callout.text") || path.includes(".quote.text");
-}
-
-function inferTemplateFieldType(value: TemplateScalarValue): TemplateFieldInputType {
-  switch (typeof value) {
-    case "number":
-      return "number";
-    case "boolean":
-      return "boolean";
-    default:
-      return "text";
-  }
-}
-
-function buildTemplateFieldDefinitions(
-  templateData: Record<string, TemplateScalarValue>
-): TemplateFieldDefinition[] {
-  return Object.entries(templateData).map(([key, value]) => ({
-    key,
-    value,
-    inputType: inferTemplateFieldType(value),
-  }));
 }
 
 function interpolateString(
@@ -525,12 +509,21 @@ export function resolveCourseTemplate(
   sourceDocument: CourseTemplateDocument,
   options: ResolveCourseTemplateOptions = {}
 ): ResolvedCourseTemplate {
-  const templateData = {
+  const mergedTemplateData = {
     ...(sourceDocument.templateData ?? {}),
     ...(options.templateDataOverrides ?? {}),
   };
-  const templateFields = buildTemplateFieldDefinitions(templateData);
+  const templateValidation = validateTemplateVariableValues(
+    mergedTemplateData,
+    options.variableSchema ?? null
+  );
+  const templateData = templateValidation.values;
+  const templateFields = buildTemplateFieldDefinitions(
+    templateData,
+    options.variableSchema ?? null
+  );
   const issues: string[] = [];
+  issues.push(...templateValidation.issues);
   const expandedNodes = expandEntries(
     sourceDocument.nodes,
     sourceDocument.blocks ?? {},

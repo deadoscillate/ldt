@@ -1,0 +1,11 @@
+id: retail-support
+title: Retail support escalation
+description: Escalation variant for retail support teams handling returns and delivery issues.
+templateId: customer-service-escalation
+notes: Focus this variant on de-escalation and quick handoffs for store support teams.
+values:
+  courseTitle: Retail Support Escalation Essentials
+  courseDescription: Practice a consistent escalation flow when a customer has a delivery or return issue.
+  companyName: Alpine Retail
+  escalationDesk: Retail Escalations Desk
+  escalationEmail: escalations@alpineretail.example

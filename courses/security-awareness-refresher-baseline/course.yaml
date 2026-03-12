@@ -1,10 +1,6 @@
 id: security-awareness-refresher
 title: "{{courseTitle}}"
 description: "{{courseDescription}}"
-theme:
-  primary: "{{primaryColor}}"
-  secondary: "{{secondaryColor}}"
-  font: "{{fontFamily}}"
 start: intro
 passingScore: 10
 templateData:
@@ -13,9 +9,6 @@ templateData:
   companyName: Tailwind Manufacturing
   securityTeam: Security Operations
   policyUrl: https://example.com/security/refresher
-  primaryColor: "#245f45"
-  secondaryColor: "#edf8f3"
-  fontFamily: Aptos
 blocks:
   intro_block:
     - id: intro

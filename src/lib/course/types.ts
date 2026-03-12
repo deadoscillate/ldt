@@ -1,30 +1,77 @@
-export type CourseNodeType = "content" | "choice" | "quiz" | "result";
-export type CourseAuthorNodeType =
-  | "content"
-  | "choice"
-  | "branch"
-  | "quiz"
-  | "question"
-  | "result";
-export type CourseLayoutType =
-  | "title"
-  | "text"
-  | "image"
-  | "video"
-  | "two-column"
-  | "image-left"
-  | "image-right"
-  | "quote"
-  | "callout"
-  | "question"
-  | "result";
+export const CANONICAL_NODE_TYPES = ["content", "choice", "quiz", "result"] as const;
+export type CourseNodeType = (typeof CANONICAL_NODE_TYPES)[number];
+
+export const PUBLIC_AUTHOR_NODE_TYPES = [
+  "content",
+  "question",
+  "choice",
+  "branch",
+  "result",
+] as const;
+export type PublicAuthorNodeType = (typeof PUBLIC_AUTHOR_NODE_TYPES)[number];
+
+export const LEGACY_AUTHOR_NODE_TYPE_ALIASES = {
+  quiz: "question",
+} as const;
+export type LegacyAuthorNodeType = keyof typeof LEGACY_AUTHOR_NODE_TYPE_ALIASES;
+
+export type CourseAuthorNodeType = PublicAuthorNodeType | LegacyAuthorNodeType;
+
+export const COURSE_LAYOUT_TYPES = [
+  "title",
+  "text",
+  "image",
+  "video",
+  "two-column",
+  "image-left",
+  "image-right",
+  "quote",
+  "callout",
+  "question",
+  "result",
+] as const;
+export type CourseLayoutType = (typeof COURSE_LAYOUT_TYPES)[number];
+
+export interface CompiledThemeFontFace {
+  id: string;
+  family: string;
+  source: string;
+  weight: string;
+  style: string;
+  format: string;
+}
 
 export interface CompiledTheme {
+  id: string | null;
+  name: string | null;
+  description: string | null;
+  author: string | null;
+  version: string | null;
+  runtimeCompatibility: string | null;
+  supportedLayouts: CourseLayoutType[];
   primary: string | null;
   secondary: string | null;
+  accent: string | null;
   font: string | null;
+  headingFont: string | null;
+  baseSize: string | null;
+  headingScale: number | null;
   logo: string | null;
   background: string | null;
+  surface: string | null;
+  surfaceStrong: string | null;
+  text: string | null;
+  mutedText: string | null;
+  border: string | null;
+  success: string | null;
+  danger: string | null;
+  panelPadding: string | null;
+  sectionGap: string | null;
+  cardGap: string | null;
+  buttonRadius: string | null;
+  cardRadius: string | null;
+  borderStyle: string | null;
+  fontFaces: CompiledThemeFontFace[];
 }
 
 export interface CompiledMedia {
@@ -133,3 +180,6 @@ export interface CompiledCourse {
   edges: CompiledEdge[];
   nodes: Record<string, CompiledNode>;
 }
+
+export type CanonicalCourse = CompiledCourse;
+export type CanonicalNode = CompiledNode;

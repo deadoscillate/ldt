@@ -1,5 +1,17 @@
-scormCloudStatus: passed
-summary: SCORM Cloud validation has passed for launch, completion, score, pass/fail, and resume. Broader LMS validation is still in progress.
+title: LMS Validation Proof Center
+summary: Validated in SCORM Cloud for launch, completion, score, pass/fail, and resume. Broader LMS interoperability testing is in progress and is tracked platform by platform.
+philosophy: Validation is treated as part of the build and release workflow. Source YAML stays as the system of record, SCORM packages remain build artifacts, and interoperability evidence is tracked separately from course source.
+betaScope:
+  - Structured source authoring in YAML
+  - Browser preview from validated source
+  - SCORM 1.2 export
+  - SCORM Cloud validation baseline
+  - Broader LMS validation in progress
+caveats:
+  - Current proof is limited to the shipped branching scenarios and export paths tested so far.
+  - LMS-specific activity settings, grading rules, or completion settings can still affect outcomes outside the package.
+  - Diagnostics-enabled validation builds are recommended when testing in a new LMS environment.
+  - Do not claim universal LMS compatibility until the target platform has a dated record in this registry.
 checklist:
   - Import package successfully
   - Launch package successfully
@@ -8,37 +20,111 @@ checklist:
   - Pass/fail works if configured
   - Resume works after relaunch
   - Record observed quirks or notes
-targets:
+platforms:
+  - id: scorm-cloud
+    name: SCORM Cloud
+    summary: Reference validation environment used for the current beta baseline.
+    currentStatus: passed
+    records:
+      - id: scorm-cloud-baseline-2026-03-12
+        platformId: scorm-cloud
+        platformName: SCORM Cloud
+        environment: SCORM Cloud sandbox
+        version: Current hosted environment
+        validationDate: "2026-03-12"
+        packageName: phishing-awareness-scorm12-validation.zip
+        courseName: Phishing Awareness Essentials
+        exportMode: validation
+        diagnosticsEnabled: true
+        behaviors:
+          import: passed
+          launch: passed
+          completion: passed
+          score: passed
+          passFail: passed
+          resume: passed
+        notes: Validation baseline confirmed using the diagnostics-enabled build. Launch, completion, score, pass/fail, and resume all behaved as expected.
+        knownIssues: []
+        validatorName: Internal beta validation
+        validatorSource: SCORM Cloud
   - id: moodle
     name: Moodle
-    validationDate: ""
-    version: ""
-    importPassed: false
-    launchPassed: false
-    completionPassed: false
-    scorePassed: false
-    passFailPassed: false
-    resumePassed: false
-    notes: Record SCORM activity settings, gradebook behavior, and any completion quirks here.
+    summary: Target platform for real LMS validation. Checklist and validation build workflow are ready.
+    currentStatus: pending
+    records:
+      - id: moodle-planned-validation
+        platformId: moodle
+        platformName: Moodle
+        environment: Planned Moodle test environment
+        version: ""
+        validationDate: ""
+        packageName: ""
+        courseName: ""
+        exportMode: validation
+        diagnosticsEnabled: true
+        behaviors:
+          import: pending
+          launch: pending
+          completion: pending
+          score: pending
+          passFail: pending
+          resume: pending
+        notes: Moodle validation is queued. Use the LMS validation build and record activity settings, completion tracking, gradebook mapping, and resume behavior.
+        knownIssues:
+          - Gradebook and activity completion settings must be recorded during the first live validation session.
+        validatorName: ""
+        validatorSource: ""
   - id: canvas
     name: Canvas LMS
-    validationDate: ""
-    version: ""
-    importPassed: false
-    launchPassed: false
-    completionPassed: false
-    scorePassed: false
-    passFailPassed: false
-    resumePassed: false
-    notes: Record module settings, assignment grading behavior, and any launch quirks here.
+    summary: Target platform registered for beta validation, but no dated test session has been completed yet.
+    currentStatus: not_tested
+    records:
+      - id: canvas-baseline-placeholder
+        platformId: canvas
+        platformName: Canvas LMS
+        environment: Planned Canvas test environment
+        version: ""
+        validationDate: ""
+        packageName: ""
+        courseName: ""
+        exportMode: validation
+        diagnosticsEnabled: true
+        behaviors:
+          import: not_tested
+          launch: not_tested
+          completion: not_tested
+          score: not_tested
+          passFail: not_tested
+          resume: not_tested
+        notes: Canvas testing has not been run yet. Start with import, launch, assignment score behavior, completion status, and resume after relaunch.
+        knownIssues:
+          - Canvas assignment and module settings may affect score and completion visibility outside the package.
+        validatorName: ""
+        validatorSource: ""
   - id: talentlms
     name: TalentLMS
-    validationDate: ""
-    version: ""
-    importPassed: false
-    launchPassed: false
-    completionPassed: false
-    scorePassed: false
-    passFailPassed: false
-    resumePassed: false
-    notes: Record package import settings, completion rules, and any learner resume quirks here.
+    summary: Target platform registered for beta validation, but no dated test session has been completed yet.
+    currentStatus: not_tested
+    records:
+      - id: talentlms-baseline-placeholder
+        platformId: talentlms
+        platformName: TalentLMS
+        environment: Planned TalentLMS test environment
+        version: ""
+        validationDate: ""
+        packageName: ""
+        courseName: ""
+        exportMode: validation
+        diagnosticsEnabled: true
+        behaviors:
+          import: not_tested
+          launch: not_tested
+          completion: not_tested
+          score: not_tested
+          passFail: not_tested
+          resume: not_tested
+        notes: TalentLMS testing has not been run yet. Start with import, learner launch, completion rule behavior, score reporting, and resume after relaunch.
+        knownIssues:
+          - Completion and pass/fail behavior should be checked against TalentLMS course rules during the first validation session.
+        validatorName: ""
+        validatorSource: ""

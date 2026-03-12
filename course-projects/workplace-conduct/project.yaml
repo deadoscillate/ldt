@@ -1,0 +1,49 @@
+id: workplace-conduct
+title: Workplace Conduct Project
+description: Repeatable conduct and reporting course family with multiple industry-specific variable sets.
+version: 0.1.0
+author: LDT Engine
+createdAt: 2026-03-12
+updatedAt: 2026-03-12
+defaultTemplateId: conduct-reporting
+defaultVariantId: corporate
+defaultThemeId: default
+buildTargets:
+  - scorm12
+readme: README.md
+gitignore: .gitignore
+buildDirectory: build
+assetsDirectory: assets
+templates:
+  - id: conduct-reporting
+    title: Workplace conduct reporting
+    description: Structured reporting scenario for documenting and escalating conduct concerns.
+    recommendedUseCase: Rebuild a common reporting workflow for different environments without duplicating branching logic.
+    template: templates/conduct-reporting/template.yaml
+    schema: templates/conduct-reporting/schema.yaml
+    readme: templates/conduct-reporting/README.md
+variants:
+  - id: corporate
+    templateId: conduct-reporting
+    title: Corporate reporting
+    description: Office-based conduct reporting workflow.
+    source: variants/corporate.yaml
+  - id: hospital
+    templateId: conduct-reporting
+    title: Hospital reporting
+    description: Clinical environment reporting workflow.
+    source: variants/hospital.yaml
+  - id: manufacturing
+    templateId: conduct-reporting
+    title: Manufacturing reporting
+    description: Shop-floor reporting workflow.
+    source: variants/manufacturing.yaml
+themes:
+  - id: default
+    theme: themes/default/theme.yaml
+    tokens: themes/default/tokens.yaml
+    assetsDirectory: themes/default/assets
+  - id: dark
+    theme: themes/dark/theme.yaml
+    tokens: themes/dark/tokens.yaml
+    assetsDirectory: themes/dark/assets

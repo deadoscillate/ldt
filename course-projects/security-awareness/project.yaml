@@ -1,0 +1,49 @@
+id: security-awareness
+title: Security Awareness Project
+description: Multi-variant phishing awareness project with reusable source, variable sets, and branded themes.
+version: 0.1.0
+author: LDT Engine
+createdAt: 2026-03-12
+updatedAt: 2026-03-12
+defaultTemplateId: phishing-awareness
+defaultVariantId: k12-district
+defaultThemeId: default
+buildTargets:
+  - scorm12
+readme: README.md
+gitignore: .gitignore
+buildDirectory: build
+assetsDirectory: assets
+templates:
+  - id: phishing-awareness
+    title: Phishing awareness
+    description: Branching phishing scenario with a scored quiz and result screens.
+    recommendedUseCase: Generate organization-specific phishing awareness modules from shared source.
+    template: templates/phishing-awareness/template.yaml
+    schema: templates/phishing-awareness/schema.yaml
+    readme: templates/phishing-awareness/README.md
+variants:
+  - id: k12-district
+    templateId: phishing-awareness
+    title: K-12 district phishing
+    description: Variant tailored to faculty and staff in a school district.
+    source: variants/k12-district.yaml
+  - id: healthcare
+    templateId: phishing-awareness
+    title: Healthcare organization phishing
+    description: Variant focused on patient-data handling and clinical inbox triage.
+    source: variants/healthcare.yaml
+  - id: enterprise
+    templateId: phishing-awareness
+    title: Enterprise IT phishing
+    description: Variant focused on internal IT queues and higher-volume message review.
+    source: variants/enterprise.yaml
+themes:
+  - id: default
+    theme: themes/default/theme.yaml
+    tokens: themes/default/tokens.yaml
+    assetsDirectory: themes/default/assets
+  - id: corporate-blue
+    theme: themes/corporate-blue/theme.yaml
+    tokens: themes/corporate-blue/tokens.yaml
+    assetsDirectory: themes/corporate-blue/assets

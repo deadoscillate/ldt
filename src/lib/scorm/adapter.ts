@@ -69,6 +69,9 @@ function createDebugStore(isEnabled) {
   var listeners = [];
   var state = {
     enabled: Boolean(isEnabled),
+    apiDiscovery: {
+      found: false
+    },
     lastValues: {
       "cmi.core.lesson_status": "",
       "cmi.core.lesson_location": "",
@@ -104,6 +107,10 @@ function createDebugStore(isEnabled) {
   }
 
   function pushLog(level, action, details) {
+    if (!state.enabled) {
+      return;
+    }
+
     var entry = {
       timestamp: new Date().toISOString(),
       level: level,
@@ -139,6 +146,13 @@ function createDebugStore(isEnabled) {
     getState: function () {
       return cloneState();
     },
+    setApiDiscovery: function (details) {
+      state.apiDiscovery = details || { found: false };
+
+      if (state.enabled) {
+        pushLog(details && details.found ? "info" : "error", "api.discovery", details);
+      }
+    },
     subscribe: function (listener) {
       listeners.push(listener);
       listener(cloneState());
@@ -161,10 +175,16 @@ function createDebugStore(isEnabled) {
 function createScormAdapter(course, options) {
   var api = findScormApi(window);
   var fallback = createFallbackStorage(course.id);
-  var debugStore = createDebugStore(Boolean(options && options.debug) || !api);
+  var debugStore = createDebugStore(Boolean(options && options.debug));
   var initialized = false;
   var terminated = false;
   var lastSnapshot = null;
+
+  debugStore.setApiDiscovery({
+    found: Boolean(api),
+    courseId: course.id,
+    mode: options && options.exportMode ? options.exportMode : "standard"
+  });
 
   function readLastError(action, context) {
     if (!api || typeof api.LMSGetLastError !== "function") {

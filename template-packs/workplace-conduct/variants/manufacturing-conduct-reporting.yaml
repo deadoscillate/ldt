@@ -1,0 +1,10 @@
+id: manufacturing-conduct-reporting
+title: Manufacturing conduct reporting
+description: Reporting workflow tailored to plant-floor incidents and shift supervisors.
+templateId: workplace-harassment-reporting
+notes: Adjusts the copy for team leads and line supervisors working across shifts.
+values:
+  courseTitle: Manufacturing Conduct Reporting
+  courseDescription: Practice documenting and escalating workplace conduct concerns on the plant floor.
+  companyName: Tailwind Manufacturing
+  reportingChannel: Shift supervisor, HR, or the ethics hotline

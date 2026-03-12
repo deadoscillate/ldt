@@ -1,0 +1,25 @@
+colors:
+  primary: "#1f5fbf"
+  secondary: "#e8f0fb"
+  accent: "#2c7be5"
+  background: "#f6f9fe"
+  surface: "#ffffff"
+  surfaceStrong: "#edf4fe"
+  text: "#12243d"
+  mutedText: "#4f6280"
+  border: "#c8d7ee"
+  success: "#1f7a57"
+  danger: "#a53a4e"
+typography:
+  bodyFont: '"Segoe UI", "Aptos", sans-serif'
+  headingFont: '"Segoe UI Semibold", "Segoe UI", sans-serif'
+  baseSize: 16px
+  headingScale: 1.12
+spacing:
+  panelPadding: 1.5rem
+  sectionGap: 1rem
+  cardGap: 0.9rem
+components:
+  buttonRadius: 0.85rem
+  cardRadius: 1.2rem
+  borderStyle: solid

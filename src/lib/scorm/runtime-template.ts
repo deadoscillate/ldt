@@ -1,5 +1,13 @@
 import { buildScormAdapterSource } from "@/lib/scorm/adapter";
 
+interface ScormRuntimeBuildOptions {
+  builtAt: string;
+  courseId: string;
+  courseTitle: string;
+  diagnosticsEnabled: boolean;
+  exportMode: "standard" | "validation";
+}
+
 export function buildScormRuntimeHtml(title: string): string {
   return `<!doctype html>
 <html lang="en">
@@ -8,6 +16,7 @@ export function buildScormRuntimeHtml(title: string): string {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${title}</title>
     <link rel="stylesheet" href="assets/runtime.css" />
+    <link rel="stylesheet" href="assets/theme.css" />
   </head>
   <body>
     <main class="shell">
@@ -24,7 +33,7 @@ export function buildScormRuntimeHtml(title: string): string {
 export function buildScormRuntimeStyles(): string {
   return `
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --bg: #f4f1ea;
   --panel: #fffaf3;
   --panel-strong: #efe4d2;
@@ -37,8 +46,26 @@ export function buildScormRuntimeStyles(): string {
   --danger: #8a2f39;
   --shadow: 0 18px 40px rgba(31, 26, 20, 0.08);
   --course-primary: var(--accent);
+  --course-secondary: var(--panel-strong);
+  --course-accent: var(--accent);
   --course-background: var(--panel);
+  --course-surface: #fffefb;
+  --course-surface-strong: var(--panel-strong);
+  --course-text: var(--text);
+  --course-muted-text: var(--muted);
+  --course-border: var(--line);
+  --course-success: var(--success);
+  --course-danger: var(--danger);
   --course-font: "Aptos", "Segoe UI", sans-serif;
+  --course-heading-font: var(--course-font);
+  --course-base-size: 16px;
+  --course-heading-scale: 1.14;
+  --course-panel-padding: 1.5rem;
+  --course-section-gap: 1rem;
+  --course-card-gap: 0.85rem;
+  --course-button-radius: 0.9rem;
+  --course-card-radius: 1.25rem;
+  --course-border-style: solid;
 }
 
 * {
@@ -48,10 +75,11 @@ export function buildScormRuntimeStyles(): string {
 body {
   margin: 0;
   font-family: var(--course-font);
+  font-size: var(--course-base-size);
   background:
-    radial-gradient(circle at top right, rgba(164, 72, 29, 0.14), transparent 32rem),
-    linear-gradient(180deg, #fbf8f3 0%, var(--bg) 100%);
-  color: var(--text);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--course-accent) 16%, transparent), transparent 32rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--course-background) 92%, white) 0%, var(--course-background) 100%);
+  color: var(--course-text);
 }
 
 .shell {
@@ -62,11 +90,11 @@ body {
 .card {
   max-width: 860px;
   margin: 0 auto;
-  background: var(--course-background);
-  border: 1px solid var(--line);
-  border-radius: 1.5rem;
+  background: var(--course-surface);
+  border: 1px var(--course-border-style) var(--course-border);
+  border-radius: var(--course-card-radius);
   box-shadow: var(--shadow);
-  padding: 1.5rem;
+  padding: var(--course-panel-padding);
 }
 
 .eyebrow {
@@ -74,17 +102,18 @@ body {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--muted);
+  color: var(--course-muted-text);
 }
 
 .title {
   margin: 0;
-  font-size: 2rem;
+  font-family: var(--course-heading-font);
+  font-size: calc(1.75rem * var(--course-heading-scale));
 }
 
 .body {
   margin: 1rem 0 0;
-  color: var(--muted);
+  color: var(--course-muted-text);
   white-space: pre-wrap;
   line-height: 1.6;
 }
@@ -98,8 +127,8 @@ body {
 
 .chip {
   border-radius: 999px;
-  background: var(--panel-strong);
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--course-secondary) 78%, var(--course-surface));
+  border: 1px solid var(--course-border);
   padding: 0.4rem 0.7rem;
   font-size: 0.9rem;
 }
@@ -111,7 +140,7 @@ body {
 
 button {
   border: 0;
-  border-radius: 0.9rem;
+  border-radius: var(--course-button-radius);
   padding: 0.9rem 1rem;
   background: var(--course-primary);
   color: white;
@@ -130,8 +159,8 @@ button:disabled {
 
 button.secondary {
   background: transparent;
-  color: var(--text);
-  border: 1px solid var(--line);
+  color: var(--course-text);
+  border: 1px solid var(--course-border);
 }
 
 .quiz-options {
@@ -144,10 +173,10 @@ button.secondary {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
-  border: 1px solid var(--line);
-  border-radius: 1rem;
+  border: 1px solid var(--course-border);
+  border-radius: var(--course-card-radius);
   padding: 0.9rem 1rem;
-  background: #fff;
+  background: var(--course-surface);
 }
 
 .option input {
@@ -155,11 +184,11 @@ button.secondary {
 }
 
 .status-passed {
-  color: var(--success);
+  color: var(--course-success);
 }
 
 .status-failed {
-  color: var(--danger);
+  color: var(--course-danger);
 }
 
 .logo {
@@ -172,7 +201,7 @@ button.secondary {
 .layout-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--course-section-gap);
   margin-top: 1rem;
 }
 
@@ -192,13 +221,13 @@ button.secondary {
 .layout-column img,
 .layout-column video {
   width: 100%;
-  border-radius: 1rem;
-  border: 1px solid var(--line);
-  background: #fff;
+  border-radius: var(--course-card-radius);
+  border: 1px solid var(--course-border);
+  background: var(--course-surface);
 }
 
 .media-block figcaption {
-  color: var(--muted);
+  color: var(--course-muted-text);
   font-size: 0.88rem;
 }
 
@@ -206,8 +235,8 @@ button.secondary {
   margin: 1rem 0 0;
   padding: 1rem 1.15rem;
   border-left: 4px solid var(--course-primary);
-  border-radius: 0 1rem 1rem 0;
-  background: rgba(255, 255, 255, 0.82);
+  border-radius: 0 var(--course-card-radius) var(--course-card-radius) 0;
+  background: color-mix(in srgb, var(--course-surface) 84%, var(--course-secondary));
 }
 
 .quote-block p,
@@ -217,7 +246,7 @@ button.secondary {
 
 .quote-block footer {
   margin-top: 0.5rem;
-  color: var(--muted);
+  color: var(--course-muted-text);
   font-size: 0.88rem;
 }
 
@@ -226,9 +255,13 @@ button.secondary {
   gap: 0.45rem;
   margin-top: 1rem;
   padding: 1rem 1.1rem;
-  border-radius: 1rem;
-  border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(164, 72, 29, 0.08), rgba(255, 255, 255, 0.9));
+  border-radius: var(--course-card-radius);
+  border: 1px solid var(--course-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--course-accent) 10%, transparent),
+    color-mix(in srgb, var(--course-surface) 90%, white)
+  );
 }
 
 .debug-panel {
@@ -281,7 +314,7 @@ button.secondary {
 
 @media (min-width: 860px) {
   .debug-grid {
-    grid-template-columns: 1fr 1.4fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -293,8 +326,14 @@ button.secondary {
 `;
 }
 
-export function buildScormRuntimeScript(): string {
+export function buildScormRuntimeScript(
+  options: ScormRuntimeBuildOptions
+): string {
+  const buildConfig = JSON.stringify(options);
+
   return `
+var SCORM_BUILD_CONFIG = ${buildConfig};
+
 ${buildScormAdapterSource()}
 
 function createEventEmitter() {
@@ -396,17 +435,36 @@ function applyCourseTheme(course) {
     return;
   }
 
-  if (course.theme.primary) {
-    document.documentElement.style.setProperty("--course-primary", course.theme.primary);
-  }
+  [
+    ["--course-primary", course.theme.primary],
+    ["--course-secondary", course.theme.secondary],
+    ["--course-accent", course.theme.accent],
+    ["--course-background", course.theme.background],
+    ["--course-surface", course.theme.surface],
+    ["--course-surface-strong", course.theme.surfaceStrong],
+    ["--course-text", course.theme.text],
+    ["--course-muted-text", course.theme.mutedText],
+    ["--course-border", course.theme.border],
+    ["--course-success", course.theme.success],
+    ["--course-danger", course.theme.danger],
+    ["--course-font", course.theme.font],
+    ["--course-heading-font", course.theme.headingFont],
+    ["--course-base-size", course.theme.baseSize],
+    ["--course-heading-scale", course.theme.headingScale],
+    ["--course-panel-padding", course.theme.panelPadding],
+    ["--course-section-gap", course.theme.sectionGap],
+    ["--course-card-gap", course.theme.cardGap],
+    ["--course-button-radius", course.theme.buttonRadius],
+    ["--course-card-radius", course.theme.cardRadius],
+    ["--course-border-style", course.theme.borderStyle]
+  ].forEach(function (entry) {
+    var key = entry[0];
+    var value = entry[1];
 
-  if (course.theme.background) {
-    document.documentElement.style.setProperty("--course-background", course.theme.background);
-  }
-
-  if (course.theme.font) {
-    document.documentElement.style.setProperty("--course-font", course.theme.font);
-  }
+    if (value !== null && value !== undefined) {
+      document.documentElement.style.setProperty(key, String(value));
+    }
+  });
 }
 
 function createMediaBlock(media) {
@@ -881,6 +939,13 @@ function createRenderer(root, runtime, course) {
       meta.appendChild(chip);
     });
 
+    if (SCORM_BUILD_CONFIG && SCORM_BUILD_CONFIG.exportMode === "validation") {
+      var validationChip = document.createElement("div");
+      validationChip.className = "chip";
+      validationChip.textContent = "Validation build: diagnostics enabled";
+      meta.appendChild(validationChip);
+    }
+
     var body = document.createElement("div");
 
     var actions = document.createElement("div");
@@ -994,7 +1059,7 @@ function createRenderer(root, runtime, course) {
   render(runtime.getSnapshot());
 }
 
-function createDebugPanel(adapter) {
+function createDebugPanel(adapter, runtime) {
   if (!adapter.isDebugEnabled()) {
     return {
       destroy: function () {}
@@ -1005,19 +1070,27 @@ function createDebugPanel(adapter) {
   panel.className = "debug-panel";
 
   var title = document.createElement("h2");
-  title.textContent = "SCORM debug panel";
+  title.textContent = "SCORM validation diagnostics";
 
   var description = document.createElement("p");
   description.textContent =
-    "Shows the latest SCORM values written plus recent LMSSetValue, LMSCommit, and LMSFinish activity.";
+    "Shows API discovery, latest LMS values, runtime state, and recent LMSInitialize, LMSSetValue, LMSCommit, and LMSFinish activity.";
 
   var grid = document.createElement("div");
   grid.className = "debug-grid";
 
+  var buildBlock = document.createElement("section");
+  buildBlock.className = "debug-block";
+  var buildTitle = document.createElement("h3");
+  buildTitle.textContent = "Build metadata";
+  var buildPre = document.createElement("pre");
+  buildBlock.appendChild(buildTitle);
+  buildBlock.appendChild(buildPre);
+
   var valuesBlock = document.createElement("section");
   valuesBlock.className = "debug-block";
   var valuesTitle = document.createElement("h3");
-  valuesTitle.textContent = "Last values written";
+  valuesTitle.textContent = "Runtime + LMS values";
   var valuesPre = document.createElement("pre");
   valuesBlock.appendChild(valuesTitle);
   valuesBlock.appendChild(valuesPre);
@@ -1030,6 +1103,7 @@ function createDebugPanel(adapter) {
   logsBlock.appendChild(logsTitle);
   logsBlock.appendChild(logsPre);
 
+  grid.appendChild(buildBlock);
   grid.appendChild(valuesBlock);
   grid.appendChild(logsBlock);
 
@@ -1038,26 +1112,56 @@ function createDebugPanel(adapter) {
   panel.appendChild(grid);
   document.body.appendChild(panel);
 
-  var unsubscribe = adapter.subscribeDebug(function (debugState) {
-    valuesPre.textContent = JSON.stringify(
+  var currentDebugState = adapter.getDebugState();
+  var currentSnapshot = runtime.getSnapshot();
+
+  function renderPanel() {
+    buildPre.textContent = JSON.stringify(
       {
-        values: debugState.lastValues,
-        lastError: debugState.lastError
+        build: SCORM_BUILD_CONFIG,
+        apiDiscovery: currentDebugState.apiDiscovery
       },
       null,
       2
     );
-    logsPre.textContent = debugState.logs
+
+    valuesPre.textContent = JSON.stringify(
+      {
+        lessonStatus: currentSnapshot.lessonStatus,
+        currentNodeId: currentSnapshot.state.currentNodeId,
+        score: currentSnapshot.state.score,
+        completed: currentSnapshot.state.completed,
+        state: currentSnapshot.state,
+        lmsWrites: currentDebugState.lastValues,
+        lastError: currentDebugState.lastError
+      },
+      null,
+      2
+    );
+    logsPre.textContent = currentDebugState.logs
       .map(function (entry) {
         return entry.timestamp + " [" + entry.level + "] " + entry.action + "\\n" +
           JSON.stringify(entry.details, null, 2);
       })
       .join("\\n\\n");
+  }
+
+  var unsubscribeDebug = adapter.subscribeDebug(function (debugState) {
+    currentDebugState = debugState;
+    renderPanel();
   });
+
+  var unsubscribeRuntime = runtime.subscribe("stateChanged", function (event) {
+    currentSnapshot = event.snapshot;
+    renderPanel();
+  });
+
+  renderPanel();
 
   return {
     destroy: function () {
-      unsubscribe();
+      unsubscribeDebug();
+      unsubscribeRuntime();
 
       if (panel.parentNode) {
         panel.parentNode.removeChild(panel);
@@ -1084,7 +1188,10 @@ function wireRuntimeToScorm(runtime, adapter) {
 }
 
 function scormDebugRequested() {
-  return /(?:^|[?&])(scormDebug|debugScorm)=1(?:&|$)/.test(window.location.search);
+  return Boolean(
+    (SCORM_BUILD_CONFIG && SCORM_BUILD_CONFIG.diagnosticsEnabled) ||
+      /(?:^|[?&])(scormDebug|debugScorm)=1(?:&|$)/.test(window.location.search)
+  );
 }
 
 fetch("assets/course.json")
@@ -1094,7 +1201,8 @@ fetch("assets/course.json")
   .then(function (course) {
     applyCourseTheme(course);
     var adapter = createScormAdapter(course, {
-      debug: scormDebugRequested()
+      debug: scormDebugRequested(),
+      exportMode: SCORM_BUILD_CONFIG && SCORM_BUILD_CONFIG.exportMode
     });
     var persistedState = adapter.loadState();
     var runtime = createRuntimeController(course, persistedState);
@@ -1102,7 +1210,7 @@ fetch("assets/course.json")
 
     wireRuntimeToScorm(runtime, adapter);
     createRenderer(root, runtime, course);
-    createDebugPanel(adapter);
+    createDebugPanel(adapter, runtime);
     runtime.announceLaunch();
 
     var terminated = false;

@@ -3,6 +3,3 @@ courseDescription: Train employees to inspect suspicious requests before clickin
 companyName: Northwind Health
 reportingChannel: security@northwindhealth.example
 policyUrl: https://example.com/security/phishing
-primaryColor: "#a4481d"
-secondaryColor: "#f4efe7"
-fontFamily: Aptos

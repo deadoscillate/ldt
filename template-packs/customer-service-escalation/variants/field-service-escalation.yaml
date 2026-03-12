@@ -1,0 +1,11 @@
+id: field-service-escalation
+title: Field service escalation
+description: Escalation variant for field service coordination and dispatch teams.
+templateId: customer-service-escalation
+notes: Focus on dispatch follow-up, parts availability, and onsite customer expectations.
+values:
+  courseTitle: Field Service Escalation Essentials
+  courseDescription: Practice a consistent escalation flow when an onsite service issue needs dispatch support.
+  companyName: Tailwind Field Services
+  escalationDesk: Dispatch Escalation Team
+  escalationEmail: dispatch-escalations@tailwindfield.example

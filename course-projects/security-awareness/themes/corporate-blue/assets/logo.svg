@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 240 64" role="img" aria-labelledby="title desc">
+  <title id="title">Corporate Blue Theme</title>
+  <desc id="desc">Corporate blue logo for branded training exports.</desc>
+  <rect width="240" height="64" rx="14" fill="#12243d"/>
+  <rect x="12" y="12" width="46" height="40" rx="10" fill="#2c7be5"/>
+  <path d="M26 24h10c8 0 12 4 12 11s-4 11-12 11H26V24zm10 15c4 0 6-1 6-4s-2-4-6-4h-4v8h4z" fill="#ffffff"/>
+  <text x="74" y="30" fill="#ffffff" font-family="Segoe UI, Aptos, sans-serif" font-size="12" font-weight="700" letter-spacing="2">CORPORATE BLUE</text>
+  <text x="74" y="46" fill="#dce9fb" font-family="Segoe UI, Aptos, sans-serif" font-size="11">Repeatable branded learning builds</text>
+</svg>

@@ -1,7 +1,10 @@
 node_modules
+/build/*
+!/build/README.md
 .next
 out
 coverage
+**/.ci-build/
 *.log
 *.zip
 .DS_Store

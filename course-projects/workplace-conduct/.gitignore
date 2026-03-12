@@ -1,0 +1,10 @@
+# Generated build artifacts
+/build/*
+!/build/README.md
+*.zip
+
+# Temporary editor files
+*.tmp
+*.log
+Thumbs.db
+Desktop.ini

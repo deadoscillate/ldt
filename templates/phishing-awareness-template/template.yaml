@@ -1,10 +1,6 @@
 id: phishing-awareness
 title: "{{courseTitle}}"
 description: "{{courseDescription}}"
-theme:
-  primary: "{{primaryColor}}"
-  secondary: "{{secondaryColor}}"
-  font: "{{fontFamily}}"
 start: intro
 passingScore: 10
 templateData:
@@ -13,9 +9,6 @@ templateData:
   companyName: Northwind Health
   reportingChannel: security@northwindhealth.example
   policyUrl: https://example.com/security/phishing
-  primaryColor: "#a4481d"
-  secondaryColor: "#f4efe7"
-  fontFamily: Aptos
 blocks:
   intro_block:
     - id: intro

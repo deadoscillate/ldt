@@ -1,0 +1,21 @@
+id: corporate-blue
+name: Corporate Blue
+description: Branded blue-forward theme for corporate compliance, onboarding, and policy training.
+author: LDT Engine
+version: 1.0.0
+runtimeCompatibility: 1.x
+supportedLayouts:
+  - title
+  - text
+  - image
+  - video
+  - two-column
+  - image-left
+  - image-right
+  - quote
+  - callout
+  - question
+  - result
+assets:
+  logo: assets/logo.svg
+fonts: []

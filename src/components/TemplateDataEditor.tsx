@@ -34,7 +34,13 @@ export function TemplateDataEditor({
         if (field.inputType === "boolean") {
           return (
             <label className="template-field" key={field.key}>
-              <span className="template-field-label">{field.key}</span>
+              <span className="template-field-label">
+                {field.label}
+                {field.required ? " *" : ""}
+              </span>
+              {field.description ? (
+                <span className="template-field-description">{field.description}</span>
+              ) : null}
               <select
                 className="template-field-input"
                 onChange={(event) => onChange(field.key, event.target.value === "true")}
@@ -51,12 +57,39 @@ export function TemplateDataEditor({
 
         return (
           <label className="template-field" key={field.key}>
-            <span className="template-field-label">{field.key}</span>
+            <span className="template-field-label">
+              {field.label}
+              {field.required ? " *" : ""}
+            </span>
+            {field.description ? (
+              <span className="template-field-description">{field.description}</span>
+            ) : null}
             <input
-              className="template-field-input"
-              onChange={(event) => onChange(field.key, event.target.value)}
-              type={field.inputType === "number" ? "number" : "text"}
-              value={String(currentValue)}
+              className={`template-field-input template-field-input-${field.inputType}`}
+              onChange={(event) =>
+                onChange(
+                  field.key,
+                  field.inputType === "number"
+                    ? event.target.value === ""
+                      ? ""
+                      : Number(event.target.value)
+                    : event.target.value
+                )
+              }
+              placeholder={field.placeholder}
+              type={
+                field.inputType === "number" ||
+                field.inputType === "email" ||
+                field.inputType === "url" ||
+                field.inputType === "color"
+                  ? field.inputType
+                  : "text"
+              }
+              value={
+                field.inputType === "color"
+                  ? String(currentValue || field.placeholder || "#1f6feb")
+                  : String(currentValue)
+              }
             />
           </label>
         );

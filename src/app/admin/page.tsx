@@ -62,6 +62,21 @@ function buildEventCounts(entries: EventEntry[]): Array<{ label: string; count: 
     .sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
 }
 
+function buildOnboardingSummary(entries: EventEntry[]): Array<{ label: string; count: number }> {
+  const trackedEventNames = [
+    "onboarding_started",
+    "onboarding_completed",
+    "first_preview_opened",
+    "first_export_completed",
+    "starter_repo_downloaded",
+  ];
+
+  return trackedEventNames.map((eventName) => ({
+    label: eventName,
+    count: entries.filter((entry) => entry.eventName === eventName).length,
+  }));
+}
+
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const token = getAdminTokenFromSearchParam(params.token);
@@ -102,6 +117,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       listIntakeEntries<EventEntry>("events"),
     ]);
     const eventCounts = buildEventCounts(eventsResult.entries);
+    const onboardingSummary = buildOnboardingSummary(eventsResult.entries);
 
     return (
       <main className="page-shell admin-shell">
@@ -220,6 +236,28 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </section>
 
         <section className="admin-grid">
+          <article className="panel admin-card">
+            <div className="section-heading-row">
+              <div>
+                <p className="eyebrow">Onboarding funnel</p>
+                <h2>First-run summary</h2>
+                <p className="panel-copy">
+                  Lightweight visibility into how many external users start onboarding,
+                  reach preview, and complete a first export.
+                </p>
+              </div>
+            </div>
+
+            <div className="admin-event-grid">
+              {onboardingSummary.map((entry) => (
+                <article className="summary-card" key={entry.label}>
+                  <strong>{entry.label}</strong>
+                  <span>{entry.count} events</span>
+                </article>
+              ))}
+            </div>
+          </article>
+
           <article className="panel admin-card">
             <div className="section-heading-row">
               <div>

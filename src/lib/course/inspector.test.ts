@@ -52,8 +52,12 @@ nodes:
   const templateFields: TemplateFieldDefinition[] = [
     {
       key: "companyName",
+      label: "Company Name",
+      description: "",
       value: "Example Corp",
       inputType: "text",
+      required: true,
+      placeholder: "",
     },
   ];
 

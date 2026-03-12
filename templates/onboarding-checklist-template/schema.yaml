@@ -1,17 +1,21 @@
 variables:
   courseTitle:
     type: text
+    label: Course title
+    description: Display title for the onboarding module.
   courseDescription:
     type: text
+    label: Course description
+    description: Short summary shown in the studio and preview.
   companyName:
     type: text
+    label: Company name
+    description: Organization referenced throughout the onboarding flow.
   managerRole:
     type: text
+    label: Manager role
+    description: Role or team responsible for the new hire.
   handbookUrl:
-    type: text
-  primaryColor:
-    type: color
-  secondaryColor:
-    type: color
-  fontFamily:
-    type: text
+    type: url
+    label: Handbook URL
+    description: Link to the handbook or onboarding portal used in the scenario.

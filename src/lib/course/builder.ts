@@ -7,7 +7,6 @@ import type {
   MediaDocument,
   QuoteBlockDocument,
   TemplateScalarValue,
-  ThemeDocument,
 } from "@/lib/course/schema";
 import type {
   CompiledCalloutBlock,
@@ -16,17 +15,9 @@ import type {
   CompiledMedia,
   CompiledNode,
   CompiledQuoteBlock,
-  CourseAuthorNodeType,
   CourseLayoutType,
+  PublicAuthorNodeType,
 } from "@/lib/course/types";
-
-export interface BuilderTheme {
-  primary: string;
-  secondary: string;
-  font: string;
-  logo: string;
-  background: string;
-}
 
 export interface BuilderChoiceOption {
   id: string;
@@ -38,7 +29,7 @@ export interface BuilderChoiceOption {
 
 export interface BuilderNode {
   id: string;
-  type: Exclude<CourseAuthorNodeType, "quiz">;
+  type: PublicAuthorNodeType;
   title: string;
   body: string;
   layout: CourseLayoutType;
@@ -75,18 +66,7 @@ export interface BuilderCourse {
   description: string;
   start: string;
   passingScore: string;
-  theme: BuilderTheme;
   nodes: BuilderNode[];
-}
-
-function createEmptyTheme(): BuilderTheme {
-  return {
-    primary: "",
-    secondary: "",
-    font: "",
-    logo: "",
-    background: "",
-  };
 }
 
 function normalizeMedia(media: CompiledMedia | null): Pick<
@@ -101,9 +81,9 @@ function normalizeMedia(media: CompiledMedia | null): Pick<
   };
 }
 
-function normalizeColumn(
-  column: CompiledLayoutColumn | null,
-  prefix: "left" | "right"
+function normalizeColumns(
+  left: CompiledLayoutColumn | null,
+  right: CompiledLayoutColumn | null
 ): Pick<
   BuilderNode,
   | "leftTitle"
@@ -115,28 +95,15 @@ function normalizeColumn(
   | "rightImage"
   | "rightVideo"
 > {
-  if (prefix === "left") {
-    return {
-      leftTitle: column?.title ?? "",
-      leftText: column?.text ?? "",
-      leftImage: column?.image ?? "",
-      leftVideo: column?.video ?? "",
-      rightTitle: "",
-      rightText: "",
-      rightImage: "",
-      rightVideo: "",
-    };
-  }
-
   return {
-    leftTitle: "",
-    leftText: "",
-    leftImage: "",
-    leftVideo: "",
-    rightTitle: column?.title ?? "",
-    rightText: column?.text ?? "",
-    rightImage: column?.image ?? "",
-    rightVideo: column?.video ?? "",
+    leftTitle: left?.title ?? "",
+    leftText: left?.text ?? "",
+    leftImage: left?.image ?? "",
+    leftVideo: left?.video ?? "",
+    rightTitle: right?.title ?? "",
+    rightText: right?.text ?? "",
+    rightImage: right?.image ?? "",
+    rightVideo: right?.video ?? "",
   };
 }
 
@@ -176,8 +143,7 @@ function inferDefaultLayout(node: CompiledNode): CourseLayoutType {
 }
 
 function compiledNodeToBuilderNode(node: CompiledNode): BuilderNode {
-  const leftFields = normalizeColumn(node.left, "left");
-  const rightFields = normalizeColumn(node.right, "right");
+  const columnFields = normalizeColumns(node.left, node.right);
 
   return {
     id: node.id,
@@ -203,8 +169,7 @@ function compiledNodeToBuilderNode(node: CompiledNode): BuilderNode {
     failNext: node.type === "quiz" ? node.failNext ?? "" : "",
     outcome: node.type === "result" ? node.outcome : "neutral",
     ...normalizeMedia(node.media),
-    ...leftFields,
-    ...rightFields,
+    ...columnFields,
     ...normalizeQuote(node.quote),
     ...normalizeCallout(node.callout),
     options:
@@ -226,32 +191,6 @@ function compiledNodeToBuilderNode(node: CompiledNode): BuilderNode {
             }))
           : [],
   };
-}
-
-function toThemeDocument(theme: BuilderTheme): ThemeDocument | undefined {
-  const nextTheme: ThemeDocument = {};
-
-  if (theme.primary.trim()) {
-    nextTheme.primary = theme.primary.trim();
-  }
-
-  if (theme.secondary.trim()) {
-    nextTheme.secondary = theme.secondary.trim();
-  }
-
-  if (theme.font.trim()) {
-    nextTheme.font = theme.font.trim();
-  }
-
-  if (theme.logo.trim()) {
-    nextTheme.logo = theme.logo.trim();
-  }
-
-  if (theme.background.trim()) {
-    nextTheme.background = theme.background.trim();
-  }
-
-  return Object.keys(nextTheme).length > 0 ? nextTheme : undefined;
 }
 
 function toMediaDocument(node: BuilderNode): MediaDocument | undefined {
@@ -344,13 +283,6 @@ export function compiledCourseToBuilderCourse(course: CompiledCourse): BuilderCo
     description: course.description,
     start: course.startNodeId,
     passingScore: String(course.passingScore),
-    theme: {
-      primary: course.theme.primary ?? "",
-      secondary: course.theme.secondary ?? "",
-      font: course.theme.font ?? "",
-      logo: course.theme.logo ?? "",
-      background: course.theme.background ?? "",
-    },
     nodes: course.nodeOrder.map((nodeId) =>
       compiledNodeToBuilderNode(course.nodes[nodeId])
     ),
@@ -430,7 +362,6 @@ export function createEmptyBuilderCourse(): BuilderCourse {
     description: "Describe the training scenario.",
     start: "intro",
     passingScore: "0",
-    theme: createEmptyTheme(),
     nodes: [introNode, resultNode],
   };
 }
@@ -443,7 +374,6 @@ export function builderCourseToTemplateDocument(
     id: builderCourse.id,
     title: builderCourse.title,
     description: builderCourse.description,
-    theme: toThemeDocument(builderCourse.theme),
     start: builderCourse.start,
     passingScore: builderCourse.passingScore,
     templateData,

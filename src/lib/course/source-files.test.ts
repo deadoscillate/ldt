@@ -6,6 +6,7 @@ import {
   buildCourseProjectReadme,
   buildSourceDownloadFileName,
   createDuplicatedTemplateDraft,
+  createDuplicatedVariantDraft,
   inferCourseProjectDirectory,
   parseTemplateDataYaml,
   serializeTemplateDataYaml,
@@ -42,6 +43,23 @@ test("template duplication produces a portable local source draft", () => {
   assert.equal(draft.suggestedProjectDirectory, "phishing-awareness-variant");
   assert.deepEqual(draft.templateData, {
     companyName: "Example Corp",
+  });
+});
+
+test("variant duplication keeps template-family values in editable source form", () => {
+  const draft = createDuplicatedVariantDraft({
+    variantId: "retail-support-escalation",
+    variantTitle: "Retail support escalation",
+    values: {
+      escalationEmail: "escalations@example.com",
+    },
+  });
+
+  assert.equal(draft.title, "Retail support escalation copy");
+  assert.equal(draft.variantId, "retail-support-escalation-copy");
+  assert.equal(draft.suggestedFileName, "retail-support-escalation-copy.yaml");
+  assert.deepEqual(draft.values, {
+    escalationEmail: "escalations@example.com",
   });
 });
 

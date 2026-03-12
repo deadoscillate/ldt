@@ -1,0 +1,81 @@
+name: Build Course Family
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_path:
+        description: Path to the course project directory
+        required: false
+        default: course-projects/security-awareness
+        type: string
+      export_mode:
+        description: SCORM export mode
+        required: false
+        default: standard
+        type: choice
+        options:
+          - standard
+          - validation
+      fail_on_warning:
+        description: Fail the workflow when warnings are present
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  build-family:
+    runs-on: ubuntu-latest
+    env:
+      INPUT_PROJECT_PATH: ${{ github.event.inputs.project_path }}
+      INPUT_EXPORT_MODE: ${{ github.event.inputs.export_mode }}
+      INPUT_FAIL_ON_WARNING: ${{ github.event.inputs.fail_on_warning }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all valid variant and theme combinations
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          project_path="${INPUT_PROJECT_PATH:-course-projects/security-awareness}"
+          export_mode="${INPUT_EXPORT_MODE:-standard}"
+          fail_on_warning="${INPUT_FAIL_ON_WARNING:-false}"
+
+          command=(
+            npx tsx scripts/course-project-build.ts export-all
+            --project "$project_path"
+            --mode "$export_mode"
+          )
+
+          if [[ "$fail_on_warning" == "true" ]]; then
+            command+=(--fail-on-warning)
+          fi
+
+          "${command[@]}"
+
+          if [[ -f "${project_path}/build/build-summary.md" ]]; then
+            cat "${project_path}/build/build-summary.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload course family artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-family-builds-${{ github.run_number }}
+          path: |
+            course-projects/*/build/scorm12/*.zip
+            course-projects/*/build/scorm12/*.build-manifest.json
+            course-projects/*/build/build-manifest.json
+            course-projects/*/build/build-summary.md
+            course-projects/*/build/ci-build-report.json
+          if-no-files-found: error

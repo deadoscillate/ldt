@@ -1,0 +1,30 @@
+id: customer-service-escalation
+title: Customer Service Escalation Pack
+description: Repeatable escalation training variants for support teams, customer success, and field service.
+category: customer service
+recommendedUseCase: Maintain one escalation template and rebuild team-specific variants from shared source.
+readme: README.md
+templates:
+  - id: customer-service-escalation
+    title: Customer service escalation
+    description: Practice a consistent escalation workflow with branching response choices.
+    recommendedUseCase: Frontline support, retention, and service recovery teams.
+    template: ../../templates/customer-service-escalation-template/template.yaml
+    schema: ../../templates/customer-service-escalation-template/schema.yaml
+    readme: ../../templates/customer-service-escalation-template/README.md
+variants:
+  - id: retail-support-escalation
+    templateId: customer-service-escalation
+    title: Retail support escalation
+    description: Variant for store and contact-center retail teams.
+    source: variants/retail-support-escalation.yaml
+  - id: saas-customer-success-escalation
+    templateId: customer-service-escalation
+    title: SaaS customer success escalation
+    description: Variant for customer success and technical account managers.
+    source: variants/saas-customer-success-escalation.yaml
+  - id: field-service-escalation
+    templateId: customer-service-escalation
+    title: Field service escalation
+    description: Variant for service coordinators and dispatch teams.
+    source: variants/field-service-escalation.yaml

@@ -1,0 +1,70 @@
+id: ldt-engine-starter
+title: LDT Engine Starter Repository
+description: >
+  GitHub-ready starter repository template for managing structured SCORM course
+  projects, reusable template packs, and reusable theme packs as source-controlled assets.
+version: 1.0.0
+product:
+  name: LDT Engine
+  studioPath: /studio
+  validationPath: /validation
+structure:
+  courseProjectsDir: course-projects
+  templatePacksDir: template-packs
+  themesDir: themes
+  assetsDir: assets
+  buildDir: build
+courseProjects:
+  - id: security-awareness
+    title: Security Awareness Project
+    path: course-projects/security-awareness
+    family: true
+  - id: workplace-conduct
+    title: Workplace Conduct Project
+    path: course-projects/workplace-conduct
+    family: true
+  - id: customer-service
+    title: Customer Service Project
+    path: course-projects/customer-service
+    family: false
+templatePacks:
+  - id: security-awareness
+    title: Security Awareness Pack
+    path: template-packs/security-awareness
+  - id: workplace-conduct
+    title: Workplace Conduct Pack
+    path: template-packs/workplace-conduct
+  - id: customer-service-escalation
+    title: Customer Service Escalation Pack
+    path: template-packs/customer-service-escalation
+themes:
+  - id: default
+    name: Default Theme
+    path: themes/default
+  - id: corporate-blue
+    name: Corporate Blue
+    path: themes/corporate-blue
+  - id: dark
+    name: Dark Theme
+    path: themes/dark
+workflows:
+  - .github/workflows/validate-course-project.yml
+  - .github/workflows/build-course-project.yml
+  - .github/workflows/build-course-family.yml
+docs:
+  - docs/getting-started.md
+  - docs/first-module.md
+  - docs/course-projects.md
+  - docs/template-packs.md
+  - docs/theme-packs.md
+  - docs/build-pipeline.md
+  - docs/build-artifacts.md
+  - docs/github-actions.md
+  - docs/repository-philosophy.md
+  - docs/ci-cd-for-learning-modules.md
+quickStart:
+  - npm install
+  - npm run dev
+  - npm run validate:project
+  - npm run build:project
+  - npm run build:all

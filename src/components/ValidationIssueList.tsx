@@ -9,6 +9,54 @@ interface ValidationIssueViewModel {
 }
 
 function mapValidationIssue(issue: string): ValidationIssueViewModel {
+  const missingFieldMatch = issue.match(
+    /^course\.nodes\.(\d+)\.([a-zA-Z0-9]+): This field is required\.$/
+  );
+
+  if (missingFieldMatch) {
+    const [, rawIndex, fieldName] = missingFieldMatch;
+    const stepNumber = Number(rawIndex) + 1;
+
+    return {
+      category: "Builder",
+      title: "Required field missing",
+      description: `Step ${stepNumber} is missing '${fieldName}'. Add that field before compiling again.`,
+    };
+  }
+
+  const missingAnswerMatch = issue.match(
+    /^course\.nodes\.(\d+)\.options: At least (one|two) option[s]? (?:is|required)\.$/
+  );
+
+  if (missingAnswerMatch) {
+    const [, rawIndex, quantity] = missingAnswerMatch;
+    const stepNumber = Number(rawIndex) + 1;
+
+    return {
+      category: "Builder",
+      title: "Answer choices needed",
+      description:
+        quantity === "two"
+          ? `Step ${stepNumber} needs at least two answer choices before it can be previewed or exported.`
+          : `Step ${stepNumber} needs at least one answer choice before it can be previewed or exported.`,
+    };
+  }
+
+  const questionCorrectMatch = issue.match(
+    /^course\.nodes\.(\d+)\.options: (.+correct.+)\.$/i
+  );
+
+  if (questionCorrectMatch) {
+    const [, rawIndex] = questionCorrectMatch;
+    const stepNumber = Number(rawIndex) + 1;
+
+    return {
+      category: "Builder",
+      title: "Correct answer missing",
+      description: `Step ${stepNumber} needs at least one correct answer before it can be scored.`,
+    };
+  }
+
   const missingNodeMatch = issue.match(
     /^Node "([^"]+)" references missing node "([^"]+)" via "([^"]+)"\.$/
   );
@@ -62,6 +110,30 @@ function mapValidationIssue(issue: string): ValidationIssueViewModel {
       category: "Syntax",
       title: "YAML syntax issue",
       description: issue,
+    };
+  }
+
+  const requiredVariableMatch = issue.match(
+    /^Template variable "([^"]+)" is required\.$/
+  );
+
+  if (requiredVariableMatch) {
+    return {
+      category: "Template",
+      title: "Required variable missing",
+      description: `Template variable '${requiredVariableMatch[1]}' still needs a value before this course can compile.`,
+    };
+  }
+
+  const variableTypeMatch = issue.match(
+    /^Template variable "([^"]+)" must be (.+)\.$/
+  );
+
+  if (variableTypeMatch) {
+    return {
+      category: "Template",
+      title: "Variable value is invalid",
+      description: `Template variable '${variableTypeMatch[1]}' ${variableTypeMatch[2].toLowerCase()}.`,
     };
   }
 

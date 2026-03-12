@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 
 import { NodePresentation } from "@/components/NodePresentation";
 import type { CompiledCourse, CompiledQuizNode } from "@/lib/course/types";
@@ -19,6 +19,7 @@ import {
   saveRuntimeState,
 } from "@/lib/runtime/storage";
 import { renderTemplatedText } from "@/lib/runtime/templating";
+import { buildThemeStyleVariables } from "@/lib/theme/apply";
 import type { RuntimeState } from "@/lib/runtime/types";
 
 interface RuntimePlayerProps {
@@ -40,28 +41,6 @@ function formatTimestamp(value: string): string {
 
 function buildInitialState(course: CompiledCourse): RuntimeState {
   return initializeRuntime(course);
-}
-
-function buildThemeStyle(course: CompiledCourse): CSSProperties {
-  const style: CSSProperties & Record<string, string> = {};
-
-  if (course.theme.primary) {
-    style["--course-primary"] = course.theme.primary;
-  }
-
-  if (course.theme.secondary) {
-    style["--course-secondary"] = course.theme.secondary;
-  }
-
-  if (course.theme.background) {
-    style["--course-background"] = course.theme.background;
-  }
-
-  if (course.theme.font) {
-    style["--course-font"] = course.theme.font;
-  }
-
-  return style;
 }
 
 export function RuntimePlayer({ course }: RuntimePlayerProps) {
@@ -95,7 +74,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       : runtimeState.completed
         ? "Completed"
         : "In Progress";
-  const themeStyle = buildThemeStyle(course);
+  const themeStyle = buildThemeStyleVariables(course.theme);
 
   useEffect(() => {
     if (currentNode.type !== "quiz") {
@@ -207,6 +186,13 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
         This compiled preview is rendered from the validated source definition and
         mirrors the learner progress and score that SCORM export reports to an LMS.
       </p>
+      {course.theme.name ? (
+        <p className="runtime-tracking-note">
+          Theme pack: <strong>{course.theme.name}</strong>
+          {course.theme.version ? ` (${course.theme.version})` : ""}. Branding is
+          applied as a build layer on top of the structured source definition.
+        </p>
+      ) : null}
 
       <article className="node-card">
         <header className="node-header">

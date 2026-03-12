@@ -1,17 +1,21 @@
 variables:
   courseTitle:
     type: text
+    label: Course title
+    description: Display title used in the runtime header and results.
   courseDescription:
     type: text
+    label: Course description
+    description: Short summary shown in the studio and preview.
   companyName:
     type: text
+    label: Company name
+    description: Organization referenced in the refresher copy.
   securityTeam:
     type: text
+    label: Security team
+    description: Team or desk learners should contact for support.
   policyUrl:
-    type: text
-  primaryColor:
-    type: color
-  secondaryColor:
-    type: color
-  fontFamily:
-    type: text
+    type: url
+    label: Policy URL
+    description: Link to the refresher or policy documentation.

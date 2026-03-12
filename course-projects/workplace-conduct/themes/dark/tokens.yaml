@@ -1,0 +1,25 @@
+colors:
+  primary: "#74b2ff"
+  secondary: "#1b2432"
+  accent: "#8ec5ff"
+  background: "#0d141d"
+  surface: "#152030"
+  surfaceStrong: "#1d2b40"
+  text: "#eef5ff"
+  mutedText: "#b2c3d9"
+  border: "#2d425f"
+  success: "#69c28f"
+  danger: "#ef7f8d"
+typography:
+  bodyFont: '"Aptos", "Segoe UI", sans-serif'
+  headingFont: '"IBM Plex Sans", "Aptos", sans-serif'
+  baseSize: 16px
+  headingScale: 1.16
+spacing:
+  panelPadding: 1.45rem
+  sectionGap: 1rem
+  cardGap: 0.85rem
+components:
+  buttonRadius: 0.95rem
+  cardRadius: 1.25rem
+  borderStyle: solid

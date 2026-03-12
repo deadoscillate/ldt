@@ -16,13 +16,6 @@ test("builder courses serialize to structured YAML that compiles successfully", 
     description: "Built through forms.",
     start: "intro",
     passingScore: "7",
-    theme: {
-      primary: "#1f6feb",
-      secondary: "#f3f6fb",
-      font: "Inter",
-      logo: "https://example.com/logo.png",
-      background: "#ffffff",
-    },
     nodes: [
       {
         id: "intro",
@@ -174,7 +167,7 @@ test("builder courses serialize to structured YAML that compiles successfully", 
   const compiledCourse = parseAndCompileCourse(yaml);
 
   assert.equal(compiledCourse.id, "guided-course");
-  assert.equal(compiledCourse.theme.primary, "#1f6feb");
+  assert.equal(compiledCourse.theme.primary, null);
   assert.equal(compiledCourse.nodes.intro.layout, "image-right");
   assert.equal(compiledCourse.nodes["question-1"].sourceType, "question");
   assert.equal(compiledCourse.nodes["question-1"].type, "quiz");

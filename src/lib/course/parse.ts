@@ -1,37 +1,38 @@
-import yaml from "js-yaml";
 import { ZodError } from "zod";
 
-import { compileCourse, CourseCompilationError } from "@/lib/course/compile";
+import {
+  CourseCompilationError,
+} from "@/lib/course/compile";
 import {
   CourseTemplateResolutionError,
   CourseValidationError,
 } from "@/lib/course/errors";
 import {
-  courseTemplateDocumentSchema,
-  type CourseTemplateDocument,
-  type TemplateScalarValue,
+  formatZodIssues,
+  parseCourseSourceObject,
+  runCoursePipeline,
+  validateCourseTemplateDocument,
+} from "@/lib/course/pipeline";
+import type {
+  CoursePipelineSnapshot,
+} from "@/lib/course/pipeline";
+import type {
+  CourseTemplateDocument,
+  TemplateScalarValue,
 } from "@/lib/course/schema";
 import {
-  resolveCourseTemplate,
-  type ResolvedCourseTemplate,
-  type ResolveCourseTemplateOptions,
-  type TemplateFieldDefinition,
+  buildTemplateFieldDefinitions,
+  type TemplateVariableSchema,
+} from "@/lib/course/template-variables";
+import type {
+  ResolveCourseTemplateOptions,
+  TemplateFieldDefinition,
 } from "@/lib/course/template";
-import type { CompiledCourse } from "@/lib/course/types";
+import type { CanonicalCourse } from "@/lib/course/types";
 
 export interface ParsedCourseBundle {
-  course: CompiledCourse;
-  resolvedTemplate: ResolvedCourseTemplate;
-}
-
-function formatPath(path: PropertyKey[]): string {
-  return path.length === 0
-    ? "course"
-    : path.map((segment) => String(segment)).join(".");
-}
-
-function formatZodIssues(error: ZodError): string[] {
-  return error.issues.map((issue) => `${formatPath(issue.path)}: ${issue.message}`);
+  course: CanonicalCourse;
+  resolvedTemplate: NonNullable<CoursePipelineSnapshot["resolvedTemplate"]>;
 }
 
 function isTemplateScalarValue(value: unknown): value is TemplateScalarValue {
@@ -51,10 +52,6 @@ export function collectCourseErrorMessages(error: unknown): string[] {
     return error.issues;
   }
 
-  if (error instanceof ZodError) {
-    return formatZodIssues(error);
-  }
-
   if (error instanceof Error) {
     return [error.message];
   }
@@ -64,8 +61,7 @@ export function collectCourseErrorMessages(error: unknown): string[] {
 
 export function parseCourseTemplateYaml(source: string): CourseTemplateDocument {
   try {
-    const parsedDocument = yaml.load(source);
-    return courseTemplateDocumentSchema.parse(parsedDocument);
+    return validateCourseTemplateDocument(parseCourseSourceObject(source));
   } catch (error) {
     if (error instanceof ZodError) {
       throw new CourseValidationError(formatZodIssues(error));
@@ -81,7 +77,7 @@ export function parseCourseTemplateYaml(source: string): CourseTemplateDocument 
 
 export function inspectTemplateFields(source: string): TemplateFieldDefinition[] | null {
   try {
-    const parsedDocument = yaml.load(source);
+    const parsedDocument = parseCourseSourceObject(source);
 
     if (
       !parsedDocument ||
@@ -97,21 +93,12 @@ export function inspectTemplateFields(source: string): TemplateFieldDefinition[]
       return [];
     }
 
-    return Object.entries(templateData).flatMap(([key, value]) =>
-      isTemplateScalarValue(value)
-        ? [
-            {
-              key,
-              value,
-              inputType:
-                typeof value === "number"
-                  ? "number"
-                  : typeof value === "boolean"
-                    ? "boolean"
-                    : "text",
-            } satisfies TemplateFieldDefinition,
-          ]
-        : []
+    return buildTemplateFieldDefinitions(
+      Object.fromEntries(
+        Object.entries(templateData).flatMap(([key, value]) =>
+          isTemplateScalarValue(value) ? [[key, value]] : []
+        )
+      )
     );
   } catch {
     return null;
@@ -120,17 +107,35 @@ export function inspectTemplateFields(source: string): TemplateFieldDefinition[]
 
 export function inspectTemplateFieldsWithOverrides(
   source: string,
-  overrides: Record<string, TemplateScalarValue>
+  overrides: Record<string, TemplateScalarValue>,
+  variableSchema: TemplateVariableSchema | null = null
 ): TemplateFieldDefinition[] | null {
   try {
-    const templateDocument = parseCourseTemplateYaml(source);
-    const resolvedTemplate = resolveCourseTemplate(templateDocument, {
-      templateDataOverrides: overrides,
-    });
-
-    return resolvedTemplate.templateFields;
+    const parsedDocument = parseCourseTemplateYaml(source);
+    return buildTemplateFieldDefinitions(
+      {
+        ...(parsedDocument.templateData ?? {}),
+        ...overrides,
+      },
+      variableSchema
+    );
   } catch {
     return null;
+  }
+}
+
+function throwPipelineErrors(snapshot: CoursePipelineSnapshot): never {
+  switch (snapshot.failedStageId) {
+    case "parse-source":
+    case "validate-schema":
+      throw new CourseValidationError(snapshot.errors);
+    case "resolve-templates":
+      throw new CourseTemplateResolutionError(snapshot.errors);
+    case "normalize-canonical":
+    case "validate-graph":
+      throw new CourseCompilationError(snapshot.errors);
+    default:
+      throw new Error(snapshot.errors[0] ?? "Course pipeline failed.");
   }
 }
 
@@ -138,18 +143,21 @@ export function parseAndCompileCourseBundle(
   source: string,
   options: ResolveCourseTemplateOptions = {}
 ): ParsedCourseBundle {
-  const templateDocument = parseCourseTemplateYaml(source);
-  const resolvedTemplate = resolveCourseTemplate(templateDocument, options);
+  const snapshot = runCoursePipeline(source, options);
+
+  if (!snapshot.canonicalCourse || !snapshot.resolvedTemplate || snapshot.errors.length > 0) {
+    throwPipelineErrors(snapshot);
+  }
 
   return {
-    course: compileCourse(resolvedTemplate.document),
-    resolvedTemplate,
+    course: snapshot.canonicalCourse,
+    resolvedTemplate: snapshot.resolvedTemplate,
   };
 }
 
 export function parseAndCompileCourse(
   source: string,
   options: ResolveCourseTemplateOptions = {}
-): CompiledCourse {
+): CanonicalCourse {
   return parseAndCompileCourseBundle(source, options).course;
 }

@@ -1,0 +1,47 @@
+id: security-awareness
+title: Security Awareness Pack
+description: Reusable security training templates for phishing drills and short refresher modules.
+category: security
+recommendedUseCase: Create repeatable awareness variants for different organizations without duplicating branching logic.
+readme: README.md
+templates:
+  - id: phishing-awareness
+    title: Phishing awareness
+    description: Branching phishing scenario with a scored knowledge check and remediation result.
+    recommendedUseCase: Organization-specific phishing awareness training for recurring campaigns.
+    template: ../../templates/phishing-awareness-template/template.yaml
+    schema: ../../templates/phishing-awareness-template/schema.yaml
+    readme: ../../templates/phishing-awareness-template/README.md
+  - id: security-awareness-refresher
+    title: Security awareness refresher
+    description: Short refresher scenario for everyday security decisions.
+    recommendedUseCase: Quarterly refresher content for distributed teams.
+    template: ../../templates/security-awareness-refresher-template/template.yaml
+    schema: ../../templates/security-awareness-refresher-template/schema.yaml
+    readme: ../../templates/security-awareness-refresher-template/README.md
+variants:
+  - id: k12-district-phishing
+    templateId: phishing-awareness
+    title: K-12 district phishing
+    description: Variant tailored to school district faculty and staff.
+    source: variants/k12-district-phishing.yaml
+  - id: healthcare-org-phishing
+    templateId: phishing-awareness
+    title: Healthcare organization phishing
+    description: Variant focused on clinical teams and patient-data handling.
+    source: variants/healthcare-org-phishing.yaml
+  - id: enterprise-it-phishing
+    templateId: phishing-awareness
+    title: Enterprise IT phishing
+    description: Variant focused on internal IT and high-volume inbox triage.
+    source: variants/enterprise-it-phishing.yaml
+  - id: frontline-refresher
+    templateId: security-awareness-refresher
+    title: Frontline team refresher
+    description: Refresher variant for field and warehouse teams.
+    source: variants/frontline-refresher.yaml
+  - id: corporate-refresher
+    templateId: security-awareness-refresher
+    title: Corporate office refresher
+    description: Refresher variant for office-based teams.
+    source: variants/corporate-refresher.yaml

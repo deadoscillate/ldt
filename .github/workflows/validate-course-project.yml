@@ -1,0 +1,84 @@
+name: Validate Course Projects
+
+on:
+  pull_request:
+    paths:
+      - "course-projects/**"
+      - "scripts/course-project-build.ts"
+      - "src/lib/project/**"
+      - "src/lib/course/**"
+      - "src/lib/export/**"
+      - "src/lib/theme/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/validate-course-project.yml"
+  push:
+    paths:
+      - "course-projects/**"
+      - "scripts/course-project-build.ts"
+      - "src/lib/project/**"
+      - "src/lib/course/**"
+      - "src/lib/export/**"
+      - "src/lib/theme/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/validate-course-project.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate all course projects
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          found=0
+
+          for project_file in course-projects/*/project.yaml; do
+            found=1
+            project_dir="$(dirname "$project_file")"
+
+            echo "::group::Validate ${project_dir}"
+            npx tsx scripts/course-project-build.ts validate \
+              --project "$project_dir" \
+              --all
+            echo "::endgroup::"
+
+            if [[ -f "${project_dir}/build/build-summary.md" ]]; then
+              {
+                echo "## ${project_dir}"
+                cat "${project_dir}/build/build-summary.md"
+                echo
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          if [[ "$found" -eq 0 ]]; then
+            echo "No course projects were found under course-projects/."
+            exit 1
+          fi
+
+      - name: Upload validation reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-project-validation-reports
+          path: |
+            course-projects/*/build/build-manifest.json
+            course-projects/*/build/build-summary.md
+            course-projects/*/build/ci-build-report.json
+          if-no-files-found: error

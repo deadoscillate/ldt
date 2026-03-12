@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64" viewBox="0 0 220 64" role="img" aria-labelledby="title desc">
+  <title id="title">LDT Engine Default Theme</title>
+  <desc id="desc">Default logo for structured SCORM course previews and exports.</desc>
+  <rect width="220" height="64" rx="14" fill="#1f1a14"/>
+  <rect x="10" y="10" width="54" height="44" rx="12" fill="#a4481d"/>
+  <path d="M28 23h10v18h14v8H28V23z" fill="#fffaf3"/>
+  <text x="78" y="30" fill="#fffaf3" font-family="Aptos, Segoe UI, sans-serif" font-size="12" font-weight="700" letter-spacing="2">LDT ENGINE</text>
+  <text x="78" y="46" fill="#efe4d2" font-family="Aptos, Segoe UI, sans-serif" font-size="11">Structured SCORM Authoring</text>
+</svg>

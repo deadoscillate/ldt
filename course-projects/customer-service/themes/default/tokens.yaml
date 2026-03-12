@@ -1,0 +1,25 @@
+colors:
+  primary: "#a4481d"
+  secondary: "#efe4d2"
+  accent: "#c7672f"
+  background: "#fffaf3"
+  surface: "#fffefb"
+  surfaceStrong: "#f4ebdf"
+  text: "#1f1a14"
+  mutedText: "#665f55"
+  border: "#d5c8b8"
+  success: "#2a6b49"
+  danger: "#8a2f39"
+typography:
+  bodyFont: '"Aptos", "Segoe UI", sans-serif'
+  headingFont: '"Aptos Display", "Aptos", "Segoe UI", sans-serif'
+  baseSize: 16px
+  headingScale: 1.14
+spacing:
+  panelPadding: 1.45rem
+  sectionGap: 1rem
+  cardGap: 0.85rem
+components:
+  buttonRadius: 0.9rem
+  cardRadius: 1.25rem
+  borderStyle: solid

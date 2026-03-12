@@ -16,6 +16,14 @@ export interface DuplicatedTemplateDraft {
   suggestedProjectDirectory: string;
 }
 
+export interface DuplicatedVariantDraft {
+  title: string;
+  variantId: string;
+  values: Record<string, TemplateScalarValue>;
+  sourceLabel: string;
+  suggestedFileName: string;
+}
+
 const templateDataFileSchema = z.record(
   z.string().trim().min(1, "Template variable names are required."),
   z.union([z.string(), z.number(), z.boolean()])
@@ -123,6 +131,24 @@ export function createDuplicatedTemplateDraft(input: {
   };
 }
 
+export function createDuplicatedVariantDraft(input: {
+  variantId: string;
+  variantTitle: string;
+  values: Record<string, TemplateScalarValue>;
+}): DuplicatedVariantDraft {
+  const safeVariantId = safeSlug(input.variantId || input.variantTitle);
+
+  return {
+    title: `${input.variantTitle} copy`,
+    variantId: `${safeVariantId}-copy`,
+    values: {
+      ...input.values,
+    },
+    sourceLabel: `Local variant: ${input.variantTitle} copy`,
+    suggestedFileName: `${safeVariantId}-copy.yaml`,
+  };
+}
+
 export function buildSourceDownloadFileName(
   projectDirectory: string,
   kind: "course" | "template-data"
@@ -144,7 +170,9 @@ export function buildCourseProjectReadme(input: {
     "Recommended source layout:",
     "",
     `- \`courses/${input.projectDirectory}/course.yaml\`: branching course structure with placeholders`,
-    `- \`courses/${input.projectDirectory}/template-data.yaml\`: course-specific variable values`,
+    `- \`courses/${input.projectDirectory}/template-data.yaml\`: course-specific variable values or exported variant data`,
+    "- For template-pack workflows, keep shared templates in `/templates` and variable sets in `/template-packs/<pack>/variants/*.yaml`.",
+    "- Keep reusable branded presentation in `/themes/<theme-pack>/` so source structure and theme packs can evolve independently in Git.",
     "- Commit these source files to Git. Treat exported SCORM packages as build artifacts.",
   ].join("\n");
 }

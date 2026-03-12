@@ -7,6 +7,10 @@ import {
   type BuilderCourse,
   type BuilderNode,
 } from "@/lib/course/builder";
+import {
+  COURSE_LAYOUT_TYPES,
+  PUBLIC_AUTHOR_NODE_TYPES,
+} from "@/lib/course/types";
 
 interface CourseBuilderProps {
   course: BuilderCourse;
@@ -54,19 +58,6 @@ export function CourseBuilder({
     onChange({
       ...course,
       [key]: value,
-    });
-  }
-
-  function updateThemeField(
-    key: keyof BuilderCourse["theme"],
-    value: string
-  ): void {
-    onChange({
-      ...course,
-      theme: {
-        ...course.theme,
-        [key]: value,
-      },
     });
   }
 
@@ -273,57 +264,12 @@ export function CourseBuilder({
         </article>
 
         <article className="panel builder-panel">
-          <p className="eyebrow">Theme</p>
+          <p className="eyebrow">Structured Source</p>
           <p className="panel-copy">
-            Theme values are compiled into the preview and exported runtime. Keep the
-            source definition as the system of record.
+            Builder mode edits source structure only. Branding is now selected as a
+            separate theme pack in the studio so templates stay reusable across course
+            families.
           </p>
-          <div className="template-data-grid">
-            <label className="template-field">
-              <span className="template-field-label">Primary color</span>
-              <input
-                className="template-field-input"
-                onChange={(event) => updateThemeField("primary", event.target.value)}
-                value={course.theme.primary}
-              />
-            </label>
-            <label className="template-field">
-              <span className="template-field-label">Secondary color</span>
-              <input
-                className="template-field-input"
-                onChange={(event) =>
-                  updateThemeField("secondary", event.target.value)
-                }
-                value={course.theme.secondary}
-              />
-            </label>
-            <label className="template-field">
-              <span className="template-field-label">Background</span>
-              <input
-                className="template-field-input"
-                onChange={(event) =>
-                  updateThemeField("background", event.target.value)
-                }
-                value={course.theme.background}
-              />
-            </label>
-            <label className="template-field">
-              <span className="template-field-label">Font</span>
-              <input
-                className="template-field-input"
-                onChange={(event) => updateThemeField("font", event.target.value)}
-                value={course.theme.font}
-              />
-            </label>
-            <label className="template-field">
-              <span className="template-field-label">Logo URL</span>
-              <input
-                className="template-field-input"
-                onChange={(event) => updateThemeField("logo", event.target.value)}
-                value={course.theme.logo}
-              />
-            </label>
-          </div>
         </article>
       </div>
 
@@ -375,11 +321,11 @@ export function CourseBuilder({
                   }
                   value={node.type}
                 >
-                  <option value="content">content</option>
-                  <option value="question">question</option>
-                  <option value="choice">choice</option>
-                  <option value="branch">branch</option>
-                  <option value="result">result</option>
+                  {PUBLIC_AUTHOR_NODE_TYPES.map((nodeType) => (
+                    <option key={nodeType} value={nodeType}>
+                      {nodeType}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="template-field">
@@ -413,17 +359,11 @@ export function CourseBuilder({
                   }
                   value={node.layout}
                 >
-                  <option value="title">title</option>
-                  <option value="text">text</option>
-                  <option value="image">image</option>
-                  <option value="video">video</option>
-                  <option value="two-column">two-column</option>
-                  <option value="image-left">image-left</option>
-                  <option value="image-right">image-right</option>
-                  <option value="quote">quote</option>
-                  <option value="callout">callout</option>
-                  <option value="question">question</option>
-                  <option value="result">result</option>
+                  {COURSE_LAYOUT_TYPES.map((layoutType) => (
+                    <option key={layoutType} value={layoutType}>
+                      {layoutType}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>

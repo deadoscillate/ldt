@@ -28,9 +28,8 @@ It lets you:
 - choose a layout primitive
 - set branching targets
 - configure score and result behavior
-- edit theme values
 
-Builder view still generates structured YAML internally.
+Builder view still generates structured YAML internally. Branding stays separate through theme-pack selection in the studio.
 
 ### Source view
 
@@ -47,6 +46,8 @@ Use it when you want to:
 
 Treat these as source:
 
+- `template-packs/*/pack.yaml`
+- `template-packs/*/variants/*.yaml`
 - `template.yaml`
 - `course.yaml`
 - `template-data.yaml`
@@ -55,6 +56,7 @@ Treat these as build output:
 
 - SCORM zip packages
 - exported runtime files inside the package
+- validation diagnostics and LMS testing notes
 
 If a team needs to update a module later, they should go back to the source files, not edit the exported package.
 
@@ -83,6 +85,7 @@ Templates support:
 - reusable `blocks`
 - `templateData`
 - compile-time placeholder substitution using `{{variableName}}`
+- template packs that group shared templates with multiple variable sets
 
 Example:
 
@@ -106,33 +109,44 @@ Rules:
 - missing variables fail validation
 - no scripting or dynamic code is allowed
 
-## Theme customization
+## Theme packs
 
-Themes are stored with the course definition:
+Themes are reusable source assets stored separately from course definitions:
 
-```yaml
-theme:
-  primary: "#1f6feb"
-  secondary: "#f3f6fb"
-  font: Inter
-  logo: https://example.com/logo.svg
-  background: "#ffffff"
+```text
+/themes
+  /default
+    theme.yaml
+    tokens.yaml
+    /assets
+      logo.svg
 ```
 
-Theme values apply in:
+Theme packs define constrained tokens for:
+
+- color
+- typography
+- spacing
+- component radii and borders
+- optional logo/font assets
+
+Theme packs apply in:
 
 - studio preview
 - exported SCORM runtime
+
+The YAML course definition remains the structural source of truth.
 
 ## Using this with Git
 
 Recommended pattern:
 
-1. Store templates under `/templates`.
-2. Store course variants under `/courses`.
-3. Commit `course.yaml` and `template-data.yaml`.
-4. Review branching and scoring changes as text diffs.
-5. Keep exported SCORM packages out of source control unless you have a specific release reason.
+1. Store shared templates under `/templates`.
+2. Organize repeatable course families under `/template-packs`.
+3. Store course variants under `/courses` when you need a dedicated project folder.
+4. Commit template, pack, and variant YAML separately.
+5. Review branching and scoring changes as text diffs.
+6. Keep exported SCORM packages out of source control unless you have a specific release reason.
 
 Why this works well in Git:
 
@@ -144,11 +158,25 @@ Why this works well in Git:
 ## Suggested project layout
 
 ```text
+/template-packs
+  /security-awareness
+    pack.yaml
+    README.md
+    /variants
+      healthcare-org-phishing.yaml
+
 /templates
   /phishing-awareness-template
     template.yaml
     schema.yaml
     README.md
+
+/themes
+  /default
+    theme.yaml
+    tokens.yaml
+    /assets
+      logo.svg
 
 /courses
   /phishing-awareness-baseline

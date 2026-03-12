@@ -1,0 +1,30 @@
+id: workplace-conduct
+title: Workplace Conduct Pack
+description: Repeatable workplace conduct and reporting modules built from a shared harassment-reporting source definition.
+category: compliance
+recommendedUseCase: Generate team- or business-unit-specific reporting scenarios from one shared conduct template.
+readme: README.md
+templates:
+  - id: workplace-harassment-reporting
+    title: Workplace harassment reporting
+    description: Scenario-based reporting template with explicit documentation and escalation paths.
+    recommendedUseCase: Annual conduct training and manager refreshers.
+    template: ../../templates/workplace-harassment-reporting-template/template.yaml
+    schema: ../../templates/workplace-harassment-reporting-template/schema.yaml
+    readme: ../../templates/workplace-harassment-reporting-template/README.md
+variants:
+  - id: hospital-conduct-reporting
+    templateId: workplace-harassment-reporting
+    title: Hospital conduct reporting
+    description: Variant tailored to hospital operations and conduct hotlines.
+    source: variants/hospital-conduct-reporting.yaml
+  - id: manufacturing-conduct-reporting
+    templateId: workplace-harassment-reporting
+    title: Manufacturing conduct reporting
+    description: Variant tailored to plant-floor reporting paths and shift coverage.
+    source: variants/manufacturing-conduct-reporting.yaml
+  - id: corporate-conduct-reporting
+    templateId: workplace-harassment-reporting
+    title: Corporate conduct reporting
+    description: Variant tailored to office-based teams and HR follow-up channels.
+    source: variants/corporate-conduct-reporting.yaml

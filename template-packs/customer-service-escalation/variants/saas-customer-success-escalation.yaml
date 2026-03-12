@@ -1,0 +1,11 @@
+id: saas-customer-success-escalation
+title: SaaS customer success escalation
+description: Escalation variant for customer success and account-management teams.
+templateId: customer-service-escalation
+notes: Useful when support, billing, and product issues require coordinated follow-up.
+values:
+  courseTitle: Customer Success Escalation Playbook
+  courseDescription: Practice a consistent escalation path when a SaaS account needs cross-functional follow-up.
+  companyName: Contoso SaaS
+  escalationDesk: Customer Success Escalations
+  escalationEmail: escalations@contososaas.example

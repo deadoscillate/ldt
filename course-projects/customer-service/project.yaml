@@ -1,0 +1,35 @@
+id: customer-service
+title: Customer Service Escalation Project
+description: Single-course project showing the lightest valid Course-as-Code setup with one template, one variant, and one theme.
+version: 0.1.0
+author: LDT Engine
+createdAt: 2026-03-12
+updatedAt: 2026-03-12
+defaultTemplateId: customer-service-escalation
+defaultVariantId: retail-support
+defaultThemeId: default
+buildTargets:
+  - scorm12
+readme: README.md
+gitignore: .gitignore
+buildDirectory: build
+assetsDirectory: assets
+templates:
+  - id: customer-service-escalation
+    title: Customer service escalation
+    description: Branching escalation scenario for service teams.
+    recommendedUseCase: Single-course project for teams that want a minimal starting point before adding more variants.
+    template: templates/customer-service-escalation/template.yaml
+    schema: templates/customer-service-escalation/schema.yaml
+    readme: templates/customer-service-escalation/README.md
+variants:
+  - id: retail-support
+    templateId: customer-service-escalation
+    title: Retail support escalation
+    description: Single default variant for a support team starter project.
+    source: variants/retail-support.yaml
+themes:
+  - id: default
+    theme: themes/default/theme.yaml
+    tokens: themes/default/tokens.yaml
+    assetsDirectory: themes/default/assets

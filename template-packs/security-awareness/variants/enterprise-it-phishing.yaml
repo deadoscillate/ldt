@@ -1,0 +1,11 @@
+id: enterprise-it-phishing
+title: Enterprise IT phishing
+description: Variant for corporate IT teams handling high-volume internal requests.
+templateId: phishing-awareness
+notes: Position the learner as an IT operations analyst triaging a suspicious message.
+values:
+  courseTitle: Enterprise IT Phishing Escalation
+  courseDescription: Help IT operations teams evaluate suspicious internal messages and follow the approved escalation path.
+  companyName: Contoso Global IT
+  reportingChannel: soc@contosoglobal.example
+  policyUrl: https://contoso.example/security/phishing

@@ -1,0 +1,11 @@
+id: healthcare
+title: Healthcare organization phishing
+description: Tailored phishing variant for patient-data and clinician support workflows.
+templateId: phishing-awareness
+notes: Emphasize protected health information and urgent credential reset scams.
+values:
+  courseTitle: Healthcare Phishing Response
+  courseDescription: Train clinical and operations teams to inspect suspicious requests before clicking or replying.
+  companyName: Northwind Health
+  reportingChannel: security@northwindhealth.example
+  policyUrl: https://northwindhealth.example/security/phishing

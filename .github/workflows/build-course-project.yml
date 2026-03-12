@@ -1,0 +1,134 @@
+name: Build Course Project
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_path:
+        description: Path to the course project directory
+        required: false
+        default: course-projects/security-awareness
+        type: string
+      target:
+        description: Build target in the form template/variant/theme
+        required: false
+        default: phishing-awareness/k12-district/default
+        type: string
+      export_mode:
+        description: SCORM export mode
+        required: false
+        default: standard
+        type: choice
+        options:
+          - standard
+          - validation
+      fail_on_warning:
+        description: Fail the workflow when warnings are present
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches:
+      - main
+    paths:
+      - "course-projects/**"
+      - "scripts/course-project-build.ts"
+      - "src/lib/project/**"
+      - "src/lib/course/**"
+      - "src/lib/export/**"
+      - "src/lib/theme/**"
+      - "src/lib/scorm/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/build-course-project.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      INPUT_PROJECT_PATH: ${{ github.event.inputs.project_path }}
+      INPUT_TARGET: ${{ github.event.inputs.target }}
+      INPUT_EXPORT_MODE: ${{ github.event.inputs.export_mode }}
+      INPUT_FAIL_ON_WARNING: ${{ github.event.inputs.fail_on_warning }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build course project targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            project_path="${INPUT_PROJECT_PATH:-course-projects/security-awareness}"
+            target="${INPUT_TARGET:-phishing-awareness/k12-district/default}"
+            export_mode="${INPUT_EXPORT_MODE:-standard}"
+            fail_on_warning="${INPUT_FAIL_ON_WARNING:-false}"
+
+            command=(
+              npx tsx scripts/course-project-build.ts export
+              --project "$project_path"
+              --target "$target"
+              --mode "$export_mode"
+            )
+
+            if [[ "$fail_on_warning" == "true" ]]; then
+              command+=(--fail-on-warning)
+            fi
+
+            echo "::group::Build ${project_path} (${target})"
+            "${command[@]}"
+            echo "::endgroup::"
+
+            if [[ -f "${project_path}/build/build-summary.md" ]]; then
+              cat "${project_path}/build/build-summary.md" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            exit 0
+          fi
+
+          found=0
+
+          for project_file in course-projects/*/project.yaml; do
+            found=1
+            project_dir="$(dirname "$project_file")"
+
+            echo "::group::Build default target for ${project_dir}"
+            npx tsx scripts/course-project-build.ts export --project "$project_dir"
+            echo "::endgroup::"
+
+            if [[ -f "${project_dir}/build/build-summary.md" ]]; then
+              {
+                echo "## ${project_dir}"
+                cat "${project_dir}/build/build-summary.md"
+                echo
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          if [[ "$found" -eq 0 ]]; then
+            echo "No course projects were found under course-projects/."
+            exit 1
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: course-project-builds-${{ github.run_number }}
+          path: |
+            course-projects/*/build/scorm12/*.zip
+            course-projects/*/build/scorm12/*.build-manifest.json
+            course-projects/*/build/build-manifest.json
+            course-projects/*/build/build-summary.md
+            course-projects/*/build/ci-build-report.json
+          if-no-files-found: error

@@ -10,16 +10,18 @@ import type {
   ThemeDocument,
 } from "@/lib/course/schema";
 import type {
+  CanonicalCourse,
+  CanonicalNode,
   CompiledCalloutBlock,
-  CompiledCourse,
+  CompiledChoiceNode,
   CompiledEdge,
   CompiledLayoutColumn,
   CompiledMedia,
-  CompiledNode,
   CompiledQuoteBlock,
   CompiledQuizNode,
   CompiledTheme,
 } from "@/lib/course/types";
+import { COURSE_LAYOUT_TYPES } from "@/lib/course/types";
 
 export class CourseCompilationError extends Error {
   readonly issues: string[];
@@ -31,7 +33,7 @@ export class CourseCompilationError extends Error {
   }
 }
 
-function nodeMaxScore(node: CourseDocumentNode): number {
+function sourceNodeMaxScore(node: CourseDocumentNode): number {
   switch (node.type) {
     case "choice":
     case "branch":
@@ -42,26 +44,6 @@ function nodeMaxScore(node: CourseDocumentNode): number {
     default:
       return 0;
   }
-}
-
-function pushEdge(
-  edges: CompiledEdge[],
-  issues: string[],
-  nodeIds: Set<string>,
-  from: string,
-  to: string | undefined,
-  label: string
-): void {
-  if (!to) {
-    return;
-  }
-
-  if (!nodeIds.has(to)) {
-    issues.push(`Node "${from}" references missing node "${to}" via "${label}".`);
-    return;
-  }
-
-  edges.push({ from, to, label });
 }
 
 function normalizeMedia(node: CourseDocumentNode): CompiledMedia | null {
@@ -128,7 +110,7 @@ function createBaseNode(node: CourseDocumentNode) {
   };
 }
 
-function compileContentNode(node: ContentNodeDocument): CompiledNode {
+function normalizeContentNode(node: ContentNodeDocument): CanonicalNode {
   return {
     ...createBaseNode(node),
     type: "content",
@@ -137,9 +119,9 @@ function compileContentNode(node: ContentNodeDocument): CompiledNode {
   };
 }
 
-function compileChoiceLikeNode(
+function normalizeChoiceLikeNode(
   node: ChoiceNodeDocument | BranchNodeDocument
-): CompiledNode {
+): CanonicalNode {
   return {
     ...createBaseNode(node),
     type: "choice",
@@ -153,7 +135,7 @@ function compileChoiceLikeNode(
   };
 }
 
-function compileQuizLikeNode(
+function normalizeQuizLikeNode(
   node: QuizNodeDocument | QuestionNodeDocument
 ): CompiledQuizNode {
   return {
@@ -175,7 +157,7 @@ function compileQuizLikeNode(
   };
 }
 
-function compileResultNode(node: ResultNodeDocument): CompiledNode {
+function normalizeResultNode(node: ResultNodeDocument): CanonicalNode {
   return {
     ...createBaseNode(node),
     type: "result",
@@ -184,35 +166,77 @@ function compileResultNode(node: ResultNodeDocument): CompiledNode {
   };
 }
 
-function compileNode(node: CourseDocumentNode): CompiledNode {
+function normalizeNode(node: CourseDocumentNode): CanonicalNode {
   switch (node.type) {
     case "content":
-      return compileContentNode(node);
+      return normalizeContentNode(node);
     case "choice":
     case "branch":
-      return compileChoiceLikeNode(node);
+      return normalizeChoiceLikeNode(node);
     case "quiz":
     case "question":
-      return compileQuizLikeNode(node);
+      return normalizeQuizLikeNode(node);
     case "result":
-      return compileResultNode(node);
+      return normalizeResultNode(node);
   }
 }
 
 function normalizeTheme(theme: ThemeDocument | undefined): CompiledTheme {
   return {
+    id: null,
+    name: null,
+    description: null,
+    author: null,
+    version: null,
+    runtimeCompatibility: null,
+    supportedLayouts: [...COURSE_LAYOUT_TYPES],
     primary: theme?.primary ?? null,
     secondary: theme?.secondary ?? null,
     font: theme?.font ?? null,
+    headingFont: null,
+    baseSize: null,
+    headingScale: null,
     logo: theme?.logo ?? null,
     background: theme?.background ?? null,
+    accent: null,
+    surface: null,
+    surfaceStrong: null,
+    text: null,
+    mutedText: null,
+    border: null,
+    success: null,
+    danger: null,
+    panelPadding: null,
+    sectionGap: null,
+    cardGap: null,
+    buttonRadius: null,
+    cardRadius: null,
+    borderStyle: null,
+    fontFaces: [],
   };
 }
 
-function validateLayoutConfiguration(
-  node: CourseDocumentNode,
-  issues: string[]
+function pushEdge(
+  edges: CompiledEdge[],
+  issues: string[],
+  nodeIds: Set<string>,
+  from: string,
+  to: string | null,
+  label: string
 ): void {
+  if (!to) {
+    return;
+  }
+
+  if (!nodeIds.has(to)) {
+    issues.push(`Node "${from}" references missing node "${to}" via "${label}".`);
+    return;
+  }
+
+  edges.push({ from, to, label });
+}
+
+function validateLayoutConfiguration(node: CanonicalNode, issues: string[]): void {
   switch (node.layout) {
     case "image":
     case "video":
@@ -244,17 +268,15 @@ function validateLayoutConfiguration(
       }
       break;
     case "question":
-      if (node.type !== "quiz" && node.type !== "question") {
+      if (node.type !== "quiz") {
         issues.push(
-          `Node "${node.id}" uses layout "question" but is not a quiz or question node.`
+          `Node "${node.id}" uses layout "question" but is not a question node.`
         );
       }
       break;
     case "result":
       if (node.type !== "result") {
-        issues.push(
-          `Node "${node.id}" uses layout "result" but is not a result node.`
-        );
+        issues.push(`Node "${node.id}" uses layout "result" but is not a result node.`);
       }
       break;
     default:
@@ -262,86 +284,33 @@ function validateLayoutConfiguration(
   }
 }
 
-function validateNodeSpecificRules(node: CourseDocumentNode, issues: string[]): void {
-  if (node.type === "quiz" || node.type === "question") {
+function validateCanonicalNode(node: CanonicalNode, issues: string[]): void {
+  if (node.type === "quiz") {
     const correctOptions = node.options.filter((option) => option.correct);
 
     if (correctOptions.length === 0) {
-      issues.push(`Quiz "${node.id}" must mark at least one option as correct.`);
+      issues.push(`Question "${node.id}" must mark at least one option as correct.`);
     }
   }
 
   validateLayoutConfiguration(node, issues);
 }
 
-export function compileCourse(document: CourseDocument): CompiledCourse {
-  const issues: string[] = [];
-  const nodes: Record<string, CompiledNode> = {};
-  const nodeIds = new Set<string>();
-  const edges: CompiledEdge[] = [];
+export function normalizeCourseDocument(document: CourseDocument): CanonicalCourse {
+  const nodes: Record<string, CanonicalNode> = {};
 
   for (const node of document.nodes) {
-    if (nodeIds.has(node.id)) {
-      issues.push(`Duplicate node id "${node.id}".`);
+    if (nodes[node.id]) {
       continue;
     }
 
-    nodeIds.add(node.id);
-    validateNodeSpecificRules(node, issues);
-    nodes[node.id] = compileNode(node);
-  }
-
-  if (!nodeIds.has(document.start)) {
-    issues.push(`Start node "${document.start}" does not exist.`);
-  }
-
-  if (!document.nodes.some((node) => node.type === "result")) {
-    issues.push("Course must include at least one result node.");
-  }
-
-  for (const node of document.nodes) {
-    switch (node.type) {
-      case "content":
-        pushEdge(edges, issues, nodeIds, node.id, node.next, "next");
-        break;
-      case "choice":
-      case "branch":
-        for (const option of node.options) {
-          pushEdge(
-            edges,
-            issues,
-            nodeIds,
-            node.id,
-            option.next,
-            `option:${option.id}`
-          );
-        }
-        break;
-      case "quiz":
-      case "question":
-        pushEdge(edges, issues, nodeIds, node.id, node.passNext, "passNext");
-        pushEdge(edges, issues, nodeIds, node.id, node.failNext, "failNext");
-        pushEdge(edges, issues, nodeIds, node.id, node.next, "next");
-        break;
-      case "result":
-        break;
-    }
+    nodes[node.id] = normalizeNode(node);
   }
 
   const maxScore = document.nodes.reduce(
-    (score, node) => score + nodeMaxScore(node),
+    (score, node) => score + sourceNodeMaxScore(node),
     0
   );
-
-  if (document.passingScore > maxScore) {
-    issues.push(
-      `Passing score ${document.passingScore} exceeds the compiled max score ${maxScore}.`
-    );
-  }
-
-  if (issues.length > 0) {
-    throw new CourseCompilationError(issues);
-  }
 
   return {
     id: document.id,
@@ -352,11 +321,83 @@ export function compileCourse(document: CourseDocument): CompiledCourse {
     passingScore: document.passingScore,
     maxScore,
     nodeOrder: document.nodes.map((node) => node.id),
-    edges,
+    edges: [],
     nodes,
   };
 }
 
-export function serializeCompiledCourse(course: CompiledCourse): string {
+export function validateCanonicalCourse(
+  document: CourseDocument,
+  canonicalCourse: CanonicalCourse
+): string[] {
+  const issues: string[] = [];
+  const nodeIds = new Set<string>();
+  const edges: CompiledEdge[] = [];
+
+  for (const node of document.nodes) {
+    if (nodeIds.has(node.id)) {
+      issues.push(`Duplicate node id "${node.id}".`);
+      continue;
+    }
+
+    nodeIds.add(node.id);
+
+    const canonicalNode = canonicalCourse.nodes[node.id];
+    if (canonicalNode) {
+      validateCanonicalNode(canonicalNode, issues);
+    }
+  }
+
+  if (!nodeIds.has(document.start)) {
+    issues.push(`Start node "${document.start}" does not exist.`);
+  }
+
+  if (!document.nodes.some((node) => node.type === "result")) {
+    issues.push("Course must include at least one result node.");
+  }
+
+  Object.values(canonicalCourse.nodes).forEach((node) => {
+    switch (node.type) {
+      case "content":
+        pushEdge(edges, issues, nodeIds, node.id, node.next, "next");
+        break;
+      case "choice":
+        (node as CompiledChoiceNode).options.forEach((option) => {
+          pushEdge(edges, issues, nodeIds, node.id, option.next, `option:${option.id}`);
+        });
+        break;
+      case "quiz":
+        pushEdge(edges, issues, nodeIds, node.id, node.passNext, "passNext");
+        pushEdge(edges, issues, nodeIds, node.id, node.failNext, "failNext");
+        pushEdge(edges, issues, nodeIds, node.id, node.next, "next");
+        break;
+      case "result":
+        break;
+    }
+  });
+
+  if (document.passingScore > canonicalCourse.maxScore) {
+    issues.push(
+      `Passing score ${document.passingScore} exceeds the compiled max score ${canonicalCourse.maxScore}.`
+    );
+  }
+
+  canonicalCourse.edges = edges;
+
+  return issues;
+}
+
+export function compileCourse(document: CourseDocument): CanonicalCourse {
+  const canonicalCourse = normalizeCourseDocument(document);
+  const issues = validateCanonicalCourse(document, canonicalCourse);
+
+  if (issues.length > 0) {
+    throw new CourseCompilationError(issues);
+  }
+
+  return canonicalCourse;
+}
+
+export function serializeCompiledCourse(course: CanonicalCourse): string {
   return JSON.stringify(course, null, 2);
 }

@@ -1,0 +1,11 @@
+id: k12-district
+title: K-12 district phishing
+description: Help faculty and staff route suspicious messages without risking student-data exposure.
+templateId: phishing-awareness
+notes: Focus this variant on front-office staff, teachers, and district administrators.
+values:
+  courseTitle: K-12 District Phishing Awareness
+  courseDescription: Help faculty and staff spot suspicious requests and route them through the district reporting path.
+  companyName: Lakeview School District
+  reportingChannel: helpdesk@lakeviewschools.example
+  policyUrl: https://district.example/it/phishing
