@@ -1,0 +1,122 @@
+id: customer-service-escalation
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Customer Service Escalation Essentials
+  courseDescription: Practice empathetic escalation decisions when a frustrated customer needs support beyond the first response.
+  courseLabel: customer service escalation
+  introLine1: A customer has received the wrong shipment and is already upset when they reach your team.
+  introLine2: Your job is to de-escalate the conversation, confirm the facts, and route the issue to the right specialist.
+  escalationTeam: order resolution desk
+  completionFocus: empathy, ownership, and clear escalation handoffs
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      title: "{{courseTitle}}"
+      body:
+        - "{{introLine1}}"
+        - "{{introLine2}}"
+      next: first-response
+  result_block:
+    - id: passed
+      type: result
+      title: Scenario complete
+      outcome: passed
+      body:
+        - "You completed the {{courseLabel}} scenario."
+        - "Final score: {{score}} / {{maxScore}}"
+        - "Focus points: {{completionFocus}}"
+    - id: failed
+      type: result
+      title: Review needed
+      outcome: failed
+      body:
+        - The strongest response should lower tension and move the conversation forward.
+        - "Final score: {{score}} / {{maxScore}}"
+        - Review the scenario and try again.
+nodes:
+  - include: intro_block
+  - id: first-response
+    type: choice
+    title: Opening response
+    body:
+      - The customer says, "I've already explained this twice. Why should I trust your company?"
+      - What do you say first?
+    options:
+      - id: acknowledge
+        label: Acknowledge the frustration and promise to help
+        next: gather-details
+      - id: policy-first
+        label: Start by reading the policy language
+        next: policy-mistake
+      - id: defensive
+        label: Explain that mistakes happen sometimes
+        next: defensive-mistake
+  - id: policy-mistake
+    type: content
+    title: Policy can wait
+    body:
+      - Leading with policy can sound dismissive when the customer is already frustrated.
+      - Start by acknowledging the experience, then move into the next step.
+    next: gather-details
+  - id: defensive-mistake
+    type: content
+    title: Avoid sounding defensive
+    body:
+      - Defending the company before you understand the issue usually increases tension.
+      - Acknowledge the frustration and focus on resolution.
+    next: gather-details
+  - id: gather-details
+    type: quiz
+    title: Best escalation statement
+    body:
+      - Choose the response that shows ownership and prepares for a clean handoff.
+    question: Which reply is the strongest service escalation move?
+    correctScore: 10
+    incorrectScore: 0
+    passNext: next-step
+    failNext: failed
+    options:
+      - id: empathetic
+        label: I can hear how frustrating that is. Let me confirm the details and connect you with the order resolution desk.
+        correct: true
+      - id: rushed
+        label: If you read the email carefully, the shipping window was explained.
+        correct: false
+      - id: vague
+        label: Someone should probably contact the warehouse eventually.
+        correct: false
+  - id: next-step
+    type: choice
+    title: Move toward escalation
+    body:
+      - You have the order number and understand the issue.
+      - What should happen next?
+    options:
+      - id: confirm-plan
+        label: "Explain the next steps and hand the issue to the {{escalationTeam}}"
+        next: passed
+      - id: transfer-blind
+        label: Transfer the customer without context
+        next: blind-transfer
+      - id: wait
+        label: Tell the customer to wait for an update with no timeline
+        next: vague-followup
+  - id: blind-transfer
+    type: content
+    title: Avoid blind transfers
+    body:
+      - Handing off a customer without context creates repeat effort and damages trust.
+      - Set the next owner up with the right notes and expectations.
+    next: passed
+  - id: vague-followup
+    type: content
+    title: Give a clear next step
+    body:
+      - A vague promise to follow up rarely feels reassuring.
+      - Confirm who will act, what will happen next, and when the customer should expect an update.
+    next: passed
+  - include: result_block

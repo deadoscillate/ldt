@@ -1,0 +1,135 @@
+id: phishing-awareness
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Phishing Awareness Essentials
+  courseDescription: Learn how to evaluate a suspicious message, route it correctly, and close a phishing scenario.
+  courseLabel: phishing awareness
+  introLine1: You are about to step through a short phishing awareness scenario.
+  introLine2: Practice how to inspect a suspicious request before you click, reply, or report it.
+  suspiciousSender: Payroll Operations
+  suspiciousRequest: confirm your login credentials before the end of the day
+  reportingChannel: IT or the phishing mailbox
+  completionFocus: sender verification, urgent language, and approved reporting steps
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      title: "{{courseTitle}}"
+      body:
+        - "{{introLine1}}"
+        - "{{introLine2}}"
+      next: inbox
+  result_block:
+    - id: passed
+      type: result
+      title: Scenario complete
+      outcome: passed
+      body:
+        - "You finished the {{courseLabel}} scenario."
+        - "Final score: {{score}} / {{maxScore}}"
+        - "Focus points: {{completionFocus}}"
+    - id: failed
+      type: result
+      title: Review needed
+      outcome: failed
+      body:
+        - "You missed one or more core phishing signals."
+        - "Final score: {{score}} / {{maxScore}}"
+        - "Review the scenario and try again."
+nodes:
+  - include: intro_block
+  - id: inbox
+    type: choice
+    title: A suspicious email arrives
+    body:
+      - "An email claims to be from {{suspiciousSender}} and asks you to {{suspiciousRequest}}."
+      - "What do you do first?"
+    options:
+      - id: inspect
+        label: Inspect the sender, links, and request
+        next: inspect-message
+      - id: click
+        label: Click the link right away
+        next: click-risk
+      - id: reply
+        label: Reply with your password to be safe
+        next: credential-risk
+  - id: inspect-message
+    type: content
+    title: Good instinct
+    body:
+      - The sender domain is misspelled and the link points to a non-company site.
+      - Review the red flags before you act.
+    next: red-flags
+  - id: click-risk
+    type: content
+    title: That would be risky
+    body:
+      - Clicking before inspecting can expose you to credential theft or malware.
+      - Pause and review the warning signs first.
+    next: red-flags
+  - id: credential-risk
+    type: content
+    title: Never share credentials by email
+    body:
+      - Legitimate payroll or support teams should not request your password over email.
+      - Review the common phishing signals before you respond.
+    next: red-flags
+  - id: red-flags
+    type: quiz
+    title: Spot the red flags
+    body:
+      - Select every detail that should make you suspicious.
+    question: Which details are phishing red flags?
+    multiple: true
+    correctScore: 10
+    incorrectScore: 0
+    passNext: next-step
+    failNext: failed
+    options:
+      - id: urgent-language
+        label: The email uses urgency and pressure
+        correct: true
+      - id: sender-domain
+        label: The sender domain is slightly misspelled
+        correct: true
+      - id: company-logo
+        label: The email includes the company logo
+        correct: false
+      - id: credentials
+        label: The message requests login credentials
+        correct: true
+  - id: next-step
+    type: choice
+    title: Best next action
+    body:
+      - You identified the red flags.
+      - What is the safest next step?
+    options:
+      - id: report
+        label: "Report the email to {{reportingChannel}}"
+        next: passed
+      - id: forward
+        label: Forward it to coworkers so they can watch out
+        next: review-forward
+      - id: reply
+        label: Ask the sender to verify the request
+        next: review-reply
+  - id: review-forward
+    type: content
+    title: Close, but not ideal
+    body:
+      - Forwarding a suspicious email can spread the threat and accidental clicks.
+      - Use the official reporting route instead.
+    next: passed
+  - id: review-reply
+    type: content
+    title: Avoid engaging with the attacker
+    body:
+      - Replying confirms that your address is active.
+      - Report through the approved channel instead of responding.
+    next: passed
+  - include: result_block

@@ -1,0 +1,126 @@
+id: workplace-harassment-reporting
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+start: intro
+passingScore: 10
+templateData:
+  courseTitle: Workplace Harassment Reporting Basics
+  courseDescription: Practice the immediate actions for documenting and reporting workplace harassment concerns.
+  courseLabel: harassment reporting
+  introLine1: You witness repeated comments in a team area that could violate workplace conduct expectations.
+  introLine2: Your goal is to respond appropriately, preserve facts, and use the correct reporting path.
+  reportingChannel: HR or the approved conduct channel
+  completionFocus: facts, documentation, and approved reporting channels
+blocks:
+  intro_block:
+    - id: intro
+      type: content
+      title: "{{courseTitle}}"
+      body:
+        - "{{introLine1}}"
+        - "{{introLine2}}"
+      next: first-choice
+  result_block:
+    - id: passed
+      type: result
+      title: Scenario complete
+      outcome: passed
+      body:
+        - "You completed the {{courseLabel}} scenario."
+        - "Final score: {{score}} / {{maxScore}}"
+        - "Focus points: {{completionFocus}}"
+    - id: failed
+      type: result
+      title: Review needed
+      outcome: failed
+      body:
+        - Effective reporting starts with facts, documentation, and the right reporting path.
+        - "Final score: {{score}} / {{maxScore}}"
+        - Review the scenario and try again.
+nodes:
+  - include: intro_block
+  - id: first-choice
+    type: choice
+    title: First action
+    body:
+      - A coworker seems uncomfortable after repeated inappropriate remarks from a manager.
+      - What is the best immediate action?
+    options:
+      - id: document
+        label: Document what happened and use the reporting process
+        next: documentation
+      - id: post-online
+        label: Post about it publicly so leadership notices
+        next: post-risk
+      - id: ignore
+        label: Ignore it unless someone files a complaint later
+        next: ignore-risk
+  - id: post-risk
+    type: content
+    title: Use the formal process
+    body:
+      - Public posts can expose private details and make fact-finding harder.
+      - Start by documenting what you observed and use the formal reporting path.
+    next: documentation
+  - id: ignore-risk
+    type: content
+    title: Delays make reporting harder
+    body:
+      - Waiting can make it more difficult to preserve facts and support the person affected.
+      - Document what happened and use the appropriate reporting channel promptly.
+    next: documentation
+  - id: documentation
+    type: quiz
+    title: Reporting essentials
+    body:
+      - Select the actions that support a responsible reporting process.
+    question: Which actions belong in a responsible harassment reporting response?
+    multiple: true
+    correctScore: 10
+    incorrectScore: 0
+    passNext: next-step
+    failNext: failed
+    options:
+      - id: facts
+        label: Record dates, locations, and who was present
+        correct: true
+      - id: preserve
+        label: Preserve relevant messages or other evidence
+        correct: true
+      - id: promise
+        label: Promise complete confidentiality to everyone involved
+        correct: false
+      - id: report
+        label: "Use {{reportingChannel}}"
+        correct: true
+  - id: next-step
+    type: choice
+    title: Follow-through
+    body:
+      - You have documented the issue.
+      - What is the strongest follow-through step?
+    options:
+      - id: approved-channel
+        label: "Report through {{reportingChannel}}"
+        next: passed
+      - id: wait
+        label: Wait a few months before deciding whether it matters
+        next: delay-risk
+      - id: gossip
+        label: Share the story informally so others can weigh in
+        next: gossip-risk
+  - id: delay-risk
+    type: content
+    title: Prompt reporting matters
+    body:
+      - Delays can weaken documentation and leave people unsupported.
+      - Use the approved reporting path as soon as practical.
+    next: passed
+  - id: gossip-risk
+    type: content
+    title: Keep the process professional
+    body:
+      - Informal sharing can escalate harm and interfere with a formal review.
+      - Stick to the designated reporting route and preserve facts.
+    next: passed
+  - include: result_block
