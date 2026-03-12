@@ -5,11 +5,13 @@ import { WaitlistForm } from "@/components/WaitlistForm";
 import { WorkflowSteps } from "@/components/WorkflowSteps";
 import type { CourseSample } from "@/lib/course/sample-catalog";
 import type { CompiledCourse } from "@/lib/course/types";
+import { SCORM_PACKAGE_CONTENTS } from "@/lib/export/scorm-export";
 
 interface LandingPageProps {
   samples: CourseSample[];
   featuredCourse: CompiledCourse;
   featuredSnippet: string;
+  featuredSource: string;
 }
 
 const featureCards = [
@@ -32,11 +34,52 @@ const featureCards = [
   },
 ];
 
+const audienceCards = [
+  "Instructional designers building branching scenario training.",
+  "Training consultants producing repeatable SCORM content.",
+  "Technical L&D teams who want structured authoring instead of manual slide assembly.",
+];
+
+const validationChecklist = [
+  "SCORM Cloud launch validated",
+  "Completion and pass/fail validated",
+  "Score reporting validated",
+  "Resume behavior validated",
+];
+
+const comparisonRows = [
+  {
+    label: "Authoring model",
+    thisTool: "YAML-based structured authoring",
+    traditional: "Manual slide duplication and trigger setup",
+  },
+  {
+    label: "Preview loop",
+    thisTool: "Instant browser preview",
+    traditional: "Trigger-heavy branching setup before each export",
+  },
+  {
+    label: "Repeatability",
+    thisTool: "Template-driven branching scenarios",
+    traditional: "Rebuild and re-export similar modules repeatedly",
+  },
+];
+
+const roadmapItems = [
+  "Broader LMS validation beyond SCORM Cloud.",
+  "Reusable template packs for common training scenarios.",
+  "Improved authoring workflow inside the studio.",
+  "Additional deployment hardening for production teams.",
+];
+
 export function LandingPage({
   samples,
   featuredCourse,
   featuredSnippet,
+  featuredSource,
 }: LandingPageProps) {
+  const featuredSample = samples[0];
+
   return (
     <main className="landing-shell">
       <header className="landing-nav">
@@ -45,9 +88,13 @@ export function LandingPage({
         </Link>
         <nav className="landing-nav-links" aria-label="Primary">
           <a href="#product">Product</a>
+          <a href="#proof">Proof</a>
           <a href="#demo">Demo</a>
           <a href="#waitlist">Waitlist</a>
-          <Link className="ghost-button button-link" href="/studio">
+          <a className="ghost-button button-link" href="#waitlist">
+            Request Early Access
+          </a>
+          <Link className="primary-button button-link" href="/studio">
             Open Studio
           </Link>
         </nav>
@@ -65,13 +112,16 @@ export function LandingPage({
             standards-compliant SCORM for any LMS.
           </p>
           <div className="hero-actions">
-            <a className="primary-button button-link" href="#waitlist">
-              Join Early Access
-            </a>
-            <Link className="ghost-button button-link" href="/studio">
-              View Demo
+            <Link className="primary-button button-link" href="/studio">
+              Open Studio
             </Link>
+            <a className="ghost-button button-link" href="#waitlist">
+              Request Early Access
+            </a>
           </div>
+          <p className="landing-hero-note">
+            No login or LMS setup required to try the studio. Early feedback is welcome.
+          </p>
           <WorkflowSteps steps={["YAML", "Preview", "SCORM", "LMS"]} />
         </div>
 
@@ -91,6 +141,43 @@ export function LandingPage({
             <span className="trust-pill">Resume passed</span>
           </div>
         </aside>
+      </section>
+
+      <section className="landing-proof-band panel" id="proof">
+        <div className="landing-proof-copy">
+          <p className="eyebrow">Proof</p>
+          <h2>Validated behavior, presented honestly</h2>
+          <p className="panel-copy">
+            The current product has passed SCORM Cloud checks for the core LMS behaviors
+            early testers care about most.
+          </p>
+        </div>
+        <div className="proof-checklist" aria-label="Validation checklist">
+          {validationChecklist.map((item) => (
+            <span className="proof-item" key={item}>
+              {item}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="landing-section">
+        <div className="section-heading">
+          <p className="eyebrow">Who It&apos;s For</p>
+          <h2>Built for teams shipping repeatable branching training</h2>
+          <p className="panel-copy">
+            The product is intentionally narrow: structured authoring, fast preview, and
+            SCORM export without the overhead of a large desktop toolchain.
+          </p>
+        </div>
+
+        <div className="who-grid">
+          {audienceCards.map((item) => (
+            <article className="panel who-card" key={item}>
+              <p className="panel-copy">{item}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="landing-section" id="product">
@@ -130,21 +217,36 @@ export function LandingPage({
           <p className="eyebrow">Demo</p>
           <h2>See the current product workflow</h2>
           <p className="panel-copy">
-            The landing page reuses the existing sample course and preview runtime
-            so the demo stays aligned with the shipped authoring experience.
+            The landing page reuses the shipped sample course and preview runtime so
+            the demo stays aligned with the actual authoring experience.
           </p>
         </div>
 
         <div className="demo-layout">
           <article className="panel demo-overview">
-            {/* Reuse real sample content in the marketing demo so the page stays aligned with the actual authoring workflow. */}
+            {/* Keep the landing snippet short so non-technical visitors can grasp the structure quickly before expanding the full sample. */}
             <div className="editor-shell demo-editor-shell">
               <div className="editor-toolbar">
-                <span className="editor-file">phishing-awareness.yaml</span>
+                <span className="editor-file">
+                  {featuredSample?.fileName ?? "sample-course.yaml"}
+                </span>
                 <span className="editor-language">YAML</span>
               </div>
-              <pre className="demo-code-preview">{featuredSnippet}</pre>
+              <p className="demo-snippet-note">
+                Short sample showing course metadata, template data, one reusable block,
+                and the first branching node.
+              </p>
+              <pre className="demo-code-preview demo-code-preview-compact">
+                {featuredSnippet}
+              </pre>
             </div>
+
+            <details className="details-panel landing-sample-details">
+              <summary>View full sample</summary>
+              <pre className="demo-code-preview demo-code-preview-full">
+                {featuredSource}
+              </pre>
+            </details>
 
             <div className="demo-callout-grid">
               <div className="summary-card">
@@ -177,9 +279,28 @@ export function LandingPage({
 
         <div className="demo-footer">
           <Link className="primary-button button-link" href="/studio">
-            Open Interactive Demo
+            Open Studio
           </Link>
         </div>
+      </section>
+
+      <section className="landing-section">
+        <div className="section-heading">
+          <p className="eyebrow">Export Output</p>
+          <h2>Show exactly what the SCORM package contains</h2>
+          <p className="panel-copy">
+            Export a standards-compliant SCORM 1.2 package generated from the validated
+            course definition.
+          </p>
+        </div>
+
+        <article className="panel export-proof-panel">
+          <ul className="export-proof-list">
+            {SCORM_PACKAGE_CONTENTS.map((filePath) => (
+              <li key={filePath}>{filePath}</li>
+            ))}
+          </ul>
+        </article>
       </section>
 
       <section className="landing-section">
@@ -198,6 +319,44 @@ export function LandingPage({
         </div>
       </section>
 
+      <section className="landing-section comparison-section">
+        <div className="section-heading">
+          <p className="eyebrow">Workflow Difference</p>
+          <h2>Why teams may prefer this over traditional slide-based branching tools</h2>
+          <p className="panel-copy">
+            This is a workflow difference, not a claim that one tool replaces every other
+            authoring stack.
+          </p>
+        </div>
+
+        <div className="comparison-table" role="table" aria-label="Workflow comparison">
+          <div className="comparison-row comparison-row-header" role="row">
+            <span className="comparison-label" role="columnheader">
+              Area
+            </span>
+            <span className="comparison-cell comparison-cell-strong" role="columnheader">
+              This tool
+            </span>
+            <span className="comparison-cell" role="columnheader">
+              Traditional tools
+            </span>
+          </div>
+          {comparisonRows.map((row) => (
+            <div className="comparison-row" key={row.label} role="row">
+              <span className="comparison-label" role="cell">
+                {row.label}
+              </span>
+              <span className="comparison-cell comparison-cell-strong" role="cell">
+                {row.thisTool}
+              </span>
+              <span className="comparison-cell" role="cell">
+                {row.traditional}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="landing-section">
         <article className="panel trust-panel">
           <p className="eyebrow">Trust</p>
@@ -208,6 +367,25 @@ export function LandingPage({
             is ongoing.
           </p>
         </article>
+      </section>
+
+      <section className="landing-section">
+        <div className="section-heading">
+          <p className="eyebrow">What&apos;s Next</p>
+          <h2>Next areas of product hardening</h2>
+          <p className="panel-copy">
+            The roadmap is deliberately practical and focused on making the current
+            workflow more dependable.
+          </p>
+        </div>
+
+        <div className="roadmap-grid">
+          {roadmapItems.map((item) => (
+            <article className="panel roadmap-card" key={item}>
+              <p className="panel-copy">{item}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="landing-section" id="waitlist">
@@ -227,7 +405,7 @@ export function LandingPage({
       </section>
 
       <footer className="landing-footer">
-        <div>
+        <div className="footer-meta">
           <strong>LDT Engine</strong>
           <p className="panel-copy">
             Structured YAML authoring for branching training modules and SCORM
@@ -235,8 +413,9 @@ export function LandingPage({
           </p>
         </div>
         <div className="footer-links">
-          <a href="mailto:hello@your-domain.com">hello@your-domain.com</a>
-          <Link href="/studio">Open studio</Link>
+          <a href="mailto:contact@ldtengine.app">contact@ldtengine.app</a>
+          <Link href="/studio">Open Studio</Link>
+          <a href="https://github.com/deadoscillate/ldt">GitHub</a>
         </div>
       </footer>
     </main>

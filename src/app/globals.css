@@ -111,6 +111,19 @@ textarea {
   color: var(--accent-dark);
 }
 
+.landing-nav .brand-link {
+  color: #f6ede0;
+}
+
+.landing-nav-links a:not(.button-link) {
+  color: rgba(245, 236, 223, 0.78);
+}
+
+.landing-nav .brand-link:hover,
+.landing-nav-links a:not(.button-link):hover {
+  color: #fff3e5;
+}
+
 .landing-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(20rem, 1fr);
@@ -136,6 +149,26 @@ textarea {
   background: var(--panel-elevated);
 }
 
+.landing-hero-copy h1 {
+  margin: 0;
+  max-width: 13ch;
+  font-size: clamp(2.8rem, 5.1vw, 4.9rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  color: #23170f;
+}
+
+.landing-hero .hero-subheadline {
+  color: rgba(35, 23, 15, 0.88);
+}
+
+.landing-hero-note {
+  margin: 1rem 0 0;
+  color: rgba(57, 48, 39, 0.86);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .landing-section {
   margin-top: 3rem;
 }
@@ -154,11 +187,87 @@ textarea {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.24);
 }
 
+.landing-section .section-heading h2 {
+  color: #f6ede0;
+  text-shadow: none;
+}
+
+.landing-section .section-heading .panel-copy,
+.landing-section .section-heading .eyebrow,
+.landing-footer .panel-copy,
+.landing-footer strong {
+  color: rgba(245, 236, 223, 0.86);
+}
+
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.85rem;
   margin-top: 1.35rem;
+}
+
+.landing-proof-band,
+.export-proof-panel {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.landing-proof-band {
+  grid-template-columns: minmax(0, 1fr) minmax(24rem, 1.15fr);
+  margin-top: 1rem;
+  padding: 1.2rem 1.35rem;
+  background: linear-gradient(180deg, rgba(47, 107, 73, 0.08), rgba(255, 255, 255, 0.9));
+}
+
+.landing-proof-copy h2 {
+  margin: 0;
+  color: var(--text-strong);
+}
+
+.proof-checklist,
+.who-grid,
+.roadmap-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.proof-checklist,
+.who-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.proof-item,
+.who-card,
+.roadmap-card {
+  border-radius: 1rem;
+}
+
+.who-card,
+.roadmap-card {
+  min-height: 100%;
+}
+
+.proof-item {
+  display: flex;
+  align-items: center;
+  min-height: 4rem;
+  border: 1px solid rgba(47, 107, 73, 0.18);
+  padding: 0.95rem 1rem 0.95rem 3rem;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--text-strong);
+  font-weight: 700;
+  position: relative;
+}
+
+.proof-item::before {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: rgba(47, 107, 73, 0.14);
+  box-shadow: inset 0 0 0 5px rgba(47, 107, 73, 0.62);
 }
 
 .problem-solution-grid,
@@ -221,6 +330,25 @@ textarea {
   white-space: pre;
 }
 
+.demo-code-preview-compact {
+  min-height: 0;
+  max-height: 24rem;
+}
+
+.demo-code-preview-full {
+  min-height: 0;
+  max-height: 34rem;
+  white-space: pre-wrap;
+}
+
+.demo-snippet-note {
+  margin: 0;
+  padding: 0.9rem 1rem 0;
+  color: rgba(247, 239, 226, 0.74);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
 .demo-callout-grid,
 .feature-grid {
   display: grid;
@@ -265,12 +393,82 @@ textarea {
   margin-top: 1rem;
 }
 
+.landing-sample-details {
+  margin-top: 0;
+}
+
+.landing-sample-details summary {
+  color: var(--text-strong);
+}
+
 .trust-panel {
   background: linear-gradient(
     180deg,
     rgba(47, 107, 73, 0.08),
     rgba(255, 255, 255, 0.84)
   );
+}
+
+.export-proof-panel {
+  padding: 1.35rem;
+  background: linear-gradient(180deg, rgba(164, 72, 29, 0.08), rgba(255, 255, 255, 0.9));
+}
+
+.export-proof-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text-strong);
+  font-family: "Cascadia Mono", "IBM Plex Mono", "Consolas", monospace;
+}
+
+.comparison-table {
+  overflow: hidden;
+  border: 1px solid rgba(216, 200, 177, 0.88);
+  border-radius: 1.4rem;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.comparison-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.85fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-top: 1px solid rgba(216, 200, 177, 0.72);
+}
+
+.comparison-row:first-child {
+  border-top: 0;
+}
+
+.comparison-row-header {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.comparison-label,
+.comparison-cell {
+  color: rgba(57, 48, 39, 0.88);
+  line-height: 1.6;
+}
+
+.comparison-label {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.comparison-cell-strong {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.roadmap-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.roadmap-card {
+  min-height: 100%;
 }
 
 .waitlist-form {
@@ -326,6 +524,10 @@ textarea {
   border-top: 1px solid rgba(216, 200, 177, 0.92);
 }
 
+.footer-meta {
+  max-width: 32rem;
+}
+
 .footer-links {
   display: flex;
   align-items: center;
@@ -334,8 +536,12 @@ textarea {
 }
 
 .footer-links a {
-  color: var(--muted);
+  color: rgba(245, 236, 223, 0.82);
   text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: #fff3e5;
 }
 
 .page-shell {
@@ -1268,7 +1474,8 @@ textarea {
   .workbench-grid,
   .problem-solution-grid,
   .demo-layout,
-  .waitlist-layout {
+  .waitlist-layout,
+  .landing-proof-band {
     grid-template-columns: 1fr;
   }
 
@@ -1276,7 +1483,9 @@ textarea {
     max-width: none;
   }
 
-  .feature-grid {
+  .feature-grid,
+  .who-grid,
+  .roadmap-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1286,6 +1495,10 @@ textarea {
 
   .runtime-status-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .comparison-row {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1349,7 +1562,10 @@ textarea {
   }
 
   .feature-grid,
-  .demo-callout-grid {
+  .demo-callout-grid,
+  .who-grid,
+  .proof-checklist,
+  .roadmap-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1364,6 +1580,14 @@ textarea {
   .workflow-item {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .landing-hero-copy h1 {
+    max-width: none;
+  }
+
+  .comparison-row {
+    gap: 0.5rem;
   }
 
   .walkthrough-card {

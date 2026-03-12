@@ -53,9 +53,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     storage,
-    message:
-      storage === "file"
-        ? "You have been added to the early access list."
-        : "You have been added to the early access list. The submission is currently stored in server logs.",
+    message: "Thanks - you're on the early access list.",
   });
 }

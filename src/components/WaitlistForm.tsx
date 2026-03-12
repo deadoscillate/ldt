@@ -42,10 +42,7 @@ export function WaitlistForm() {
         },
         body: JSON.stringify(parsed.data),
       });
-      const payload = (await response.json()) as {
-        message?: string;
-        error?: string;
-      };
+      const payload = (await response.json()) as { error?: string };
 
       if (!response.ok) {
         throw new Error(payload.error ?? "The waitlist request could not be saved.");
@@ -54,10 +51,8 @@ export function WaitlistForm() {
       setEmail("");
       setFeedback({
         tone: "success",
-        title: "Request received",
-        message:
-          payload.message ??
-          "You have been added to the early access list for the SCORM engine MVP.",
+        title: "Thanks",
+        message: "Thanks - you're on the early access list.",
       });
     } catch (error) {
       setFeedback({
@@ -94,7 +89,7 @@ export function WaitlistForm() {
         </button>
       </div>
       <p className="waitlist-note">
-        One field only. No account, login, or LMS setup required.
+        No login required. No LMS setup required. Early feedback welcome.
       </p>
       {feedback ? (
         <div className={`feedback-banner feedback-${feedback.tone}`}>
