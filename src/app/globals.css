@@ -360,16 +360,16 @@ textarea {
   font-size: clamp(2.5rem, 5vw, 4.8rem);
   line-height: 0.95;
   letter-spacing: -0.04em;
-  color: #23170f;
+  color: #f6ede0;
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.34),
-    0 12px 26px rgba(36, 24, 15, 0.08);
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
 .hero-subheadline {
   max-width: 52ch;
   margin: 1rem 0 0;
-  color: rgba(27, 20, 14, 0.92);
+  color: rgba(245, 236, 223, 0.9);
   font-size: 1.12rem;
   font-weight: 500;
   line-height: 1.7;
@@ -378,7 +378,7 @@ textarea {
 .hero-copy {
   max-width: 64ch;
   margin: 1rem 0 0;
-  color: rgba(48, 40, 31, 0.9);
+  color: rgba(227, 216, 200, 0.86);
   line-height: 1.7;
 }
 
@@ -465,6 +465,10 @@ textarea {
   letter-spacing: 0.14em;
 }
 
+.hero .eyebrow {
+  color: rgba(245, 233, 216, 0.68);
+}
+
 .workbench-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(22rem, 0.9fr);
@@ -512,6 +516,21 @@ textarea {
 
 .button-row {
   flex-wrap: wrap;
+}
+
+.section-heading-row,
+.template-card-header,
+.export-result-header,
+.walkthrough-footer,
+.walkthrough-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.section-heading-row {
+  margin-bottom: 1rem;
 }
 
 .template-data-grid {
@@ -595,6 +614,10 @@ textarea {
   line-height: 1.55;
 }
 
+.template-card-header {
+  align-items: center;
+}
+
 .template-pill {
   display: inline-flex;
   width: fit-content;
@@ -609,6 +632,19 @@ textarea {
   text-transform: uppercase;
 }
 
+.scenario-pill {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.22rem 0.65rem;
+  background: rgba(30, 26, 22, 0.08);
+  color: var(--text-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: capitalize;
+}
+
 .template-card-active {
   border-color: rgba(164, 72, 29, 0.55);
   background: linear-gradient(180deg, rgba(164, 72, 29, 0.12), rgba(255, 255, 255, 0.92));
@@ -620,6 +656,11 @@ textarea {
 .template-card-active .template-pill {
   border-color: rgba(164, 72, 29, 0.35);
   background: rgba(164, 72, 29, 0.12);
+  color: var(--accent-dark);
+}
+
+.template-card-active .scenario-pill {
+  background: rgba(164, 72, 29, 0.16);
   color: var(--accent-dark);
 }
 
@@ -726,6 +767,22 @@ textarea {
 
 .yaml-editor:focus {
   outline: none;
+}
+
+.inline-link-button {
+  margin-top: 0.75rem;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent-dark);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.inline-link-button:hover {
+  color: var(--accent);
 }
 
 .json-preview {
@@ -859,12 +916,51 @@ textarea {
   background: linear-gradient(180deg, rgba(164, 72, 29, 0.1), rgba(255, 255, 255, 0.86));
 }
 
+.export-result-panel {
+  margin-top: 1rem;
+  padding: 1.25rem;
+}
+
+.export-result-header {
+  align-items: center;
+}
+
+.package-contents-panel {
+  margin-top: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(216, 200, 177, 0.92);
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.package-contents-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.85rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-strong);
+}
+
 .details-panel {
   overflow: hidden;
 }
 
 .details-copy {
   padding: 0 1rem 1rem;
+}
+
+.guide-code-block {
+  margin-top: 0.9rem;
+  min-height: 0;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.guide-bullet-list {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+  padding-left: 1.1rem;
 }
 
 .details-panel summary {
@@ -933,6 +1029,12 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.runtime-tracking-note {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .node-card {
@@ -1009,6 +1111,43 @@ textarea {
   padding-left: 1rem;
 }
 
+.validation-issue-list {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.validation-issue-card {
+  padding: 0.95rem 1rem;
+  border-radius: 0.95rem;
+  border: 1px solid rgba(138, 47, 57, 0.16);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.validation-issue-card strong {
+  display: block;
+  color: var(--text-strong);
+}
+
+.validation-issue-card p {
+  margin: 0.35rem 0 0;
+  color: rgba(57, 48, 39, 0.88);
+  line-height: 1.6;
+}
+
+.validation-issue-category {
+  display: inline-flex;
+  margin-bottom: 0.45rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  background: rgba(138, 47, 57, 0.1);
+  color: var(--danger);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .result-badge {
   text-transform: capitalize;
 }
@@ -1056,6 +1195,71 @@ textarea {
   color: var(--success);
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+/* Keep the walkthrough lightweight and visually separate from the editor itself. */
+.walkthrough-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+
+.walkthrough-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(9, 7, 5, 0.56);
+}
+
+.walkthrough-highlight {
+  position: fixed;
+  z-index: 1;
+  border-radius: 1.2rem;
+  border: 2px solid rgba(255, 212, 183, 0.9);
+  box-shadow:
+    0 0 0 9999px rgba(9, 7, 5, 0.28),
+    0 24px 44px rgba(9, 7, 5, 0.28);
+  pointer-events: none;
+}
+
+.walkthrough-card {
+  position: fixed;
+  z-index: 2;
+  width: min(20rem, calc(100vw - 2rem));
+  padding: 1.15rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(216, 200, 177, 0.92);
+  background: rgba(255, 252, 247, 0.98);
+  box-shadow: 0 24px 60px rgba(9, 7, 5, 0.28);
+}
+
+.walkthrough-card h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1.2rem;
+}
+
+.walkthrough-card .panel-copy {
+  margin: 0.75rem 0 0;
+}
+
+.walkthrough-footer {
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.walkthrough-actions {
+  gap: 0.75rem;
+}
+
+.walkthrough-step-count {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.walkthrough-button {
+  min-width: 6.5rem;
 }
 
 @media (max-width: 1080px) {
@@ -1122,7 +1326,11 @@ textarea {
   .status-row,
   .result-summary,
   .export-bar,
-  .preview-cta-panel {
+  .preview-cta-panel,
+  .section-heading-row,
+  .export-result-header,
+  .walkthrough-footer,
+  .walkthrough-actions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -1156,5 +1364,13 @@ textarea {
   .workflow-item {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .walkthrough-card {
+    top: auto !important;
+    left: 0.5rem !important;
+    right: 0.5rem;
+    bottom: 0.75rem;
+    width: auto;
   }
 }

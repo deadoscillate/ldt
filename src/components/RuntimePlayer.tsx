@@ -62,6 +62,16 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
     1,
     course.nodeOrder.findIndex((nodeId) => nodeId === currentNode.id) + 1
   );
+  const completionStatus =
+    currentNode.type === "result"
+      ? currentNode.outcome === "passed"
+        ? "Passed"
+        : currentNode.outcome === "failed"
+          ? "Failed"
+          : "Completed"
+      : runtimeState.completed
+        ? "Completed"
+        : "In Progress";
 
   useEffect(() => {
     if (currentNode.type !== "quiz") {
@@ -137,24 +147,31 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       {/* Keep the preview summary compact so testers can scan state before stepping through the course. */}
       <div className="runtime-status-grid">
         <div className="runtime-status-card">
-          <span className="runtime-status-label">Current step</span>
+          <span className="runtime-status-label">Current node</span>
+          <strong>{runtimeState.currentNodeId}</strong>
+        </div>
+        <div className="runtime-status-card">
+          <span className="runtime-status-label">Step</span>
           <strong>
             {stepNumber} / {course.nodeOrder.length}
           </strong>
         </div>
         <div className="runtime-status-card">
-          <span className="runtime-status-label">Current node</span>
-          <strong>{runtimeState.currentNodeId}</strong>
+          <span className="runtime-status-label">Score</span>
+          <strong>
+            {runtimeState.score} / {course.maxScore}
+          </strong>
         </div>
         <div className="runtime-status-card">
-          <span className="runtime-status-label">Current score</span>
-          <strong>{runtimeState.score}</strong>
-        </div>
-        <div className="runtime-status-card">
-          <span className="runtime-status-label">Passing score</span>
-          <strong>{course.passingScore}</strong>
+          <span className="runtime-status-label">Completion status</span>
+          <strong>{completionStatus}</strong>
         </div>
       </div>
+
+      <p className="runtime-tracking-note">
+        Preview status mirrors the learner progress and score that SCORM export
+        reports to an LMS.
+      </p>
 
       <article className="node-card">
         <header className="node-header">

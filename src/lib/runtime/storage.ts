@@ -43,3 +43,23 @@ export function clearRuntimeState(courseId: string): void {
 
   window.localStorage.removeItem(getRuntimeStorageKey(courseId));
 }
+
+export function clearAllRuntimeStates(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const keysToRemove: string[] = [];
+
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+
+    if (key?.startsWith(STORAGE_PREFIX)) {
+      keysToRemove.push(key);
+    }
+  }
+
+  keysToRemove.forEach((key) => {
+    window.localStorage.removeItem(key);
+  });
+}

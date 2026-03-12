@@ -8,6 +8,14 @@ import {
   buildScormRuntimeStyles,
 } from "@/lib/scorm/runtime-template";
 
+export const SCORM_PACKAGE_CONTENTS = [
+  "imsmanifest.xml",
+  "index.html",
+  "assets/course.json",
+  "assets/runtime.css",
+  "assets/runtime.js",
+] as const;
+
 function safeFileName(value: string): string {
   return value.replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
 }
@@ -22,8 +30,8 @@ export async function exportCourseAsScormZip(
     throw new Error("Failed to create SCORM asset folder.");
   }
 
-  zip.file("imsmanifest.xml", buildScormManifest(course));
-  zip.file("index.html", buildScormRuntimeHtml(course.title));
+  zip.file(SCORM_PACKAGE_CONTENTS[0], buildScormManifest(course));
+  zip.file(SCORM_PACKAGE_CONTENTS[1], buildScormRuntimeHtml(course.title));
 
   assetsFolder.file("course.json", JSON.stringify(course, null, 2));
   assetsFolder.file("runtime.css", buildScormRuntimeStyles());

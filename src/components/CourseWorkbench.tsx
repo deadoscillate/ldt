@@ -1,9 +1,17 @@
 "use client";
 
-import { useRef, useState, useTransition, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ChangeEvent,
+} from "react";
 
+import { GuidedWalkthrough } from "@/components/GuidedWalkthrough";
 import { RuntimePlayer } from "@/components/RuntimePlayer";
 import { TemplateDataEditor } from "@/components/TemplateDataEditor";
+import { ValidationIssueList } from "@/components/ValidationIssueList";
 import { WorkflowSteps } from "@/components/WorkflowSteps";
 import { YamlEditor } from "@/components/YamlEditor";
 import { serializeCompiledCourse } from "@/lib/course/compile";
@@ -19,7 +27,9 @@ import type { CompiledCourse } from "@/lib/course/types";
 import {
   buildScormFileName,
   exportCourseAsScormZip,
+  SCORM_PACKAGE_CONTENTS,
 } from "@/lib/export/scorm-export";
+import { clearAllRuntimeStates } from "@/lib/runtime/storage";
 
 interface CourseWorkbenchProps {
   samples: CourseSample[];
@@ -45,10 +55,31 @@ interface TemplateDraftState {
   values: Record<string, TemplateScalarValue>;
 }
 
+interface ExportedPackageState {
+  fileName: string;
+  objectUrl: string;
+  contents: readonly string[];
+}
+
+const DEMO_WALKTHROUGH_STORAGE_KEY = "ldt:studio:walkthrough-dismissed";
+
 function templateFieldsToValues(
   fields: TemplateFieldDefinition[]
 ): Record<string, TemplateScalarValue> {
   return Object.fromEntries(fields.map((field) => [field.key, field.value]));
+}
+
+function mergeTemplateFieldValues(
+  fields: TemplateFieldDefinition[],
+  values: Record<string, TemplateScalarValue>,
+  preserveExistingValues: boolean
+): Record<string, TemplateScalarValue> {
+  return Object.fromEntries(
+    fields.map((field) => [
+      field.key,
+      preserveExistingValues && field.key in values ? values[field.key] : field.value,
+    ])
+  );
 }
 
 function serializeTemplateData(
@@ -72,6 +103,21 @@ function inspectTemplateDraft(source: string): TemplateDraftState | null {
     fields,
     values: templateFieldsToValues(fields),
   };
+}
+
+function collectDraftValidationErrors(
+  source: string,
+  templateData: Record<string, TemplateScalarValue>
+): string[] {
+  try {
+    parseAndCompileCourseBundle(source, {
+      templateDataOverrides: templateData,
+    });
+
+    return [];
+  } catch (error) {
+    return collectCourseErrorMessages(error);
+  }
 }
 
 function compilePreview(
@@ -103,13 +149,28 @@ function compilePreview(
   }
 }
 
+function downloadPackage(fileName: string, objectUrl: string): void {
+  const link = document.createElement("a");
+
+  link.href = objectUrl;
+  link.download = fileName;
+  link.click();
+}
+
 export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
   const defaultSample = samples[0];
   const defaultTemplateDraft = inspectTemplateDraft(defaultSample.yaml) ?? {
     fields: [],
     values: {},
   };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const templateSelectorRef = useRef<HTMLDivElement>(null);
+  const yamlEditorRef = useRef<HTMLDivElement>(null);
+  const previewPanelRef = useRef<HTMLDivElement>(null);
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
+  const authoringGuideRef = useRef<HTMLDetailsElement>(null);
+  const exportObjectUrlRef = useRef<string | null>(null);
 
   const [draftYaml, setDraftYaml] = useState(defaultSample.yaml);
   const [templateFields, setTemplateFields] = useState(defaultTemplateDraft.fields);
@@ -119,6 +180,7 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
   const [previewState, setPreviewState] = useState<PreviewState>(() =>
     compilePreview(defaultSample.yaml, defaultTemplateDraft.values)
   );
+  const [draftErrors, setDraftErrors] = useState<string[]>(previewState.errors);
   const [activeSampleId, setActiveSampleId] = useState<string | null>(
     defaultSample.id
   );
@@ -126,6 +188,11 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
     `Sample template: ${defaultSample.title}`
   );
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
+  const [lastExportedPackage, setLastExportedPackage] =
+    useState<ExportedPackageState | null>(null);
+  const [isPackageViewerOpen, setIsPackageViewerOpen] = useState(false);
+  const [isAuthoringGuideOpen, setIsAuthoringGuideOpen] = useState(false);
+  const [tourInstanceKey, setTourInstanceKey] = useState(0);
   const [isPending, startTransition] = useTransition();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -134,10 +201,32 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
   const hasUncompiledChanges =
     draftYaml !== previewState.source ||
     serializeTemplateData(templateDataValues) !== previewState.templateDataFingerprint;
+  const displayedValidationErrors = hasUncompiledChanges
+    ? draftErrors
+    : previewState.errors;
   const isReadyToExport = Boolean(previewState.course) && !hasUncompiledChanges;
 
+  useEffect(() => {
+    return () => {
+      if (exportObjectUrlRef.current) {
+        window.URL.revokeObjectURL(exportObjectUrlRef.current);
+      }
+    };
+  }, []);
+
+  function clearLastExportedPackage(): void {
+    if (exportObjectUrlRef.current) {
+      window.URL.revokeObjectURL(exportObjectUrlRef.current);
+      exportObjectUrlRef.current = null;
+    }
+
+    setLastExportedPackage(null);
+    setIsPackageViewerOpen(false);
+  }
+
   function syncTemplateDraft(
-    source: string
+    source: string,
+    preserveExistingValues: boolean
   ): Record<string, TemplateScalarValue> {
     const nextTemplateDraft = inspectTemplateDraft(source);
 
@@ -145,9 +234,15 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
       return templateDataValues;
     }
 
+    const nextValues = mergeTemplateFieldValues(
+      nextTemplateDraft.fields,
+      templateDataValues,
+      preserveExistingValues
+    );
+
     setTemplateFields(nextTemplateDraft.fields);
-    setTemplateDataValues(nextTemplateDraft.values);
-    return nextTemplateDraft.values;
+    setTemplateDataValues(nextValues);
+    return nextValues;
   }
 
   function updatePreview(
@@ -161,11 +256,21 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
       setPreviewState(nextPreview);
     });
 
+    setDraftErrors(nextPreview.errors);
+
     if (nextFeedback !== undefined) {
       setFeedback(nextFeedback);
     }
 
     return nextPreview;
+  }
+
+  function openAuthoringGuide(): void {
+    setIsAuthoringGuideOpen(true);
+    authoringGuideRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }
 
   function handleCompile(): void {
@@ -175,19 +280,22 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
       setPreviewState(nextPreview);
     });
 
+    setDraftErrors(nextPreview.errors);
+    clearLastExportedPackage();
+
     setFeedback(
       nextPreview.course
         ? {
             tone: "success",
             title: "Course validated",
             message:
-              "Blocks and placeholders were expanded successfully. The course is ready to preview or export as SCORM 1.2.",
+              "Preview updated successfully. Blocks, placeholders, and branching paths are ready for export.",
           }
         : {
             tone: "error",
             title: "Validation failed",
             message:
-              "Fix the YAML, block, or placeholder issues below, then validate again before previewing or exporting.",
+              "Fix the YAML, template, or reference issues below, then validate again before previewing or exporting.",
           }
     );
   }
@@ -196,13 +304,14 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
     setActiveSampleId(sample.id);
     setDraftYaml(sample.yaml);
     setSourceLabel(`Sample template: ${sample.title}`);
+    clearLastExportedPackage();
 
-    const nextTemplateData = syncTemplateDraft(sample.yaml);
+    const nextTemplateData = syncTemplateDraft(sample.yaml, false);
 
     updatePreview(sample.yaml, nextTemplateData, {
       tone: "info",
       title: "Template loaded",
-      message: `${sample.title} is ready to customize, preview, and export.`,
+      message: `${sample.title} is loaded and previewed instantly so you can start experimenting right away.`,
     });
   }
 
@@ -213,29 +322,64 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
 
     setDraftYaml(selectedSample.yaml);
     setSourceLabel(`Sample template: ${selectedSample.title}`);
+    clearLastExportedPackage();
 
-    const nextTemplateData = syncTemplateDraft(selectedSample.yaml);
+    const nextTemplateData = syncTemplateDraft(selectedSample.yaml, false);
 
     updatePreview(selectedSample.yaml, nextTemplateData, {
       tone: "info",
       title: "Template reset",
-      message: `${selectedSample.title} has been restored to its sample YAML and default template data.`,
+      message: `${selectedSample.title} has been restored to its default YAML and template values.`,
     });
+  }
+
+  function handleResetDemo(): void {
+    clearAllRuntimeStates();
+    clearLastExportedPackage();
+    setActiveSampleId(defaultSample.id);
+    setDraftYaml(defaultSample.yaml);
+    setSourceLabel(`Sample template: ${defaultSample.title}`);
+    setIsAuthoringGuideOpen(false);
+    setFeedback({
+      tone: "info",
+      title: "Demo reset",
+      message:
+        "The default template, preview state, and saved demo walkthrough state have been reset.",
+    });
+
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(DEMO_WALKTHROUGH_STORAGE_KEY);
+    }
+
+    const nextTemplateData = syncTemplateDraft(defaultSample.yaml, false);
+    updatePreview(defaultSample.yaml, nextTemplateData);
+    setTourInstanceKey((currentValue) => currentValue + 1);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }
 
   function handleYamlChange(source: string): void {
     setDraftYaml(source);
-    syncTemplateDraft(source);
+    clearLastExportedPackage();
+
+    const nextTemplateData = syncTemplateDraft(source, true);
+    setDraftErrors(collectDraftValidationErrors(source, nextTemplateData));
   }
 
   function handleTemplateDataChange(
     key: string,
     value: TemplateScalarValue
   ): void {
-    setTemplateDataValues((currentValues) => ({
-      ...currentValues,
+    const nextTemplateData = {
+      ...templateDataValues,
       [key]: value,
-    }));
+    };
+
+    setTemplateDataValues(nextTemplateData);
+    clearLastExportedPackage();
+    setDraftErrors(collectDraftValidationErrors(draftYaml, nextTemplateData));
   }
 
   async function handleUpload(event: ChangeEvent<HTMLInputElement>): Promise<void> {
@@ -252,14 +396,16 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
       setActiveSampleId(null);
       setDraftYaml(uploadedYaml);
       setSourceLabel(`Uploaded file: ${file.name}`);
+      clearLastExportedPackage();
 
-      const nextTemplateData = syncTemplateDraft(uploadedYaml);
+      const nextTemplateData = syncTemplateDraft(uploadedYaml, false);
       const nextPreview = compilePreview(uploadedYaml, nextTemplateData);
 
       startTransition(() => {
         setPreviewState(nextPreview);
       });
 
+      setDraftErrors(nextPreview.errors);
       setFeedback(
         nextPreview.course
           ? {
@@ -271,7 +417,7 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
               tone: "error",
               title: "Uploaded YAML has issues",
               message:
-                "The file was loaded, but blocks, placeholders, or schema rules did not validate. Review the inline errors below.",
+                "The file was loaded, but syntax, branching, or template validation still needs attention.",
             }
       );
     } catch (error) {
@@ -299,22 +445,23 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
       const blob = await exportCourseAsScormZip(previewState.course);
       const fileName = buildScormFileName(previewState.course);
       const objectUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
 
-      link.href = objectUrl;
-      link.download = fileName;
-      link.click();
-
-      window.setTimeout(() => {
-        window.URL.revokeObjectURL(objectUrl);
-      }, 0);
+      clearLastExportedPackage();
+      exportObjectUrlRef.current = objectUrl;
+      setLastExportedPackage({
+        fileName,
+        objectUrl,
+        contents: SCORM_PACKAGE_CONTENTS,
+      });
+      downloadPackage(fileName, objectUrl);
 
       setFeedback({
         tone: "success",
-        title: "SCORM package downloaded",
-        message: `${fileName} was generated from the expanded and validated course definition.`,
+        title: "SCORM 1.2 package generated successfully.",
+        message: "Download the package or inspect the generated file structure.",
       });
     } catch (error) {
+      clearLastExportedPackage();
       setFeedback({
         tone: "error",
         title: "Export failed",
@@ -327,6 +474,33 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
       setIsExporting(false);
     }
   }
+
+  const walkthroughSteps = [
+    {
+      targetRef: templateSelectorRef,
+      title: "Start with a training template.",
+      description:
+        "Choose a scenario shell for security, compliance, or customer service and the preview will load automatically.",
+    },
+    {
+      targetRef: yamlEditorRef,
+      title: "Edit the scenario structure in YAML.",
+      description:
+        "Change the nodes, branching paths, and placeholder values directly in YAML while keeping the course structure transparent.",
+    },
+    {
+      targetRef: previewPanelRef,
+      title: "Preview the training flow instantly.",
+      description:
+        "Run the learner path in the browser and watch the current node, score, and completion status update as you click through it.",
+    },
+    {
+      targetRef: exportButtonRef,
+      title: "Export a SCORM package for your LMS.",
+      description:
+        "Generate a SCORM 1.2 zip, download it, and inspect the exact package contents used for LMS delivery.",
+    },
+  ];
 
   return (
     <main className="page-shell">
@@ -354,7 +528,7 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
           </div>
           <div className="summary-card">
             <strong>Preview</strong>
-            <span>Expand blocks at compile time and run the course in the browser.</span>
+            <span>Expand blocks at compile time and run the course directly in the browser.</span>
           </div>
           <div className="summary-card">
             <strong>Export</strong>
@@ -365,12 +539,23 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
 
       <section className="workbench-grid">
         <div className="panel editor-panel">
-          <div className="panel-section">
-            <p className="eyebrow">Sample Templates</p>
-            <p className="panel-copy section-copy">
-              Start with one of the reusable scenario templates and adapt its
-              placeholder values for your training module.
-            </p>
+          <div className="panel-section" ref={templateSelectorRef}>
+            <div className="section-heading-row">
+              <div>
+                <p className="eyebrow">Sample Templates</p>
+                <p className="panel-copy section-copy">
+                  Start with a structured scenario, see the preview update
+                  instantly, and then tailor the YAML to your use case.
+                </p>
+              </div>
+              <button
+                className="ghost-button"
+                onClick={handleResetDemo}
+                type="button"
+              >
+                Reset Demo
+              </button>
+            </div>
             <div className="template-grid">
               {samples.map((sample) => (
                 <button
@@ -382,9 +567,12 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
                   onClick={() => handleSelectSample(sample)}
                   type="button"
                 >
-                  <span className="template-pill">
-                    {activeSampleId === sample.id ? "Selected template" : "Template"}
-                  </span>
+                  <div className="template-card-header">
+                    <span className="template-pill">
+                      {activeSampleId === sample.id ? "Selected template" : "Template"}
+                    </span>
+                    <span className="scenario-pill">{sample.scenarioType}</span>
+                  </div>
                   <strong>{sample.title}</strong>
                   <span>{sample.description}</span>
                 </button>
@@ -406,26 +594,22 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
             />
           </div>
 
-          <details className="details-panel">
-            <summary>How reusable blocks work</summary>
-            <div className="details-copy">
-              <p className="panel-copy">
-                Define root-level <code>blocks</code>, then inline them in{" "}
-                <code>nodes</code> with <code>- include: block_name</code>.
-                Placeholders like <code>{"{{courseTitle}}"}</code> resolve from{" "}
-                <code>templateData</code> during compilation.
-              </p>
-            </div>
-          </details>
-
           <div className="panel-header">
             <div>
               <p className="eyebrow">Authoring</p>
               <h2>Paste or upload YAML</h2>
               <p className="panel-copy">
-                Keep the YAML as the source of truth. Validation errors cover block
-                expansion, placeholder interpolation, and scene graph integrity.
+                Keep the YAML as the source of truth. Validation errors cover
+                syntax, block expansion, placeholder interpolation, and branching
+                integrity.
               </p>
+              <button
+                className="inline-link-button"
+                onClick={openAuthoringGuide}
+                type="button"
+              >
+                Authoring Guide
+              </button>
             </div>
             <div className="button-row">
               <input
@@ -456,6 +640,70 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
             </div>
           </div>
 
+          <details
+            className="details-panel"
+            id="authoring-guide"
+            onToggle={(event) => setIsAuthoringGuideOpen(event.currentTarget.open)}
+            open={isAuthoringGuideOpen}
+            ref={authoringGuideRef}
+          >
+            <summary>Authoring Guide</summary>
+            <div className="details-copy">
+              <p className="panel-copy">
+                Start with top-level course metadata, add nodes in order, and use
+                branching targets like <code>next</code>, <code>passNext</code>,
+                and <code>failNext</code> to move through the scenario.
+              </p>
+              <pre className="json-preview guide-code-block">
+{`id: example-course
+title: Example Scenario
+start: intro
+passingScore: 10
+nodes:
+  - id: intro
+    type: content
+    title: Welcome
+    body: Introduce the learner.
+    next: decision
+
+  - id: decision
+    type: choice
+    title: First branch
+    options:
+      - id: safe
+        label: Choose the safe action
+        score: 5
+        next: quiz
+
+  - id: quiz
+    type: quiz
+    title: Knowledge check
+    question: What happens next?
+    correctScore: 5
+    passNext: passed
+    failNext: failed`}
+              </pre>
+              <ul className="guide-bullet-list">
+                <li>
+                  <strong>Node types:</strong> Use <code>content</code> for
+                  context, <code>choice</code> for branching, <code>quiz</code>{" "}
+                  for scored knowledge checks, and <code>result</code> for the end
+                  screen.
+                </li>
+                <li>
+                  <strong>Branching:</strong> Choice options use <code>next</code>{" "}
+                  and quiz nodes can use <code>passNext</code>,{" "}
+                  <code>failNext</code>, or <code>next</code>.
+                </li>
+                <li>
+                  <strong>Scoring:</strong> Choice options can add points with{" "}
+                  <code>score</code>; quiz nodes use <code>correctScore</code> and{" "}
+                  <code>incorrectScore</code>.
+                </li>
+              </ul>
+            </div>
+          </details>
+
           <div className="source-row">
             <span className="status-pill">{sourceLabel}</span>
             <span
@@ -469,11 +717,13 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
             </span>
           </div>
 
-          <YamlEditor
-            onChange={handleYamlChange}
-            placeholder="Paste course YAML here..."
-            value={draftYaml}
-          />
+          <div ref={yamlEditorRef}>
+            <YamlEditor
+              onChange={handleYamlChange}
+              placeholder="Paste course YAML here..."
+              value={draftYaml}
+            />
+          </div>
 
           {feedback ? (
             <div className={`feedback-banner feedback-${feedback.tone}`}>
@@ -482,18 +732,15 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
             </div>
           ) : null}
 
-          {previewState.errors.length > 0 ? (
+          {displayedValidationErrors.length > 0 ? (
             <div className="error-panel">
               <h3>YAML issues to fix</h3>
               <p className="panel-copy">
-                The course did not pass template expansion, schema validation, or
-                compilation checks. Fix the items below, then validate again.
+                These messages update from the current draft, so you can catch
+                syntax, missing nodes, and broken branching references before you
+                export anything.
               </p>
-              <ul>
-                {previewState.errors.map((errorMessage) => (
-                  <li key={errorMessage}>{errorMessage}</li>
-                ))}
-              </ul>
+              <ValidationIssueList issues={displayedValidationErrors} />
             </div>
           ) : null}
 
@@ -515,6 +762,69 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
               {isExporting ? "Exporting..." : "Export SCORM 1.2"}
             </button>
           </div>
+
+          {lastExportedPackage ? (
+            <section className="panel export-result-panel">
+              <div className="export-result-header">
+                <div>
+                  <p className="eyebrow">Generated Package</p>
+                  <h3>SCORM 1.2 package generated successfully.</h3>
+                  <p className="panel-copy">
+                    Download the package again or inspect the generated file
+                    structure before importing it into an LMS.
+                  </p>
+                </div>
+                <div className="button-row">
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      downloadPackage(
+                        lastExportedPackage.fileName,
+                        lastExportedPackage.objectUrl
+                      )
+                    }
+                    type="button"
+                  >
+                    Download SCORM package
+                  </button>
+                  <button
+                    className="ghost-button"
+                    onClick={() =>
+                      setIsPackageViewerOpen((currentValue) => !currentValue)
+                    }
+                    type="button"
+                  >
+                    {isPackageViewerOpen
+                      ? "Hide package contents"
+                      : "View package contents"}
+                  </button>
+                </div>
+              </div>
+
+              {isPackageViewerOpen ? (
+                <div className="package-contents-panel">
+                  <p className="eyebrow">SCORM Package Contents</p>
+                  <ul className="package-contents-list">
+                    {lastExportedPackage.contents.map((filePath) => (
+                      <li key={filePath}>{filePath}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          <details className="details-panel">
+            <summary>How reusable blocks work</summary>
+            <div className="details-copy">
+              <p className="panel-copy">
+                Define root-level <code>blocks</code>, then inline them in{" "}
+                <code>nodes</code> with <code>- include: block_name</code>.
+                Placeholders like <code>{"{{courseTitle}}"}</code> resolve from{" "}
+                <code>templateData</code> during compilation.
+              </p>
+            </div>
+          </details>
 
           <details className="details-panel">
             <summary>View expanded course document</summary>
@@ -548,24 +858,27 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
               className="primary-button export-button"
               disabled={!isReadyToExport || isExporting}
               onClick={() => void handleExport()}
+              ref={exportButtonRef}
               type="button"
             >
               {isExporting ? "Exporting..." : "Export SCORM 1.2"}
             </button>
           </section>
 
-          {previewState.course ? (
-            <RuntimePlayer course={previewState.course} />
-          ) : (
-            <section className="panel runtime-panel placeholder-panel">
-              <p className="eyebrow">Preview</p>
-              <h2>Preview unavailable</h2>
-              <p className="panel-copy">
-                Validate the YAML successfully to expand reusable blocks, preview
-                the learner experience, and unlock SCORM export.
-              </p>
-            </section>
-          )}
+          <div ref={previewPanelRef}>
+            {previewState.course ? (
+              <RuntimePlayer course={previewState.course} />
+            ) : (
+              <section className="panel runtime-panel placeholder-panel">
+                <p className="eyebrow">Preview</p>
+                <h2>Preview unavailable</h2>
+                <p className="panel-copy">
+                  Validate the YAML successfully to expand reusable blocks,
+                  preview the learner experience, and unlock SCORM export.
+                </p>
+              </section>
+            )}
+          </div>
 
           <section className="panel notes-panel">
             <p className="eyebrow">Trust Signal</p>
@@ -584,6 +897,12 @@ export function CourseWorkbench({ samples }: CourseWorkbenchProps) {
           </section>
         </div>
       </section>
+
+      <GuidedWalkthrough
+        key={tourInstanceKey}
+        steps={walkthroughSteps}
+        storageKey={DEMO_WALKTHROUGH_STORAGE_KEY}
+      />
     </main>
   );
 }
