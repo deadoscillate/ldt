@@ -9,6 +9,7 @@ import {
   useState,
   useTransition,
   type ChangeEvent,
+  type ReactNode,
 } from "react";
 
 import { CourseBuilder } from "@/components/CourseBuilder";
@@ -138,6 +139,7 @@ interface CourseWorkbenchProps {
   validationCatalog: LmsValidationCatalog;
   moduleLibrary: SharedModuleLibrary | null;
   moduleUsageIndex: ModuleUsageIndex;
+  children?: ReactNode;
 }
 
 interface FeedbackState {
@@ -397,6 +399,7 @@ export function CourseWorkbench({
   validationCatalog,
   moduleLibrary,
   moduleUsageIndex,
+  children,
 }: CourseWorkbenchProps) {
   const initialProjects = courseProjects;
   const initialProjectPacks =
@@ -2729,6 +2732,7 @@ export function CourseWorkbench({
 
   return (
     <main className="page-shell" data-studio-step={activeStudioStep} ref={studioRootRef}>
+      <div className="studio-route-slot sr-only">{children}</div>
       {activeStudioStep === "setup" ? (
         <>
       <section className="hero">
@@ -5160,3 +5164,5 @@ nodes:
     </main>
   );
 }
+
+

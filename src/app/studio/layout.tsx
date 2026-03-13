@@ -30,16 +30,15 @@ export default async function StudioLayout({
     ]);
 
   return (
-    <>
-      <CourseWorkbench
-        courseProjects={courseProjects}
-        templatePacks={templatePacks}
-        themePacks={themePacks}
-        validationCatalog={validationCatalog}
-        moduleLibrary={moduleLibrary}
-        moduleUsageIndex={buildModuleUsageIndex(courseProjects, moduleLibrary)}
-      />
-      <div hidden>{children}</div>
-    </>
+    <CourseWorkbench
+      courseProjects={courseProjects}
+      templatePacks={templatePacks}
+      themePacks={themePacks}
+      validationCatalog={validationCatalog}
+      moduleLibrary={moduleLibrary}
+      moduleUsageIndex={buildModuleUsageIndex(courseProjects, moduleLibrary)}
+    >
+      {children}
+    </CourseWorkbench>
   );
 }
