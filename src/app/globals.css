@@ -1073,6 +1073,14 @@ textarea {
   align-items: start;
 }
 
+.workbench-grid-single-step {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workbench-grid-single-step > * {
+  min-width: 0;
+}
+
 .preview-column {
   display: grid;
   gap: 1.15rem;
@@ -2586,6 +2594,12 @@ textarea {
 .studio-step-nav-panel {
   display: grid;
   gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.studio-step-intro-panel {
+  display: grid;
+  gap: 0.75rem;
   margin-bottom: 1.25rem;
 }
 

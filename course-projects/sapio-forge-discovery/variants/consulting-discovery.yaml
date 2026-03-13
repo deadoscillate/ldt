@@ -1,0 +1,13 @@
+id: consulting-discovery
+title: Consultant discovery walkthrough
+description: Demo variant for training consultants managing repeatable client deliverables.
+templateId: workflow-discovery
+notes: Use this variant when the audience is comparing repeatable source against manual client-by-client duplication.
+values:
+  courseTitle: Training Maintenance Discovery
+  courseDescription: A short discovery walkthrough for consultants evaluating reusable course workflows across client engagements.
+  teamName: Consulting Delivery Team
+  stakeholderName: Client Success Lead
+  updateTopic: client reporting guidance
+  impactedCourseCount: 24
+  audienceLabel: training consultants

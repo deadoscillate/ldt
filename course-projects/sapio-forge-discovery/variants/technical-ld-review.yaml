@@ -1,0 +1,13 @@
+id: technical-ld-review
+title: Technical L&D workflow review
+description: Demo variant for technical learning teams evaluating source-controlled course systems.
+templateId: workflow-discovery
+notes: Use this variant when the audience cares about review, testing, reuse, and reproducible builds.
+values:
+  courseTitle: Sapio Forge Workflow Discovery
+  courseDescription: A short structured walkthrough for technical L&D teams evaluating reusable source, testing, and reproducible SCORM builds.
+  teamName: Technical L&D Team
+  stakeholderName: Program Operations Manager
+  updateTopic: workflow logic rules
+  impactedCourseCount: 36
+  audienceLabel: technical learning teams

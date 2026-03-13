@@ -1,0 +1,29 @@
+variables:
+  courseTitle:
+    type: text
+    label: Course title
+    description: Display title shown at the opening of the discovery walkthrough.
+  courseDescription:
+    type: text
+    label: Course description
+    description: Short overview used in the studio and runtime header.
+  teamName:
+    type: text
+    label: Team name
+    description: Team name used in the maintenance and workflow scenes.
+  stakeholderName:
+    type: text
+    label: Stakeholder name
+    description: Person requesting the multi-course update.
+  updateTopic:
+    type: text
+    label: Update topic
+    description: Policy or workflow change used in the maintenance scenario.
+  impactedCourseCount:
+    type: number
+    label: Impacted course count
+    description: Number of affected courses or modules in the scenario.
+  audienceLabel:
+    type: text
+    label: Audience label
+    description: Audience name used in summary and facilitator copy.

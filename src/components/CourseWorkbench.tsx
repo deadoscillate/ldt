@@ -554,6 +554,9 @@ export function CourseWorkbench({
   const pathname = usePathname();
   const router = useRouter();
   const activeStudioStep = getStudioStepFromPathname(pathname);
+  const currentStudioStepCopy =
+    STUDIO_STEP_COPY.find((step) => step.id === activeStudioStep) ??
+    STUDIO_STEP_COPY[0];
 
   const availablePacks =
     availableProjects.length > 0
@@ -2714,29 +2717,20 @@ export function CourseWorkbench({
   ];
 
   useEffect(() => {
-    const targetByStep: Record<StudioStep, HTMLElement | null> = {
-      setup: onboardingState.startHereDismissed
-        ? templateSelectorRef.current
-        : startHerePanelRef.current,
-      edit: yamlEditorRef.current,
-      preview: previewPanelRef.current,
-      export: exportSectionRef.current,
-      advanced: advancedSectionRef.current,
-    };
-
-    const target = targetByStep[activeStudioStep];
-
-    if (!target) {
+    if (typeof window === "undefined") {
       return;
     }
 
-    window.setTimeout(() => {
-      scrollToElement(target);
-    }, 60);
-  }, [activeStudioStep, onboardingState.startHereDismissed]);
+    window.scrollTo({
+      top: 0,
+      behavior: "auto",
+    });
+  }, [activeStudioStep]);
 
   return (
-    <main className="page-shell" ref={studioRootRef}>
+    <main className="page-shell" data-studio-step={activeStudioStep} ref={studioRootRef}>
+      {activeStudioStep === "setup" ? (
+        <>
       <section className="hero">
         <div className="hero-copy-block">
           <p className="eyebrow">{BRAND.studioName}</p>
@@ -2783,9 +2777,23 @@ export function CourseWorkbench({
           attached automatically.
         </p>
       </section>
+        </>
+      ) : (
+        <section className="panel studio-step-intro-panel">
+          <p className="eyebrow">{BRAND.studioName}</p>
+          <h1>{currentStudioStepCopy.label}</h1>
+          <p className="panel-copy">
+            {currentStudioStepCopy.description}
+          </p>
+          <p className="panel-copy">
+            Use the step navigation below to move through the workflow without
+            losing your current draft.
+          </p>
+        </section>
+      )}
 
       {!onboardingState.startHereDismissed ? (
-        <section className="panel onboarding-panel" ref={startHerePanelRef}>
+        <section className="panel onboarding-panel" hidden={activeStudioStep !== "setup"} ref={startHerePanelRef}>
           <div className="section-heading-row">
             <div>
               <p className="eyebrow">Start Here</p>
@@ -3067,9 +3075,16 @@ export function CourseWorkbench({
         </div>
       </section>
 
-      <section className="workbench-grid">
-        <div className="panel editor-panel">
-          <div className="panel-section" ref={templateSelectorRef}>
+      {feedback ? (
+        <div className={`feedback-banner feedback-${feedback.tone}`}>
+          <strong>{feedback.title}</strong>
+          <span>{feedback.message}</span>
+        </div>
+      ) : null}
+
+      <section className="workbench-grid workbench-grid-single-step" key={activeStudioStep}>
+        <div className="panel editor-panel" hidden={activeStudioStep === "preview"}>
+          <div className="panel-section" hidden={activeStudioStep !== "setup"} ref={templateSelectorRef}>
             <div className="section-heading-row">
               <div>
                 <p className="eyebrow">
@@ -3321,7 +3336,7 @@ export function CourseWorkbench({
             ) : null}
           </div>
 
-          <div className="panel-section">
+          <div className="panel-section" hidden={activeStudioStep !== "setup"}>
             <p className="eyebrow">Template Variables</p>
             <div className="help-inline-row">
               <h2>Schema-guided variable sets</h2>
@@ -3392,7 +3407,7 @@ export function CourseWorkbench({
             />
           </div>
 
-          <div className="panel-section">
+          <div className="panel-section" hidden={activeStudioStep !== "setup"}>
             <p className="eyebrow">Theme Packs</p>
             <div className="help-inline-row">
               <h2>Reusable branded presentation</h2>
@@ -3499,7 +3514,7 @@ export function CourseWorkbench({
             ) : null}
           </div>
 
-          <section className="panel repeatable-workflow-panel">
+          <section className="panel repeatable-workflow-panel" hidden={activeStudioStep !== "edit"}>
             <p className="eyebrow">Built for Repeatable Workflows</p>
             <h2>Create one course structure, then reuse it</h2>
             <p className="panel-copy">
@@ -3515,7 +3530,7 @@ export function CourseWorkbench({
             </div>
           </section>
 
-          <div className="panel-header">
+          <div className="panel-header" hidden={activeStudioStep !== "edit"}>
             <div>
               <p className="eyebrow">Authoring Workflow</p>
               <div className="help-inline-row">
@@ -3661,6 +3676,7 @@ export function CourseWorkbench({
 
           <details
             className="details-panel"
+            hidden={activeStudioStep !== "edit"}
             id="first-module-guide"
             onToggle={(event) => setIsFirstModuleGuideOpen(event.currentTarget.open)}
             open={isFirstModuleGuideOpen}
@@ -3711,6 +3727,7 @@ export function CourseWorkbench({
 
           <details
             className="details-panel"
+            hidden={activeStudioStep !== "edit"}
             id="authoring-guide"
             onToggle={(event) => setIsAuthoringGuideOpen(event.currentTarget.open)}
             open={isAuthoringGuideOpen}
@@ -3790,7 +3807,7 @@ nodes:
             </div>
           </details>
 
-          <div className="source-row">
+          <div className="source-row" hidden={activeStudioStep !== "edit"}>
             <span className="status-pill">{sourceLabel}</span>
             <span
               className={`status-pill ${
@@ -3804,7 +3821,7 @@ nodes:
           </div>
 
           {authoringMode === "builder" ? (
-            <div ref={yamlEditorRef}>
+            <div hidden={activeStudioStep !== "edit"} ref={yamlEditorRef}>
               <CourseBuilder
                 course={builderDraft}
                 compiledCourse={activeSnapshot.canonicalCourse}
@@ -3813,7 +3830,7 @@ nodes:
               />
             </div>
           ) : (
-            <div ref={yamlEditorRef}>
+            <div hidden={activeStudioStep !== "edit"} ref={yamlEditorRef}>
               <YamlEditor
                 onChange={handleYamlChange}
                 placeholder="Paste course YAML here..."
@@ -3823,14 +3840,14 @@ nodes:
           )}
 
           {feedback ? (
-            <div className={`feedback-banner feedback-${feedback.tone}`}>
+            <div className={`feedback-banner feedback-${feedback.tone}`} hidden={activeStudioStep !== "edit"}>
               <strong>{feedback.title}</strong>
               <span>{feedback.message}</span>
             </div>
           ) : null}
 
           {displayedValidationErrors.length > 0 ? (
-            <div className="error-panel">
+            <div className="error-panel" hidden={activeStudioStep !== "edit"}>
               <h3>
                 {authoringMode === "builder"
                   ? "Builder issues to fix"
@@ -3846,7 +3863,7 @@ nodes:
           ) : null}
 
           {activeSnapshot.warnings.length > 0 ? (
-            <div className="error-panel">
+            <div className="error-panel" hidden={activeStudioStep !== "edit"}>
               <h3>Build warnings to review</h3>
               <p className="panel-copy">
                 These warnings will not stop export, but they may still be worth fixing.
@@ -3855,7 +3872,7 @@ nodes:
             </div>
           ) : null}
 
-          <div className="export-bar" ref={exportSectionRef}>
+          <div className="export-bar" hidden={activeStudioStep !== "export"} ref={exportSectionRef}>
             <div>
               <p className="eyebrow">Export Build</p>
               <h3>Export your course as SCORM</h3>
@@ -3970,7 +3987,7 @@ nodes:
           </div>
 
           {selectedTemplate && selectedTemplate.variants.length > 1 ? (
-            <section className="panel export-result-panel">
+            <section className="panel export-result-panel" hidden={activeStudioStep !== "export"}>
               <div className="export-result-header">
                 <div>
                   <p className="eyebrow">Batch Build</p>
@@ -4066,7 +4083,7 @@ nodes:
           ) : null}
 
           {lastExportedPackage ? (
-            <section className="panel export-result-panel">
+            <section className="panel export-result-panel" hidden={activeStudioStep !== "export"}>
               <div className="export-result-header">
                 <div>
                   <p className="eyebrow">Generated Package</p>
@@ -4208,7 +4225,7 @@ nodes:
             </section>
           ) : null}
 
-          <details className="details-panel">
+          <details className="details-panel" hidden={activeStudioStep !== "advanced"}>
             <summary>How reusable blocks work</summary>
             <div className="details-copy">
               <p className="panel-copy">
@@ -4221,7 +4238,7 @@ nodes:
           </details>
 
           {selectedPack ? (
-            <details className="details-panel">
+            <details className="details-panel" hidden={activeStudioStep !== "advanced"}>
               <summary>
                 {selectedProject ? "View source project notes" : "View template pack notes"}
               </summary>
@@ -4230,7 +4247,7 @@ nodes:
           ) : null}
 
           {selectedTemplate ? (
-            <details className="details-panel">
+            <details className="details-panel" hidden={activeStudioStep !== "advanced"}>
               <summary>View template notes and variable schema</summary>
               <div className="details-copy">
                 <pre className="json-preview">{selectedTemplate.readme}</pre>
@@ -4239,7 +4256,7 @@ nodes:
             </details>
           ) : null}
 
-          <details className="details-panel">
+          <details className="details-panel" hidden={activeStudioStep !== "advanced"}>
             <summary>View resolved source document</summary>
             <pre className="json-preview">
               {activeSnapshot.expandedCourseJson ||
@@ -4247,7 +4264,7 @@ nodes:
             </pre>
           </details>
 
-          <details className="details-panel">
+          <details className="details-panel" hidden={activeStudioStep !== "advanced"}>
             <summary>View canonical normalized model</summary>
             <pre className="json-preview">
               {activeSnapshot.compiledJson ||
@@ -4256,8 +4273,8 @@ nodes:
           </details>
         </div>
 
-        <div className="preview-column">
-          <section className="panel preview-cta-panel">
+        <div className="preview-column" hidden={activeStudioStep === "setup" || activeStudioStep === "edit"}>
+          <section className="panel preview-cta-panel" hidden={activeStudioStep !== "preview"}>
             <div>
               <p className="eyebrow">Preview</p>
               <div className="help-inline-row">
@@ -4299,7 +4316,7 @@ nodes:
             </div>
           </section>
 
-          <div ref={previewPanelRef}>
+          <div hidden={activeStudioStep !== "preview"} ref={previewPanelRef}>
             {activePreviewCourse ? (
               <RuntimePlayer course={activePreviewCourse} />
             ) : (
@@ -4314,7 +4331,7 @@ nodes:
             )}
           </div>
 
-          <section className="panel notes-panel" ref={validationSectionRef}>
+          <section className="panel notes-panel" hidden={activeStudioStep !== "export"} ref={validationSectionRef}>
             <p className="eyebrow">Before Export</p>
             <div className="help-inline-row">
               <h2>Ready for LMS validation</h2>
@@ -4358,16 +4375,16 @@ nodes:
             </div>
           </section>
 
-          <LmsValidationPanel catalog={validationCatalog} />
-          <LmsValidationWorkspace
+          <div hidden={activeStudioStep !== "export"}><LmsValidationPanel catalog={validationCatalog} /></div>
+          <div hidden={activeStudioStep !== "export"}><LmsValidationWorkspace
             catalog={validationCatalog}
             onSelectTarget={setSelectedValidationTargetId}
             selectedTargetId={
               selectedValidationTarget?.id ?? validationCatalog.platforms[0].id
             }
-          />
+          /></div>
 
-          <details className="details-panel studio-advanced-panel" ref={advancedSectionRef}>
+          <details className="details-panel studio-advanced-panel" hidden={activeStudioStep !== "advanced"} ref={advancedSectionRef}>
             <summary>Advanced tools for source, testing, and modules</summary>
             <div className="details-copy studio-advanced-stack">
 

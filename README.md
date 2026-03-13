@@ -42,6 +42,7 @@ If you are evaluating the platform, start here. The repo already includes exampl
   - `security-awareness`
   - `workplace-conduct`
   - `customer-service`
+  - `sapio-forge-discovery`
 - `template-packs/`
   - `security-awareness`
   - `workplace-conduct`
@@ -96,7 +97,7 @@ starter-repo.yaml
 
 3. Open the starter studio at `http://localhost:3000/studio`.
    The studio loads starter examples directly from `course-projects/`, including
-   phishing email, escalation chat, and dashboard review simulations.
+   phishing email, escalation chat, dashboard review simulations, and the Sapio Forge discovery walkthrough.
 
 4. Validate a starter project locally.
 
@@ -286,6 +287,7 @@ See:
 
 - [docs/testing-course-logic.md](docs/testing-course-logic.md)
 - [docs/why-testable-learning-logic-matters.md](docs/why-testable-learning-logic-matters.md)
+- [docs/sapio-forge-discovery-demo.md](docs/sapio-forge-discovery-demo.md)
 
 ## GitHub Actions
 

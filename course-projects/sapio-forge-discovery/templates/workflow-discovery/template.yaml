@@ -1,0 +1,863 @@
+id: workflow-discovery
+title: "{{courseTitle}}"
+description: "{{courseDescription}}"
+start: intro
+passingScore: 5
+templateData:
+  courseTitle: Why Sapio Forge?
+  courseDescription: A short structured walkthrough that shows Sapio Forge while collecting discovery feedback about training maintenance.
+  teamName: Instructional Design Team
+  stakeholderName: Director of Compliance
+  updateTopic: reporting policy language
+  impactedCourseCount: 20
+  audienceLabel: instructional designers
+state:
+  roleSegment:
+    type: enum
+    initial: unknown
+    description: Role selected during the discovery conversation.
+    options:
+      - instructional_designer
+      - learning_technologist
+      - lms_admin
+      - training_manager
+      - technical_trainer
+      - other
+      - unknown
+  currentTool:
+    type: enum
+    initial: unknown
+    description: Current course authoring tool or workflow.
+    options:
+      - storyline
+      - rise
+      - captivate
+      - lms_native
+      - custom
+      - other
+      - unknown
+  painPoint:
+    type: enum
+    initial: unknown
+    description: Biggest workflow frustration called out by the learner.
+    options:
+      - maintenance
+      - branching
+      - review
+      - exports
+      - handoff
+      - unknown
+  updateApproach:
+    type: enum
+    initial: unknown
+    description: How the learner says their team would handle a shared change across many courses.
+    options:
+      - manual
+      - duplicate
+      - shared
+      - unknown
+  adoptionFit:
+    type: enum
+    initial: undecided
+    description: Reaction to the Sapio Forge workflow.
+    options:
+      - strong
+      - curious
+      - not_yet
+      - undecided
+  blocker:
+    type: enum
+    initial: none
+    description: Biggest adoption blocker surfaced in the reflection step.
+    options:
+      - learning_curve
+      - team_fit
+      - governance
+      - procurement
+      - none
+  fitSignal:
+    type: number
+    initial: 0
+    description: Lightweight fit signal based on the selected workflow and reaction choices.
+blocks:
+  result_block:
+    - id: strong-fit
+      type: result
+      layout: result
+      title: Strong fit signal
+      outcome: passed
+      body:
+        - You identified repeatable maintenance pain that Sapio Forge is designed to address.
+        - "Suggested next step: run a deeper demo with one recurring update scenario from your own team."
+        - "Fit signal: {{score}} / {{maxScore}}"
+    - id: curious-fit
+      type: result
+      layout: result
+      title: Promising, with questions to work through
+      outcome: neutral
+      body:
+        - There is real interest here, but adoption will depend on whether the workflow feels approachable for your team.
+        - "Suggested next step: open the guided editor path and pressure-test one recurring scenario."
+        - "Fit signal: {{score}} / {{maxScore}}"
+    - id: not-yet-fit
+      type: result
+      layout: result
+      title: Not a priority yet
+      outcome: neutral
+      body:
+        - Sapio Forge may not be the next step yet, but the answers above still show where maintenance friction appears today.
+        - "Suggested next step: keep the summary and revisit when reuse, branching, or review complexity increases."
+        - "Fit signal: {{score}} / {{maxScore}}"
+nodes:
+  - include:
+      module: sapio_forge_update_notice
+      version: 1.0.0
+      with:
+        courseTitle: "{{courseTitle}}"
+        teamName: "{{teamName}}"
+        stakeholderName: "{{stakeholderName}}"
+        updateTopic: "{{updateTopic}}"
+        impactedCourseCount: "{{impactedCourseCount}}"
+  - id: role-check
+    type: branch
+    layout: text
+    shell: chat_shell
+    title: Who are we learning from?
+    chat:
+      title: Discovery conversation
+      systemNotice: Pick the role that best matches the person reviewing this workflow.
+      messages:
+        - sender: Sapio Forge
+          role: other
+          timestamp: 9:01 AM
+          text: Which role best matches you today?
+    body: Choose the closest role.
+    options:
+      - id: role-id
+        label: Instructional designer
+        next: current-tool
+        score: 0
+        stateUpdates:
+          - variable: roleSegment
+            set: instructional_designer
+      - id: role-learning-tech
+        label: Learning technologist
+        next: current-tool
+        score: 0
+        stateUpdates:
+          - variable: roleSegment
+            set: learning_technologist
+      - id: role-lms-admin
+        label: LMS admin
+        next: current-tool
+        score: 0
+        stateUpdates:
+          - variable: roleSegment
+            set: lms_admin
+      - id: role-manager
+        label: Training manager
+        next: current-tool
+        score: 0
+        stateUpdates:
+          - variable: roleSegment
+            set: training_manager
+      - id: role-technical
+        label: Developer or technical trainer
+        next: current-tool
+        score: 0
+        stateUpdates:
+          - variable: roleSegment
+            set: technical_trainer
+      - id: role-other
+        label: Other
+        next: current-tool
+        score: 0
+        stateUpdates:
+          - variable: roleSegment
+            set: other
+    interactions:
+      - id: role-id-reply
+        type: chat_reply_option
+        optionId: role-id
+        label: Instructional designer
+        feedback: Thanks. We'll frame the next questions around day-to-day course maintenance.
+      - id: role-learning-tech-reply
+        type: chat_reply_option
+        optionId: role-learning-tech
+        label: Learning technologist
+        feedback: Thanks. We'll frame the next questions around systems and delivery workflows.
+      - id: role-lms-admin-reply
+        type: chat_reply_option
+        optionId: role-lms-admin
+        label: LMS admin
+        feedback: Thanks. We'll keep the next questions focused on delivery and handoff friction.
+      - id: role-manager-reply
+        type: chat_reply_option
+        optionId: role-manager
+        label: Training manager
+        feedback: Thanks. We'll focus on repeatability, handoffs, and review workload.
+      - id: role-technical-reply
+        type: chat_reply_option
+        optionId: role-technical
+        label: Developer or technical trainer
+        feedback: Thanks. We'll connect the workflow to source, tests, and reproducible builds.
+      - id: role-other-reply
+        type: chat_reply_option
+        optionId: role-other
+        label: Other
+        feedback: Thanks. The next questions will still focus on maintenance and reuse.
+  - id: current-tool
+    type: choice
+    layout: text
+    shell: chat_shell
+    title: Current workflow
+    chat:
+      title: Discovery conversation
+      systemNotice: Capture the current course-authoring baseline before showing the Sapio Forge workflow.
+      messages:
+        - sender: Sapio Forge
+          role: other
+          timestamp: 9:02 AM
+          text: What tool or workflow do you use today for most courses?
+    body: Choose the closest fit.
+    options:
+      - id: tool-storyline
+        label: Storyline
+        next: pain-point
+        score: 0
+        stateUpdates:
+          - variable: currentTool
+            set: storyline
+      - id: tool-rise
+        label: Rise
+        next: pain-point
+        score: 0
+        stateUpdates:
+          - variable: currentTool
+            set: rise
+      - id: tool-captivate
+        label: Captivate
+        next: pain-point
+        score: 0
+        stateUpdates:
+          - variable: currentTool
+            set: captivate
+      - id: tool-lms-native
+        label: Built-in LMS tools
+        next: pain-point
+        score: 0
+        stateUpdates:
+          - variable: currentTool
+            set: lms_native
+      - id: tool-custom
+        label: Custom internal workflow
+        next: pain-point
+        score: 0
+        stateUpdates:
+          - variable: currentTool
+            set: custom
+      - id: tool-other
+        label: Something else
+        next: pain-point
+        score: 0
+        stateUpdates:
+          - variable: currentTool
+            set: other
+    interactions:
+      - id: tool-storyline-reply
+        type: chat_reply_option
+        optionId: tool-storyline
+        label: Storyline
+        feedback: Great. We'll anchor the next question in maintenance and reuse.
+      - id: tool-rise-reply
+        type: chat_reply_option
+        optionId: tool-rise
+        label: Rise
+        feedback: Great. We'll anchor the next question in maintenance and reuse.
+      - id: tool-captivate-reply
+        type: chat_reply_option
+        optionId: tool-captivate
+        label: Captivate
+        feedback: Great. We'll anchor the next question in maintenance and reuse.
+      - id: tool-lms-native-reply
+        type: chat_reply_option
+        optionId: tool-lms-native
+        label: Built-in LMS tools
+        feedback: Great. We'll anchor the next question in maintenance and reuse.
+      - id: tool-custom-reply
+        type: chat_reply_option
+        optionId: tool-custom
+        label: Custom internal workflow
+        feedback: Great. We'll anchor the next question in maintenance and reuse.
+      - id: tool-other-reply
+        type: chat_reply_option
+        optionId: tool-other
+        label: Something else
+        feedback: Great. We'll anchor the next question in maintenance and reuse.
+  - id: pain-point
+    type: choice
+    layout: text
+    shell: chat_shell
+    title: Biggest pain point
+    chat:
+      title: Discovery conversation
+      systemNotice: This is one of the key discovery questions for the walkthrough.
+      messages:
+        - sender: Sapio Forge
+          role: other
+          timestamp: 9:03 AM
+          text: What is the most frustrating part of your current course workflow?
+    body: Pick the friction that hurts the most right now.
+    options:
+      - id: pain-maintenance
+        label: Updating the same content across many courses
+        next: update-request
+        score: 2
+        stateUpdates:
+          - variable: painPoint
+            set: maintenance
+          - variable: fitSignal
+            increment: 2
+      - id: pain-branching
+        label: Reviewing and trusting branching logic
+        next: update-request
+        score: 2
+        stateUpdates:
+          - variable: painPoint
+            set: branching
+          - variable: fitSignal
+            increment: 2
+      - id: pain-review
+        label: Reviewing changes and QA handoffs
+        next: update-request
+        score: 1
+        stateUpdates:
+          - variable: painPoint
+            set: review
+          - variable: fitSignal
+            increment: 1
+      - id: pain-exports
+        label: Keeping exports reliable and repeatable
+        next: update-request
+        score: 1
+        stateUpdates:
+          - variable: painPoint
+            set: exports
+          - variable: fitSignal
+            increment: 1
+      - id: pain-handoff
+        label: Handing work between people without losing context
+        next: update-request
+        score: 1
+        stateUpdates:
+          - variable: painPoint
+            set: handoff
+          - variable: fitSignal
+            increment: 1
+    interactions:
+      - id: pain-maintenance-reply
+        type: chat_reply_option
+        optionId: pain-maintenance
+        label: Repeated updates across courses
+        feedback: That is exactly the kind of maintenance problem this walkthrough is designed to surface.
+      - id: pain-branching-reply
+        type: chat_reply_option
+        optionId: pain-branching
+        label: Branching confidence
+        feedback: Branching logic becomes much easier to inspect when it lives in structured source and tests.
+      - id: pain-review-reply
+        type: chat_reply_option
+        optionId: pain-review
+        label: Review and QA handoffs
+        feedback: Sapio Forge aims to make review and handoff cleaner by keeping the logic in readable source.
+      - id: pain-exports-reply
+        type: chat_reply_option
+        optionId: pain-exports
+        label: Reliable exports
+        feedback: Reproducible export builds are part of the source-first model.
+      - id: pain-handoff-reply
+        type: chat_reply_option
+        optionId: pain-handoff
+        label: Team handoffs
+        feedback: Structured source makes it easier to explain and review what changed.
+  - id: update-request
+    type: branch
+    layout: text
+    shell: email_shell
+    title: Shared change request
+    email:
+      from: "{{stakeholderName}}"
+      subject: "Update {{updateTopic}} in {{impactedCourseCount}} modules"
+      previewText: We need a fast and consistent update path before the next rollout.
+      attachments:
+        - affected-modules.csv
+    body:
+      - If this request landed today, how would your team handle it?
+      - This is the third key discovery prompt in the walkthrough.
+    options:
+      - id: update-manual
+        label: Update each course manually
+        next: sapio-forge-concept
+        score: 2
+        stateUpdates:
+          - variable: updateApproach
+            set: manual
+          - variable: fitSignal
+            increment: 2
+      - id: update-duplicate
+        label: Duplicate and republish batches of screens
+        next: sapio-forge-concept
+        score: 1
+        stateUpdates:
+          - variable: updateApproach
+            set: duplicate
+          - variable: fitSignal
+            increment: 1
+      - id: update-shared
+        label: Update one shared module and rebuild affected courses
+        next: sapio-forge-concept
+        score: 1
+        stateUpdates:
+          - variable: updateApproach
+            set: shared
+          - variable: fitSignal
+            increment: 1
+    interactions:
+      - id: review-affected-courses
+        type: email_attachment
+        optionId: update-manual
+        label: Review affected course list
+        fileName: affected-modules.csv
+        feedback: "This is what many teams still do today: review every affected course and update it by hand."
+      - id: duplicate-builds
+        type: email_action_button
+        optionId: update-duplicate
+        label: Duplicate and republish
+        variant: secondary
+        feedback: Duplicating screens can feel faster in the moment, but it still multiplies maintenance.
+      - id: update-shared-source
+        type: email_action_button
+        optionId: update-shared
+        label: Update shared source
+        variant: primary
+        feedback: This is the source-first path Sapio Forge is designed to support.
+  - include:
+      module: sapio_forge_pipeline_snapshot
+      version: 1.0.0
+      with:
+        teamName: "{{teamName}}"
+  - id: reaction
+    type: choice
+    layout: text
+    shell: chat_shell
+    title: Reaction to the workflow
+    chat:
+      title: Discovery conversation
+      systemNotice: The goal is not to imitate a slide editor. The goal is to make maintenance, reuse, and delivery easier to manage.
+      messages:
+        - sender: Sapio Forge
+          role: other
+          timestamp: 9:06 AM
+          text: Does this workflow solve a real pain point for your team?
+    body: Choose the response that fits best.
+    options:
+      - id: reaction-strong
+        label: Yes, this solves a real maintenance problem for us
+        next: blocker
+        score: 2
+        stateUpdates:
+          - variable: adoptionFit
+            set: strong
+          - variable: fitSignal
+            increment: 2
+      - id: reaction-curious
+        label: Maybe, but the workflow would need to feel easy for the team
+        next: blocker
+        score: 1
+        stateUpdates:
+          - variable: adoptionFit
+            set: curious
+          - variable: fitSignal
+            increment: 1
+      - id: reaction-not-yet
+        label: Not yet; the pain is real but this would not be the next step
+        next: blocker
+        score: 0
+        stateUpdates:
+          - variable: adoptionFit
+            set: not_yet
+    interactions:
+      - id: reaction-strong-reply
+        type: chat_reply_option
+        optionId: reaction-strong
+        label: Strong fit
+        feedback: Great. The blocker question helps surface what the team would still need to move forward.
+      - id: reaction-curious-reply
+        type: chat_reply_option
+        optionId: reaction-curious
+        label: Curious, but cautious
+        feedback: Great. The blocker question helps surface what would make adoption easier.
+      - id: reaction-not-yet-reply
+        type: chat_reply_option
+        optionId: reaction-not-yet
+        label: Not a near-term fit
+        feedback: Great. The blocker question still helps capture what would need to change later.
+  - id: blocker
+    type: choice
+    layout: text
+    shell: dashboard_shell
+    title: What would block adoption first?
+    dashboard:
+      title: Adoption planning board
+      notice: Choose the blocker that feels most real right now.
+      navItems:
+        - People
+        - Process
+        - Governance
+        - Procurement
+      cards:
+        - title: Keep it accessible
+          text: Most nontechnical instructional designers need the workflow to stay approachable in Guided Editor.
+          metricLabel: Risk
+          metricValue: Learning curve
+          status: warning
+          visibleIf:
+            - variable: adoptionFit
+              equals: curious
+        - title: Team process
+          text: Reuse only works when templates, reviews, and ownership are clear.
+          metricLabel: Risk
+          metricValue: Team fit
+          status: warning
+          visibleIf:
+            - variable: adoptionFit
+              oneOf:
+                - strong
+                - curious
+    body: Pick the blocker that would matter most for your team.
+    options:
+      - id: blocker-learning-curve
+        label: The workflow needs to feel easier for nontechnical authors
+        next: summary
+        score: 0
+        stateUpdates:
+          - variable: blocker
+            set: learning_curve
+      - id: blocker-team-fit
+        label: We would need a clearer team process around templates and reviews
+        next: summary
+        score: 0
+        stateUpdates:
+          - variable: blocker
+            set: team_fit
+      - id: blocker-governance
+        label: Governance or IT review would slow adoption
+        next: summary
+        score: 0
+        stateUpdates:
+          - variable: blocker
+            set: governance
+      - id: blocker-procurement
+        label: Procurement or platform approvals would come first
+        next: summary
+        score: 0
+        stateUpdates:
+          - variable: blocker
+            set: procurement
+      - id: blocker-none
+        label: No major blocker right now
+        next: summary
+        score: 0
+        stateUpdates:
+          - variable: blocker
+            set: none
+    interactions:
+      - id: blocker-learning-curve-card
+        type: dashboard_action_card
+        optionId: blocker-learning-curve
+        title: Ease the learning curve
+        text: Guided Editor and clearer onboarding would matter most.
+        status: warning
+        feedback: Helpful signal. This is where beginner-friendly UX matters most.
+      - id: blocker-team-fit-card
+        type: dashboard_action_card
+        optionId: blocker-team-fit
+        title: Clarify team process
+        text: Templates, reviews, and ownership would need to be clear.
+        status: warning
+        feedback: Helpful signal. This points to adoption process rather than core capability.
+      - id: blocker-governance-card
+        type: dashboard_action_card
+        optionId: blocker-governance
+        title: Governance review
+        text: Security, governance, or IT review would shape the timeline.
+        status: neutral
+        feedback: Helpful signal. This points to rollout planning and validation expectations.
+      - id: blocker-procurement-card
+        type: dashboard_action_card
+        optionId: blocker-procurement
+        title: Procurement path
+        text: Procurement or platform approvals would be the gating factor.
+        status: neutral
+        feedback: Helpful signal. This is useful context for follow-up conversations.
+      - id: blocker-none-card
+        type: dashboard_action_card
+        optionId: blocker-none
+        title: No major blocker
+        text: The team could explore a deeper pilot now.
+        status: positive
+        feedback: Helpful signal. This suggests the workflow is ready for a deeper evaluation.
+  - id: summary
+    type: content
+    layout: text
+    shell: dashboard_shell
+    title: Discovery summary
+    dashboard:
+      title: Sapio Forge discovery summary
+      notice: This summary stays inside the module locally. Use it to guide the follow-up conversation or product feedback.
+      navItems:
+        - Profile
+        - Current workflow
+        - Maintenance signal
+        - Next step
+      cards:
+        - title: Role
+          text: Reviewing this workflow from an instructional design perspective.
+          metricLabel: Segment
+          metricValue: Instructional designer
+          status: neutral
+          visibleIf:
+            - variable: roleSegment
+              equals: instructional_designer
+        - title: Role
+          text: Reviewing this workflow from a learning technology perspective.
+          metricLabel: Segment
+          metricValue: Learning technologist
+          status: neutral
+          visibleIf:
+            - variable: roleSegment
+              equals: learning_technologist
+        - title: Role
+          text: Reviewing this workflow from an LMS administration perspective.
+          metricLabel: Segment
+          metricValue: LMS admin
+          status: neutral
+          visibleIf:
+            - variable: roleSegment
+              equals: lms_admin
+        - title: Role
+          text: Reviewing this workflow from a training management perspective.
+          metricLabel: Segment
+          metricValue: Training manager
+          status: neutral
+          visibleIf:
+            - variable: roleSegment
+              equals: training_manager
+        - title: Role
+          text: Reviewing this workflow from a technical training perspective.
+          metricLabel: Segment
+          metricValue: Technical trainer
+          status: neutral
+          visibleIf:
+            - variable: roleSegment
+              equals: technical_trainer
+        - title: Role
+          text: Reviewing this workflow from another role perspective.
+          metricLabel: Segment
+          metricValue: Other
+          status: neutral
+          visibleIf:
+            - variable: roleSegment
+              equals: other
+        - title: Current tool
+          text: Storyline is the current baseline for most course work.
+          metricLabel: Tool
+          metricValue: Storyline
+          status: neutral
+          visibleIf:
+            - variable: currentTool
+              equals: storyline
+        - title: Current tool
+          text: Rise is the current baseline for most course work.
+          metricLabel: Tool
+          metricValue: Rise
+          status: neutral
+          visibleIf:
+            - variable: currentTool
+              equals: rise
+        - title: Current tool
+          text: Captivate is the current baseline for most course work.
+          metricLabel: Tool
+          metricValue: Captivate
+          status: neutral
+          visibleIf:
+            - variable: currentTool
+              equals: captivate
+        - title: Current tool
+          text: Built-in LMS tools are the current baseline for most course work.
+          metricLabel: Tool
+          metricValue: LMS-native
+          status: neutral
+          visibleIf:
+            - variable: currentTool
+              equals: lms_native
+        - title: Current tool
+          text: A custom internal workflow is the current baseline for most course work.
+          metricLabel: Tool
+          metricValue: Custom
+          status: neutral
+          visibleIf:
+            - variable: currentTool
+              equals: custom
+        - title: Current tool
+          text: Another tool or workflow is the current baseline for most course work.
+          metricLabel: Tool
+          metricValue: Other
+          status: neutral
+          visibleIf:
+            - variable: currentTool
+              equals: other
+        - title: Biggest pain point
+          text: Repeated updates across many courses is the clearest pain signal.
+          metricLabel: Friction
+          metricValue: Maintenance
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: maintenance
+        - title: Biggest pain point
+          text: Reviewing and trusting branching logic is the clearest pain signal.
+          metricLabel: Friction
+          metricValue: Branching
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: branching
+        - title: Biggest pain point
+          text: Review and QA handoffs are the clearest pain signal.
+          metricLabel: Friction
+          metricValue: Review
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: review
+        - title: Biggest pain point
+          text: Reliable export output is the clearest pain signal.
+          metricLabel: Friction
+          metricValue: Exports
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: exports
+        - title: Biggest pain point
+          text: Team handoff and ownership is the clearest pain signal.
+          metricLabel: Friction
+          metricValue: Handoffs
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: handoff
+        - title: Update strategy
+          text: The team would update each course manually when a shared change lands.
+          metricLabel: Update path
+          metricValue: Manual
+          status: danger
+          visibleIf:
+            - variable: updateApproach
+              equals: manual
+        - title: Update strategy
+          text: The team would duplicate and republish batches of screens.
+          metricLabel: Update path
+          metricValue: Duplicate
+          status: warning
+          visibleIf:
+            - variable: updateApproach
+              equals: duplicate
+        - title: Update strategy
+          text: The team would update one shared module and rebuild affected courses.
+          metricLabel: Update path
+          metricValue: Shared source
+          status: positive
+          visibleIf:
+            - variable: updateApproach
+              equals: shared
+        - title: Reaction
+          text: This looks like a strong fit for the team's maintenance workflow.
+          metricLabel: Reaction
+          metricValue: Strong fit
+          status: positive
+          visibleIf:
+            - variable: adoptionFit
+              equals: strong
+        - title: Reaction
+          text: There is interest here, but the workflow still needs to feel easier or lower-risk.
+          metricLabel: Reaction
+          metricValue: Curious
+          status: warning
+          visibleIf:
+            - variable: adoptionFit
+              equals: curious
+        - title: Reaction
+          text: The pain is real, but this workflow is not the next step right now.
+          metricLabel: Reaction
+          metricValue: Not yet
+          status: neutral
+          visibleIf:
+            - variable: adoptionFit
+              equals: not_yet
+        - title: Adoption blocker
+          text: Nontechnical author ease-of-use is the biggest blocker right now.
+          metricLabel: Blocker
+          metricValue: Learning curve
+          status: warning
+          visibleIf:
+            - variable: blocker
+              equals: learning_curve
+        - title: Adoption blocker
+          text: Team workflow and ownership are the biggest blockers right now.
+          metricLabel: Blocker
+          metricValue: Team fit
+          status: warning
+          visibleIf:
+            - variable: blocker
+              equals: team_fit
+        - title: Adoption blocker
+          text: Governance or IT review is the biggest blocker right now.
+          metricLabel: Blocker
+          metricValue: Governance
+          status: neutral
+          visibleIf:
+            - variable: blocker
+              equals: governance
+        - title: Adoption blocker
+          text: Procurement or platform approvals are the biggest blocker right now.
+          metricLabel: Blocker
+          metricValue: Procurement
+          status: neutral
+          visibleIf:
+            - variable: blocker
+              equals: procurement
+        - title: Adoption blocker
+          text: No major blocker was identified in this walkthrough.
+          metricLabel: Blocker
+          metricValue: None
+          status: positive
+          visibleIf:
+            - variable: blocker
+              equals: none
+    body:
+      - This summary stays inside the module locally and works well as a discovery interview recap.
+      - If you use this in the studio, you can also send product feedback with the current context attached.
+    next: curious-fit
+    nextWhen:
+      - when:
+          - variable: adoptionFit
+            equals: strong
+        next: strong-fit
+      - when:
+          - variable: adoptionFit
+            equals: not_yet
+        next: not-yet-fit
+  - include: result_block
+
+

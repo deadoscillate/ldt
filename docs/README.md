@@ -22,6 +22,7 @@ Start here if you are adopting the repository as a starter template:
 - [architecture/scene-component-rendering-model.md](architecture/scene-component-rendering-model.md)
 - [testing-course-logic.md](testing-course-logic.md)
 - [why-testable-learning-logic-matters.md](why-testable-learning-logic-matters.md)
+- [sapio-forge-discovery-demo.md](sapio-forge-discovery-demo.md)
 - [providing-beta-feedback.md](providing-beta-feedback.md)
 - [beta-telemetry.md](beta-telemetry.md)
 - [build-pipeline.md](build-pipeline.md)

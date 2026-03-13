@@ -1,0 +1,46 @@
+id: sapio-forge-discovery
+title: Sapio Forge Discovery Demo
+description: Flagship demo module that doubles as a discovery interview instrument for training maintenance workflows.
+version: 0.1.0
+author: Sapio Forge
+createdAt: 2026-03-13
+updatedAt: 2026-03-13
+defaultTemplateId: workflow-discovery
+defaultVariantId: instructional-design-team
+defaultThemeId: default
+buildTargets:
+  - scorm12
+readme: README.md
+gitignore: .gitignore
+buildDirectory: build
+assetsDirectory: assets
+testsDirectory: tests
+templates:
+  - id: workflow-discovery
+    title: Sapio Forge workflow discovery
+    description: Short concept walkthrough that demonstrates Sapio Forge while collecting structured discovery feedback.
+    recommendedUseCase: Use in product demos, discovery interviews, workshops, and internal dogfooding sessions.
+    template: templates/workflow-discovery/template.yaml
+    schema: templates/workflow-discovery/schema.yaml
+    readme: templates/workflow-discovery/README.md
+variants:
+  - id: instructional-design-team
+    templateId: workflow-discovery
+    title: Instructional design team walkthrough
+    description: Default walkthrough tuned for instructional designers reviewing maintenance pain.
+    source: variants/instructional-design-team.yaml
+  - id: consulting-discovery
+    templateId: workflow-discovery
+    title: Consultant discovery walkthrough
+    description: Variant framed for training consultants managing reusable client deliverables.
+    source: variants/consulting-discovery.yaml
+  - id: technical-ld-review
+    templateId: workflow-discovery
+    title: Technical L&D workflow review
+    description: Variant framed for technical teams evaluating source-controlled course workflows.
+    source: variants/technical-ld-review.yaml
+themes:
+  - id: default
+    theme: themes/default/theme.yaml
+    tokens: themes/default/tokens.yaml
+    assetsDirectory: themes/default/assets

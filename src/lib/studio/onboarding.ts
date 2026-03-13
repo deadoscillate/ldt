@@ -136,6 +136,18 @@ export const STARTER_EXAMPLES: readonly StarterExampleDefinition[] = [
     authoringMode: "builder",
   },
   {
+    id: "sapio-forge-discovery-demo",
+    audience: "beginner",
+    title: "Sapio Forge discovery walkthrough",
+    description:
+      "Open the flagship Sapio Forge demo to show the product while collecting structured feedback about maintenance pain points.",
+    projectId: "sapio-forge-discovery",
+    templateId: "workflow-discovery",
+    variantId: "instructional-design-team",
+    themeId: "default",
+    authoringMode: "builder",
+  },
+  {
     id: "advanced-family",
     audience: "advanced",
     title: "Course family project",

@@ -23,4 +23,12 @@ test("shared module catalog groups versions and usage into first-class families"
   assert.equal(phishingFamily.usedByCount, 6);
   assert.equal(phishingFamily.acceptedVariables.length > 0, true);
   assert.equal(phishingFamily.testStatus, "module-tests");
+
+  const sapioForgeFamily = families.find(
+    (family) => family.id === "sapio_forge_update_notice"
+  );
+
+  assert.ok(sapioForgeFamily);
+  assert.equal(sapioForgeFamily.usedByCount, 3);
+  assert.equal(sapioForgeFamily.acceptedVariables.length > 0, true);
 });

@@ -1,0 +1,13 @@
+id: instructional-design-team
+title: Instructional design team walkthrough
+description: Demo variant for instructional designers evaluating maintenance, reuse, and branching pain.
+templateId: workflow-discovery
+notes: Use this as the default discovery and product-demo variant for instructional designers.
+values:
+  courseTitle: Why Sapio Forge?
+  courseDescription: A short structured walkthrough that shows Sapio Forge while collecting discovery feedback about training maintenance.
+  teamName: Instructional Design Team
+  stakeholderName: Director of Compliance
+  updateTopic: reporting policy language
+  impactedCourseCount: 20
+  audienceLabel: instructional designers

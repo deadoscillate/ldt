@@ -2,11 +2,12 @@
 
 Sapio Forge course projects make structured authoring behave like a small software project.
 
-The starter repository already ships with three example projects under `course-projects/`:
+The starter repository already ships with four example projects under `course-projects/`:
 
 - `security-awareness`
 - `workplace-conduct`
 - `customer-service`
+- `sapio-forge-discovery`
 
 The source of truth is the project source:
 

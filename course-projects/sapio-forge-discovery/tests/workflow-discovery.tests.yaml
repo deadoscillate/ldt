@@ -1,0 +1,140 @@
+id: workflow-discovery
+title: Sapio Forge discovery logic tests
+description: Deterministic learner-path tests for the Sapio Forge discovery demo module.
+target:
+  templateId: workflow-discovery
+  themeId: default
+tests:
+  - id: strong-fit-path
+    name: Maintenance-heavy path produces a strong-fit outcome
+    description: Manual updates plus a strong positive reaction should end in the strong-fit summary.
+    tags:
+      - demo
+      - discovery
+      - stateful
+      - modules
+    target:
+      variantId: instructional-design-team
+    actions:
+      - step: intro
+        advance: true
+      - step: role-check
+        interact: role-id-reply
+      - step: current-tool
+        interact: tool-storyline-reply
+      - step: pain-point
+        interact: pain-maintenance-reply
+      - step: update-request
+        interact: review-affected-courses
+      - step: sapio-forge-concept
+        advance: true
+      - step: reaction
+        interact: reaction-strong-reply
+      - step: blocker
+        interact: blocker-learning-curve-card
+      - step: summary
+        advance: true
+    expect:
+      terminalStep: strong-fit
+      score: 6
+      completionStatus: completed
+      successStatus: passed
+      pathLength: 10
+      variables:
+        teamName: Instructional Design Team
+      state:
+        roleSegment: instructional_designer
+        currentTool: storyline
+        painPoint: maintenance
+        updateApproach: manual
+        adoptionFit: strong
+        blocker: learning_curve
+        fitSignal: 6
+  - id: curious-path
+    name: Reusable update path can still end in a cautious fit outcome
+    description: A team that already thinks in shared updates may still be curious rather than fully committed.
+    tags:
+      - demo
+      - discovery
+      - stateful
+    target:
+      variantId: consulting-discovery
+    actions:
+      - step: intro
+        advance: true
+      - step: role-check
+        interact: role-manager-reply
+      - step: current-tool
+        interact: tool-rise-reply
+      - step: pain-point
+        interact: pain-review-reply
+      - step: update-request
+        interact: update-shared-source
+      - step: sapio-forge-concept
+        advance: true
+      - step: reaction
+        interact: reaction-curious-reply
+      - step: blocker
+        interact: blocker-team-fit-card
+      - step: summary
+        advance: true
+    expect:
+      terminalStep: curious-fit
+      score: 3
+      completionStatus: completed
+      successStatus: neutral
+      pathLength: 10
+      variables:
+        teamName: Consulting Delivery Team
+      state:
+        roleSegment: training_manager
+        currentTool: rise
+        painPoint: review
+        updateApproach: shared
+        adoptionFit: curious
+        blocker: team_fit
+        fitSignal: 3
+  - id: not-yet-path
+    name: Not-yet adoption path stays neutral
+    description: A team can acknowledge the concept and still decide it is not the next step.
+    tags:
+      - demo
+      - discovery
+      - stateful
+    target:
+      variantId: technical-ld-review
+    actions:
+      - step: intro
+        advance: true
+      - step: role-check
+        interact: role-technical-reply
+      - step: current-tool
+        interact: tool-custom-reply
+      - step: pain-point
+        interact: pain-handoff-reply
+      - step: update-request
+        interact: duplicate-builds
+      - step: sapio-forge-concept
+        advance: true
+      - step: reaction
+        interact: reaction-not-yet-reply
+      - step: blocker
+        interact: blocker-governance-card
+      - step: summary
+        advance: true
+    expect:
+      terminalStep: not-yet-fit
+      score: 2
+      completionStatus: completed
+      successStatus: neutral
+      pathLength: 10
+      variables:
+        teamName: Technical L&D Team
+      state:
+        roleSegment: technical_trainer
+        currentTool: custom
+        painPoint: handoff
+        updateApproach: duplicate
+        adoptionFit: not_yet
+        blocker: governance
+        fitSignal: 2

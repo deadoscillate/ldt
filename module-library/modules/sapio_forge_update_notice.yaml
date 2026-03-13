@@ -1,0 +1,74 @@
+id: sapio_forge_update_notice
+title: Shared maintenance change request
+description: Shared opening module for Sapio Forge discovery and maintenance workflow demos.
+version: 1.0.0
+category: sapio-forge
+tags:
+  - demo
+  - discovery
+  - maintenance
+lastUpdated: 2026-03-13
+deprecated: false
+templateData:
+  courseTitle: Why Sapio Forge?
+  teamName: Instructional Design Team
+  stakeholderName: Director of Compliance
+  updateTopic: reporting policy language
+  impactedCourseCount: 20
+variableSchema:
+  variables:
+    courseTitle:
+      type: text
+      label: Course title
+      description: Display title for the opening discovery module.
+    teamName:
+      type: text
+      label: Team name
+      description: Team receiving the maintenance request.
+    stakeholderName:
+      type: text
+      label: Stakeholder name
+      description: Person requesting the update.
+    updateTopic:
+      type: text
+      label: Update topic
+      description: Change request that now touches multiple modules.
+    impactedCourseCount:
+      type: number
+      label: Impacted course count
+      description: Number of affected courses or modules in the maintenance scenario.
+tests:
+  - id: intro-routes-to-role-check
+    name: Intro routes to role check
+    description: Confirms the shared discovery opener routes into the first role question.
+    tags:
+      - navigation
+      - discovery
+nodes:
+  - id: intro
+    type: content
+    layout: text
+    shell: dashboard_shell
+    title: "{{courseTitle}}"
+    dashboard:
+      title: "{{teamName}} training workspace"
+      notice: "{{stakeholderName}} needs {{updateTopic}} updated across {{impactedCourseCount}} modules this week."
+      navItems:
+        - Projects
+        - Shared modules
+        - Build queue
+      cards:
+        - title: Affected courses
+          text: The same change now touches multiple training modules, reviewers, and export files.
+          metricLabel: Modules
+          metricValue: "{{impactedCourseCount}}"
+          status: warning
+        - title: Hidden cost
+          text: When the same content is duplicated across courses, every change becomes a manual project.
+          metricLabel: Maintenance
+          metricValue: Repeated edits
+          status: danger
+    body:
+      - This short walkthrough asks how your team handles updates like this today.
+      - It also shows how Sapio Forge uses reusable source, preview, tests, and SCORM builds in one workflow.
+    next: role-check

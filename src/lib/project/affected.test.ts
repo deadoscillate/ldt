@@ -85,6 +85,8 @@ test("module usage index summarizes which builds depend on each shared module", 
   assert.equal(usageIndex.phishing_intro?.length, 6);
   assert.equal(usageIndex.harassment_intro?.length, 6);
   assert.equal(usageIndex.escalation_policy?.length, 1);
+  assert.equal(usageIndex.sapio_forge_update_notice?.length, 3);
+  assert.equal(usageIndex.sapio_forge_pipeline_snapshot?.length, 3);
   assert.equal(usageIndex.phishing_intro?.[0]?.version, "1.0.0");
   assert.equal((usageIndex.phishing_intro?.[0]?.logicTestCount ?? 0) > 0, true);
 });

@@ -10,6 +10,8 @@ Included starter projects:
   - multi-variant conduct and reporting family
 - `customer-service`
   - customer-service escalation starter scenario
+- `sapio-forge-discovery`
+  - flagship Sapio Forge discovery walkthrough and demo module
 
 Each project keeps:
 

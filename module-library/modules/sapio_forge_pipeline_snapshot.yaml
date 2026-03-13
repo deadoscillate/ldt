@@ -1,0 +1,110 @@
+id: sapio_forge_pipeline_snapshot
+title: Sapio Forge workflow snapshot
+description: Shared concept module showing how Sapio Forge handles reusable source, testing, preview, and export.
+version: 1.0.0
+category: sapio-forge
+tags:
+  - demo
+  - discovery
+  - workflow
+lastUpdated: 2026-03-13
+deprecated: false
+templateData:
+  teamName: Instructional Design Team
+variableSchema:
+  variables:
+    teamName:
+      type: text
+      label: Team name
+      description: Team name used in the workflow snapshot header.
+tests:
+  - id: concept-routes-to-reaction
+    name: Concept routes to reaction
+    description: Confirms the shared concept module routes into the reflection question.
+    tags:
+      - navigation
+      - workflow
+nodes:
+  - id: sapio-forge-concept
+    type: content
+    layout: text
+    shell: dashboard_shell
+    title: How Sapio Forge handles the same change
+    dashboard:
+      title: "{{teamName}} build workspace"
+      notice: One shared source change can update every affected build from the same definition.
+      navItems:
+        - Source
+        - Shared modules
+        - Logic tests
+        - SCORM builds
+      cards:
+        - title: Structured source
+          text: Keep reusable steps, branching, and feedback in readable source instead of duplicated screens.
+          metricLabel: Source of truth
+          metricValue: One definition
+          status: positive
+        - title: Shared module reuse
+          text: The opening maintenance notice in this demo comes from module-library/ and feeds every variant of this walkthrough.
+          metricLabel: Reuse
+          metricValue: Shared module
+          status: positive
+        - title: Preview and export
+          text: Preview the learner flow, run logic tests, and export SCORM from the same validated source.
+          metricLabel: Build path
+          metricValue: Preview -> Test -> Export
+          status: positive
+        - title: Repeated update pain
+          text: A single policy change should not mean touching dozens of separate files by hand.
+          metricLabel: Pain signal
+          metricValue: Manual updates
+          status: warning
+          visibleIf:
+            - variable: updateApproach
+              oneOf:
+                - manual
+                - duplicate
+        - title: Branching confidence
+          text: Structured source and tests make branching logic easier to review than trigger-heavy slide files.
+          metricLabel: Pain signal
+          metricValue: Branching
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: branching
+        - title: Review clarity
+          text: Plain-text source is easier to review than clicking through duplicated screens during QA.
+          metricLabel: Pain signal
+          metricValue: Review
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: review
+        - title: Export reliability
+          text: Reproducible builds matter when SCORM output is part of the delivery workflow.
+          metricLabel: Pain signal
+          metricValue: Exports
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: exports
+        - title: Team handoff
+          text: Structured source helps teams hand work off without hiding the course logic in one person's file.
+          metricLabel: Pain signal
+          metricValue: Handoffs
+          status: warning
+          visibleIf:
+            - variable: painPoint
+              equals: handoff
+    callout:
+      title: Why this matters
+      text: Sapio Forge keeps the editable source, learner preview, tests, and SCORM build tied to the same structured definition.
+      visibleIf:
+        - variable: updateApproach
+          oneOf:
+            - manual
+            - duplicate
+    body:
+      - Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.
+      - Build learning systems like software.
+    next: reaction

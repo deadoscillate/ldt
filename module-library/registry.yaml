@@ -62,3 +62,27 @@ modules:
       - procedure
     lastUpdated: 2026-03-12
     deprecated: false
+  - id: sapio_forge_update_notice
+    version: 1.0.0
+    path: modules/sapio_forge_update_notice.yaml
+    title: Shared maintenance change request
+    description: Shared opening module for Sapio Forge discovery and maintenance workflow demos.
+    category: sapio-forge
+    tags:
+      - demo
+      - discovery
+      - maintenance
+    lastUpdated: 2026-03-13
+    deprecated: false
+  - id: sapio_forge_pipeline_snapshot
+    version: 1.0.0
+    path: modules/sapio_forge_pipeline_snapshot.yaml
+    title: Sapio Forge workflow snapshot
+    description: Shared concept module showing how Sapio Forge handles reusable source, testing, preview, and export.
+    category: sapio-forge
+    tags:
+      - demo
+      - discovery
+      - workflow
+    lastUpdated: 2026-03-13
+    deprecated: false

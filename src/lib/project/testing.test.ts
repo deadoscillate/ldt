@@ -112,3 +112,35 @@ tests:
     /does not exist/
   );
 });
+
+test("sapio-forge discovery project logic tests cover the flagship demo flow", async () => {
+  const [projects, moduleLibrary] = await Promise.all([
+    loadCourseProjects(),
+    loadModuleLibrary(),
+  ]);
+  const project = projects.find((candidate) => candidate.id === "sapio-forge-discovery");
+
+  assert.ok(project);
+
+  const run = runCourseProjectLogicTests(project, {
+    moduleLibrary,
+  });
+
+  assert.equal(run.report.success, true);
+  assert.equal(run.report.totalTests, 3);
+  assert.ok(
+    run.report.results.some(
+      (result) =>
+        result.testId === "strong-fit-path" &&
+        result.actual.terminalStep === "strong-fit" &&
+        result.actual.pathTaken.includes("sapio-forge-concept")
+    )
+  );
+  assert.ok(
+    run.report.results.some(
+      (result) =>
+        result.testId === "not-yet-path" &&
+        result.actual.successStatus === "neutral"
+    )
+  );
+});

@@ -17,10 +17,15 @@ import {
 test("course projects load from disk with valid project metadata and checks", async () => {
   const projects = await loadCourseProjects();
 
-  assert.equal(projects.length, 3);
+  assert.equal(projects.length, 4);
   assert.deepEqual(
-    projects.map((project) => project.id),
-    ["customer-service", "security-awareness", "workplace-conduct"]
+    projects.map((project) => project.id).sort(),
+    [
+      "customer-service",
+      "sapio-forge-discovery",
+      "security-awareness",
+      "workplace-conduct",
+    ]
   );
   assert.ok(projects.every((project) => project.validation.ready));
   assert.ok(

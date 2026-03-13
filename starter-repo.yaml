@@ -28,6 +28,10 @@ courseProjects:
     title: Customer Service Project
     path: course-projects/customer-service
     family: false
+  - id: sapio-forge-discovery
+    title: Sapio Forge Discovery Demo
+    path: course-projects/sapio-forge-discovery
+    family: true
 templatePacks:
   - id: security-awareness
     title: Security Awareness Pack
@@ -67,6 +71,7 @@ docs:
   - docs/repository-philosophy.md
   - docs/ci-cd-for-learning-modules.md
   - docs/rebrand-checklist.md
+  - docs/sapio-forge-discovery-demo.md
 quickStart:
   - npm install
   - npm run dev
