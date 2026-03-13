@@ -5,6 +5,7 @@ import {
   applyChoiceSelection,
   getCurrentNode,
   initializeRuntime,
+  resolveNodeInteraction,
   submitQuizAnswer,
 } from "@/lib/runtime/engine";
 import type { RuntimeState } from "@/lib/runtime/types";
@@ -36,7 +37,7 @@ export interface CourseLogicTestIssue {
 
 export interface CourseLogicTestActionTrace {
   step: string;
-  action: "advance" | "select";
+  action: "advance" | "select" | "interact";
   value: string | readonly string[] | true;
   nextStep: string | null;
 }
@@ -48,6 +49,7 @@ export interface CourseLogicTestActualOutcome {
   successStatus: CourseLogicTestSuccessStatus;
   pathLength: number;
   variables: Record<string, TemplateScalarValue>;
+  state: Record<string, TemplateScalarValue>;
   pathTaken: readonly string[];
 }
 
@@ -206,6 +208,7 @@ function buildRuntimeVariableMap(input: {
     maxScore: input.course.maxScore,
     passingScore: input.course.passingScore,
     percent,
+    ...input.state.scenarioState,
   };
 }
 
@@ -232,6 +235,59 @@ function validateStepAction(
           severity: "error",
           code: "invalid-advance-action",
           message: `Step "${action.step}" is ${node.sourceType}, so it cannot use an advance action.`,
+        },
+      ];
+    }
+
+    return [];
+  }
+
+  if ("interact" in action) {
+    const interactionIds = Array.isArray(action.interact)
+      ? action.interact
+      : [action.interact];
+
+    if (node.type !== "choice" && node.type !== "quiz") {
+      return [
+        {
+          severity: "error",
+          code: "invalid-interact-action",
+          message: `Step "${action.step}" is ${node.sourceType}, so it cannot use shell interaction actions.`,
+        },
+      ];
+    }
+
+    if (node.type === "choice" && interactionIds.length !== 1) {
+      return [
+        {
+          severity: "error",
+          code: "invalid-choice-interaction",
+          message: `Step "${action.step}" requires exactly one interaction id.`,
+        },
+      ];
+    }
+
+    if (node.type === "quiz" && !node.multiple && interactionIds.length !== 1) {
+      return [
+        {
+          severity: "error",
+          code: "invalid-quiz-interaction",
+          message: `Step "${action.step}" only accepts one interaction because it is a single-answer question.`,
+        },
+      ];
+    }
+
+    const availableIds = new Set(node.interactions.map((interaction) => interaction.id));
+    const missingIds = interactionIds.filter((interactionId) => !availableIds.has(interactionId));
+
+    if (missingIds.length > 0) {
+      return [
+        {
+          severity: "error",
+          code: "missing-interaction",
+          message: `Step "${action.step}" does not define interaction id${missingIds.length === 1 ? "" : "s"} ${missingIds
+            .map((interactionId) => `"${interactionId}"`)
+            .join(", ")}.`,
         },
       ];
     }
@@ -312,6 +368,16 @@ function validateTestCase(
     });
   }
 
+  Object.keys(testCase.initialState?.state ?? {}).forEach((key) => {
+    if (!course.scenarioState[key]) {
+      issues.push({
+        severity: "error",
+        code: "invalid-initial-state-key",
+        message: `Initial state references scenario variable "${key}" but that variable is not defined in the compiled course.`,
+      });
+    }
+  });
+
   if (
     testCase.expect.terminalStep &&
     !course.nodes[testCase.expect.terminalStep]
@@ -322,6 +388,16 @@ function validateTestCase(
       message: `Expected terminal step "${testCase.expect.terminalStep}" does not exist in the compiled course.`,
     });
   }
+
+  Object.keys(testCase.expect.state ?? {}).forEach((key) => {
+    if (!course.scenarioState[key]) {
+      issues.push({
+        severity: "error",
+        code: "invalid-expected-state-key",
+        message: `Expected state references scenario variable "${key}" but that variable is not defined in the compiled course.`,
+      });
+    }
+  });
 
   return issues;
 }
@@ -354,6 +430,74 @@ function simulateAction(
         step: action.step,
         action: "advance",
         value: true,
+        nextStep: nextState.currentNodeId,
+      },
+    };
+  }
+
+  if ("interact" in action) {
+    const interactionIds = Array.isArray(action.interact)
+      ? action.interact
+      : [action.interact];
+
+    if (currentNode.type === "choice") {
+      if (interactionIds.length !== 1) {
+        throw new Error(
+          `Step "${currentNode.id}" requires exactly one interaction.`
+        );
+      }
+
+      const resolved = resolveNodeInteraction(currentNode, interactionIds[0]!);
+
+      if (!resolved) {
+        throw new Error(
+          `Step "${currentNode.id}" does not define interaction "${interactionIds[0]}".`
+        );
+      }
+
+      const nextState = applyChoiceSelection(
+        course,
+        state,
+        resolved.optionId,
+        interactionIds[0]!
+      );
+
+      return {
+        state: nextState,
+        trace: {
+          step: action.step,
+          action: "interact",
+          value: interactionIds[0]!,
+          nextStep: nextState.currentNodeId,
+        },
+      };
+    }
+
+    if (currentNode.type !== "quiz") {
+      throw new Error(
+        `Step "${currentNode.id}" is ${currentNode.sourceType} and does not accept shell interactions.`
+      );
+    }
+
+    const selectedOptionIds = interactionIds.map((interactionId) => {
+      const resolved = resolveNodeInteraction(currentNode, interactionId);
+
+      if (!resolved) {
+        throw new Error(
+          `Step "${currentNode.id}" does not define interaction "${interactionId}".`
+        );
+      }
+
+      return resolved.optionId;
+    });
+    const nextState = submitQuizAnswer(course, state, selectedOptionIds, interactionIds);
+
+    return {
+      state: nextState,
+      trace: {
+        step: action.step,
+        action: "interact",
+        value: [...interactionIds],
         nextStep: nextState.currentNodeId,
       },
     };
@@ -481,6 +625,16 @@ function evaluateExpectations(
     }
   });
 
+  Object.entries(expected.state ?? {}).forEach(([key, value]) => {
+    if (actual.state[key] !== value) {
+      issues.push({
+        severity: "error",
+        code: "state-mismatch",
+        message: `Expected scenario state "${key}" to equal "${String(value)}" but actual value was "${String(actual.state[key])}".`,
+      });
+    }
+  });
+
   return issues;
 }
 
@@ -523,6 +677,7 @@ function runSingleTest(input: {
           state: initializeRuntime(input.course),
           templateData: input.templateData,
         }),
+        state: initializeRuntime(input.course).scenarioState,
         pathTaken: [input.course.startNodeId],
       },
       actionTrace: [],
@@ -539,6 +694,10 @@ function runSingleTest(input: {
         input.testCase.initialState.currentNodeId ?? state.currentNodeId,
       score: input.testCase.initialState.score ?? state.score,
       completed: input.testCase.initialState.completed ?? state.completed,
+      scenarioState: {
+        ...state.scenarioState,
+        ...(input.testCase.initialState.state ?? {}),
+      },
       history: [
         ...(input.testCase.initialState.currentNodeId
           ? [input.testCase.initialState.currentNodeId]
@@ -576,6 +735,7 @@ function runSingleTest(input: {
       state,
       templateData: input.templateData,
     }),
+    state: { ...state.scenarioState },
     pathTaken: [...state.history],
   };
 
@@ -804,6 +964,7 @@ export function runCourseProjectLogicTests(
             successStatus: "none",
             pathLength: 0,
             variables: {},
+            state: {},
             pathTaken: [],
           },
           actionTrace: [],

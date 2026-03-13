@@ -20,6 +20,7 @@ export interface CourseLogicTestInitialState {
   currentNodeId?: string;
   score?: number;
   completed?: boolean;
+  state?: Record<string, TemplateScalarValue>;
 }
 
 export interface CourseLogicTestAdvanceAction {
@@ -32,9 +33,15 @@ export interface CourseLogicTestSelectAction {
   select: string | string[];
 }
 
+export interface CourseLogicTestInteractAction {
+  step: string;
+  interact: string | string[];
+}
+
 export type CourseLogicTestAction =
   | CourseLogicTestAdvanceAction
-  | CourseLogicTestSelectAction;
+  | CourseLogicTestSelectAction
+  | CourseLogicTestInteractAction;
 
 export interface CourseLogicTestExpectations {
   terminalStep?: string;
@@ -44,6 +51,7 @@ export interface CourseLogicTestExpectations {
   successStatus?: CourseLogicTestSuccessStatus;
   pathLength?: number;
   variables?: Record<string, TemplateScalarValue>;
+  state?: Record<string, TemplateScalarValue>;
 }
 
 export interface CourseLogicTestCase {
@@ -101,13 +109,15 @@ const initialStateSchema = z
     currentNodeId: identifierSchema.optional(),
     score: z.number().finite().optional(),
     completed: z.boolean().optional(),
+    state: z.record(identifierSchema, scalarSchema).optional(),
   })
   .strict()
   .refine(
     (value) =>
       value.currentNodeId !== undefined ||
       value.score !== undefined ||
-      value.completed !== undefined,
+      value.completed !== undefined ||
+      value.state !== undefined,
     {
       message:
         'Provide at least one initial state override when "initialState" is present.',
@@ -131,6 +141,16 @@ const selectActionSchema = z
   })
   .strict();
 
+const interactActionSchema = z
+  .object({
+    step: identifierSchema,
+    interact: z.union([
+      identifierSchema,
+      z.array(identifierSchema).min(1, "Interact with at least one component."),
+    ]),
+  })
+  .strict();
+
 const expectationsSchema = z
   .object({
     terminalStep: identifierSchema.optional(),
@@ -140,6 +160,7 @@ const expectationsSchema = z
     successStatus: z.enum(["passed", "failed", "neutral", "none"]).optional(),
     pathLength: z.number().int().positive().optional(),
     variables: z.record(identifierSchema, scalarSchema).optional(),
+    state: z.record(identifierSchema, scalarSchema).optional(),
   })
   .strict();
 
@@ -151,7 +172,9 @@ const testCaseSchema = z
     tags: z.array(z.string().trim().min(1)).optional().default([]),
     target: targetSchema.optional().nullable(),
     initialState: initialStateSchema.optional().nullable(),
-    actions: z.array(z.union([advanceActionSchema, selectActionSchema])).default([]),
+    actions: z
+      .array(z.union([advanceActionSchema, selectActionSchema, interactActionSchema]))
+      .default([]),
     expect: expectationsSchema,
   })
   .strict();
@@ -206,6 +229,7 @@ export function parseCourseLogicTestSuiteYaml(input: {
         expect: {
           ...testCase.expect,
           variables: testCase.expect.variables ?? undefined,
+          state: testCase.expect.state ?? undefined,
         },
       })),
     };

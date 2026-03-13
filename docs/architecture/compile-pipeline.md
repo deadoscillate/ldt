@@ -30,6 +30,8 @@ Expand blocks and substitute template variables.
 
 Transform resolved source into the canonical normalized course model.
 
+This stage also derives a scene shell plus typed component list for each canonical node.
+
 ### 5. Validate graph
 
 Validate:
@@ -39,6 +41,7 @@ Validate:
 - branching references
 - question correctness rules
 - layout configuration rules
+- scene/component schema rules
 - result-node presence
 - score configuration rules
 

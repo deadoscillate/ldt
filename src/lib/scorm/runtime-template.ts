@@ -198,16 +198,257 @@ button.secondary {
   margin-bottom: 0.85rem;
 }
 
-.layout-grid {
+.layout-grid,
+.scene-layout-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--course-section-gap);
   margin-top: 1rem;
 }
 
-.layout-column {
+.layout-column,
+.scene-slot-stack {
   display: grid;
   gap: 0.65rem;
+}
+
+.scene-shell {
+  display: grid;
+  gap: var(--course-card-gap);
+}
+
+.scene-shell-frame {
+  padding: 1rem 1.1rem;
+  border-radius: var(--course-card-radius);
+  border: 1px solid var(--course-border);
+  background: color-mix(in srgb, var(--course-surface) 92%, white);
+}
+
+.scene-shell-label {
+  color: var(--course-muted-text);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scene-component-muted {
+  color: var(--course-muted-text);
+}
+
+.scene-component-divider {
+  display: grid;
+  place-items: center;
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--course-border);
+  color: var(--course-muted-text);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.scene-component-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--course-muted-text);
+  line-height: 1.6;
+}
+
+.scene-shell-email,
+.scene-shell-chat,
+.scene-shell-dashboard {
+  padding: 0.25rem;
+  border-radius: calc(var(--course-card-radius) + 0.15rem);
+  background: color-mix(in srgb, var(--course-surface-strong) 88%, var(--course-secondary));
+}
+
+.scene-shell-email-bar,
+.scene-shell-chat-header,
+.scene-shell-dashboard-header {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--course-card-radius);
+  background: color-mix(in srgb, var(--course-surface) 92%, white);
+  border: 1px solid var(--course-border);
+}
+
+.scene-shell-email-frame {
+  background: #fffdf8;
+}
+
+.scene-email-header {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.scene-email-body {
+  white-space: pre-wrap;
+  line-height: 1.65;
+  color: var(--course-text);
+}
+
+.scene-email-warning {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  font-weight: 600;
+}
+
+.scene-email-warning-warning {
+  background: color-mix(in srgb, var(--course-danger) 12%, transparent);
+  color: var(--course-danger);
+}
+
+.scene-email-warning-info {
+  background: color-mix(in srgb, var(--course-primary) 10%, transparent);
+}
+
+.scene-interaction-control {
+  appearance: none;
+  display: grid;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--course-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--course-surface) 94%, white);
+  color: var(--course-text);
+  font: inherit;
+  text-align: left;
+}
+
+.scene-interaction-control.is-selected,
+.scene-interaction-button.is-selected,
+.scene-chat-choice-message.is-selected,
+.scene-dashboard-action-card.is-selected,
+.scene-dashboard-review-item.is-selected,
+.scene-dashboard-flag-toggle.is-selected {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--course-primary) 40%, transparent);
+  border-color: color-mix(in srgb, var(--course-primary) 38%, var(--course-border));
+}
+
+.scene-email-link-meta {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.scene-email-link-meta span,
+.scene-interaction-feedback {
+  color: var(--course-muted-text);
+  font-size: 0.92rem;
+}
+
+.scene-chat-reply-option,
+.scene-dashboard-action-card,
+.scene-dashboard-review-item {
+  appearance: none;
+  font: inherit;
+  text-align: left;
+}
+
+.scene-dashboard-flag-toggle {
+  appearance: none;
+  justify-content: center;
+  border: 1px solid var(--course-border);
+  font: inherit;
+}
+
+.scene-shell-chat-stream {
+  min-height: 14rem;
+}
+
+.scene-chat-message {
+  max-width: min(34rem, 100%);
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--course-border);
+  background: color-mix(in srgb, var(--course-surface) 92%, white);
+}
+
+.scene-chat-message-self {
+  justify-self: end;
+  background: color-mix(in srgb, var(--course-primary) 12%, white);
+}
+
+.scene-chat-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+  color: var(--course-muted-text);
+  font-size: 0.86rem;
+}
+
+.scene-chat-message p,
+.scene-dashboard-card p,
+.scene-dashboard-notice p {
+  margin: 0;
+}
+
+.scene-chat-notice {
+  justify-self: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--course-secondary) 80%, white);
+  color: var(--course-muted-text);
+  font-size: 0.9rem;
+}
+
+.scene-shell-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+  gap: var(--course-section-gap);
+}
+
+.scene-shell-dashboard-sidebar,
+.scene-shell-dashboard-main {
+  padding: 1rem;
+  border-radius: var(--course-card-radius);
+  border: 1px solid var(--course-border);
+  background: color-mix(in srgb, var(--course-surface) 92%, white);
+}
+
+.scene-dashboard-card,
+.scene-dashboard-metric,
+.scene-dashboard-notice {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--course-border);
+  background: color-mix(in srgb, var(--course-surface) 94%, white);
+}
+
+.scene-dashboard-card-warning,
+.scene-status-badge-warning,
+.scene-dashboard-metric-warning {
+  border-color: color-mix(in srgb, var(--course-danger) 40%, var(--course-border));
+}
+
+.scene-dashboard-card-positive,
+.scene-status-badge-positive,
+.scene-dashboard-metric-positive {
+  border-color: color-mix(in srgb, var(--course-success) 40%, var(--course-border));
+}
+
+.scene-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--course-secondary) 80%, transparent);
+}
+
+.scene-panel-title {
+  margin: 0;
+}
+
+.scene-render-error {
+  margin-top: 1rem;
+  color: var(--course-danger);
 }
 
 .media-block {
@@ -319,7 +560,9 @@ button.secondary {
 }
 
 @media (max-width: 720px) {
-  .layout-grid {
+  .layout-grid,
+  .scene-layout-grid,
+  .scene-shell-dashboard-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -362,6 +605,152 @@ function cloneValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function createScenarioStateRecord(course) {
+  var values = {};
+
+  Object.keys(course.scenarioState || {}).forEach(function (key) {
+    values[key] = course.scenarioState[key].initialValue;
+  });
+
+  return values;
+}
+
+function isValidScenarioStateValue(course, key, value) {
+  var definition = course.scenarioState && course.scenarioState[key];
+
+  if (!definition) {
+    return false;
+  }
+
+  if (definition.type === "boolean") {
+    return typeof value === "boolean";
+  }
+
+  if (definition.type === "number") {
+    return typeof value === "number" && Number.isFinite(value);
+  }
+
+  if (definition.type === "string") {
+    return typeof value === "string";
+  }
+
+  if (definition.type === "enum") {
+    return typeof value === "string" && definition.options.indexOf(value) !== -1;
+  }
+
+  return false;
+}
+
+function normalizeScenarioState(course, values) {
+  var nextValues = createScenarioStateRecord(course);
+
+  Object.keys(values || {}).forEach(function (key) {
+    if (isValidScenarioStateValue(course, key, values[key])) {
+      nextValues[key] = values[key];
+    }
+  });
+
+  return nextValues;
+}
+
+function evaluateScenarioStateCondition(condition, values) {
+  var value = values[condition.variable];
+
+  if (condition.equals !== undefined && value !== condition.equals) {
+    return false;
+  }
+
+  if (condition.notEquals !== undefined && value === condition.notEquals) {
+    return false;
+  }
+
+  if (condition.oneOf && condition.oneOf.indexOf(value) === -1) {
+    return false;
+  }
+
+  if (condition.gt !== undefined && !(typeof value === "number" && value > condition.gt)) {
+    return false;
+  }
+
+  if (condition.gte !== undefined && !(typeof value === "number" && value >= condition.gte)) {
+    return false;
+  }
+
+  if (condition.lt !== undefined && !(typeof value === "number" && value < condition.lt)) {
+    return false;
+  }
+
+  if (condition.lte !== undefined && !(typeof value === "number" && value <= condition.lte)) {
+    return false;
+  }
+
+  return true;
+}
+
+function evaluateScenarioStateConditions(conditions, values) {
+  if (!conditions || conditions.length === 0) {
+    return true;
+  }
+
+  return conditions.every(function (condition) {
+    return evaluateScenarioStateCondition(condition, values);
+  });
+}
+
+function applyScenarioStateUpdates(course, values, updates) {
+  if (!updates || updates.length === 0) {
+    return values;
+  }
+
+  var nextValues = Object.assign({}, values);
+
+  updates.forEach(function (update) {
+    var definition = course.scenarioState && course.scenarioState[update.variable];
+    var currentValue = nextValues[update.variable];
+
+    if (!definition) {
+      return;
+    }
+
+    if (update.type === "set") {
+      nextValues[update.variable] = update.value;
+      return;
+    }
+
+    if (definition.type !== "number" || typeof currentValue !== "number") {
+      return;
+    }
+
+    var delta = Number(update.value) || 0;
+    nextValues[update.variable] =
+      update.type === "increment"
+        ? currentValue + delta
+        : currentValue - delta;
+  });
+
+  return nextValues;
+}
+
+function resolveScenarioStateRoute(routes, values, fallbackNext) {
+  if (!routes || routes.length === 0) {
+    return fallbackNext || null;
+  }
+
+  var match = routes.find(function (route) {
+    return evaluateScenarioStateConditions(route.when, values);
+  });
+
+  return match ? match.next : (fallbackNext || null);
+}
+
+function appendActionHistory(state, record) {
+  return state.actionHistory.concat(
+    Object.assign({}, record, {
+      timestamp: new Date().toISOString()
+    })
+  );
+}
+
 function createDefaultState(course) {
   return {
     courseId: course.id,
@@ -369,6 +758,8 @@ function createDefaultState(course) {
     score: 0,
     history: [course.startNodeId],
     answers: {},
+    scenarioState: createScenarioStateRecord(course),
+    actionHistory: [],
     completed: course.nodes[course.startNodeId] && course.nodes[course.startNodeId].type === "result",
     updatedAt: new Date().toISOString()
   };
@@ -408,6 +799,8 @@ function normalizeState(course, persistedState) {
     score: Number.isFinite(persistedState.score) ? persistedState.score : 0,
     history: history,
     answers: answers,
+    scenarioState: normalizeScenarioState(course, persistedState.scenarioState || {}),
+    actionHistory: Array.isArray(persistedState.actionHistory) ? persistedState.actionHistory : [],
     completed:
       Boolean(persistedState.completed) ||
       course.nodes[currentNodeId].type === "result",
@@ -424,6 +817,10 @@ function interpolateText(text, course, state) {
     passingScore: String(course.passingScore),
     percent: String(percent)
   };
+
+  Object.keys(state.scenarioState || {}).forEach(function (key) {
+    tokens[key] = String(state.scenarioState[key]);
+  });
 
   return (text || "").replace(/\\{\\{\\s*([a-zA-Z0-9_]+)\\s*\\}\\}/g, function (match, key) {
     return Object.prototype.hasOwnProperty.call(tokens, key) ? tokens[key] : match;
@@ -535,104 +932,885 @@ function createLayoutColumn(column, course, state) {
   return wrapper;
 }
 
-function appendDefaultPresentation(container, node, course, state) {
-  if (node.body) {
-    var bodyBlock = document.createElement("div");
-    bodyBlock.className = "body";
-    bodyBlock.textContent = interpolateText(node.body, course, state);
-    container.appendChild(bodyBlock);
+function createBodyBlock(text, course, state, className) {
+  var resolvedText = interpolateText(text || "", course, state);
+
+  if (!resolvedText) {
+    return null;
   }
 
-  var media = createMediaBlock(node.media);
+  var block = document.createElement("div");
+  block.className = className || "body";
+  block.textContent = resolvedText;
+  return block;
+}
 
-  if (media) {
-    container.appendChild(media);
+function createListBlock(items, course, state, ordered) {
+  var resolvedItems = (items || [])
+    .map(function (item) {
+      return interpolateText(item, course, state);
+    })
+    .filter(Boolean);
+
+  if (resolvedItems.length === 0) {
+    return null;
+  }
+
+  var list = document.createElement(ordered ? "ol" : "ul");
+  list.className = "scene-component-list";
+
+  resolvedItems.forEach(function (item) {
+    var listItem = document.createElement("li");
+    listItem.textContent = item;
+    list.appendChild(listItem);
+  });
+
+  return list;
+}
+
+function resolveNodeInteraction(node, interactionId) {
+  if (!node || !node.interactions) {
+    return null;
+  }
+
+  var interaction = node.interactions.find(function (candidate) {
+    return candidate.id === interactionId;
+  });
+
+  if (!interaction) {
+    return null;
+  }
+
+  if (node.type === "choice") {
+    var choiceOption = node.options.find(function (candidate) {
+      return candidate.id === interaction.optionId;
+    });
+
+    return {
+      interactionId: interaction.id,
+      optionId: interaction.optionId,
+      actionMode: "trigger",
+      feedback: interaction.feedback || (choiceOption && choiceOption.feedback) || "",
+      correct: null,
+      scoreDelta: choiceOption ? choiceOption.score : null,
+      nextNodeId: choiceOption ? choiceOption.next : null
+    };
+  }
+
+  if (node.type === "quiz") {
+    var quizOption = node.options.find(function (candidate) {
+      return candidate.id === interaction.optionId;
+    });
+
+    return {
+      interactionId: interaction.id,
+      optionId: interaction.optionId,
+      actionMode: "toggle",
+      feedback: interaction.feedback || (quizOption && quizOption.feedback) || "",
+      correct: quizOption ? quizOption.correct : null,
+      scoreDelta: null,
+      nextNodeId: null
+    };
+  }
+
+  return null;
+}
+
+function isSceneInteractionSelected(component, renderContext) {
+  return renderContext.getSelectedOptionIds().indexOf(component.optionId) !== -1;
+}
+
+function createInteractionFeedback(component, course, state, renderContext) {
+  if (!isSceneInteractionSelected(component, renderContext)) {
+    return null;
+  }
+
+  var feedback = interpolateText(component.feedback || "", course, state);
+
+  if (!feedback) {
+    return null;
+  }
+
+  var block = document.createElement("p");
+  block.className = "scene-interaction-feedback";
+  block.textContent = feedback;
+  return block;
+}
+
+function buildLegacyScene(node) {
+  var components = [];
+
+  if (node.title) {
+    components.push({
+      id: node.id + "__title",
+      type: "title",
+      slot: "main",
+      text: node.title,
+      level: 2
+    });
+  }
+
+  if (node.body) {
+    components.push({
+      id: node.id + "__body",
+      type: "paragraph",
+      slot:
+        node.layout === "image-left"
+          ? "right"
+          : node.layout === "image-right"
+            ? "left"
+            : "main",
+      text: node.body,
+      tone: "body"
+    });
+  }
+
+  if (node.media && node.media.src) {
+    components.push({
+      id: node.id + "__media",
+      type: "image",
+      slot:
+        node.layout === "image-left"
+          ? "left"
+          : node.layout === "image-right"
+            ? "right"
+            : "main",
+      mediaType: node.media.type,
+      src: node.media.src,
+      alt: node.media.alt || "",
+      caption: node.media.caption || ""
+    });
   }
 
   if (node.quote && node.quote.text) {
-    var quote = document.createElement("blockquote");
-    quote.className = "quote-block";
-    var quoteText = document.createElement("p");
-    quoteText.textContent = interpolateText(node.quote.text, course, state);
-    quote.appendChild(quoteText);
-
-    if (node.quote.attribution) {
-      var footer = document.createElement("footer");
-      footer.textContent = interpolateText(node.quote.attribution, course, state);
-      quote.appendChild(footer);
-    }
-
-    container.appendChild(quote);
+    components.push({
+      id: node.id + "__quote",
+      type: "quote",
+      slot: "main",
+      text: node.quote.text,
+      attribution: node.quote.attribution || ""
+    });
   }
 
   if (node.callout && node.callout.text) {
-    var callout = document.createElement("div");
-    callout.className = "callout-block";
+    components.push({
+      id: node.id + "__callout",
+      type: "callout",
+      slot: "main",
+      title: node.callout.title || "",
+      text: node.callout.text,
+      variant: "warning"
+    });
+  }
 
-    if (node.callout.title) {
-      var calloutTitle = document.createElement("strong");
-      calloutTitle.textContent = interpolateText(node.callout.title, course, state);
-      callout.appendChild(calloutTitle);
+  if (node.type === "quiz") {
+    components.push({
+      id: node.id + "__question",
+      type: "question_block",
+      slot: "main",
+      prompt: node.question,
+      multiple: node.multiple,
+      helperText: node.multiple
+        ? "Select all responses that apply."
+        : "Select the best answer."
+    });
+  }
+
+  if (node.type === "result") {
+    components.push({
+      id: node.id + "__result",
+      type: "result_card",
+      slot: "main",
+      outcome: node.outcome,
+      summary:
+        node.outcome === "passed"
+          ? "This path finishes with a passing outcome."
+          : node.outcome === "failed"
+            ? "This path finishes with a failed outcome."
+            : "This path finishes without pass/fail scoring."
+    });
+  }
+
+  if (node.left) {
+    if (node.left.title) {
+      components.push({
+        id: node.id + "__left_title",
+        type: "title",
+        slot: "left",
+        text: node.left.title,
+        level: 3
+      });
     }
 
-    var calloutText = document.createElement("p");
-    calloutText.textContent = interpolateText(node.callout.text, course, state);
-    callout.appendChild(calloutText);
-    container.appendChild(callout);
+    if (node.left.text) {
+      components.push({
+        id: node.id + "__left_text",
+        type: "paragraph",
+        slot: "left",
+        text: node.left.text,
+        tone: "body"
+      });
+    }
   }
+
+  if (node.right) {
+    if (node.right.title) {
+      components.push({
+        id: node.id + "__right_title",
+        type: "title",
+        slot: "right",
+        text: node.right.title,
+        level: 3
+      });
+    }
+
+    if (node.right.text) {
+      components.push({
+        id: node.id + "__right_text",
+        type: "paragraph",
+        slot: "right",
+        text: node.right.text,
+        tone: "body"
+      });
+    }
+  }
+
+  return {
+    id: node.id + "-scene",
+    layout:
+      node.type === "result" || node.layout === "result"
+        ? "result_shell"
+        : node.layout === "two-column" || node.layout === "image-left" || node.layout === "image-right"
+          ? "two_column"
+          : node.layout === "quote" || node.layout === "callout"
+            ? "stacked"
+            : "card",
+    components: components,
+    metadata: {
+      sourceLayout: node.layout || null,
+      sourceNodeType: node.type,
+      sourceAuthorType: node.sourceType || node.type,
+      renderedFromLegacy: true,
+      mediaPlacement:
+        node.layout === "image-left"
+          ? "left"
+          : node.layout === "image-right"
+            ? "right"
+            : node.layout === "image" || node.layout === "video"
+              ? "main"
+              : null
+    }
+  };
 }
 
-function renderNodePresentation(container, node, course, state) {
-  if (node.layout === "two-column" || node.layout === "image-left" || node.layout === "image-right") {
-    var grid = document.createElement("div");
-    grid.className = "layout-grid";
-    var left = document.createElement("div");
-    var right = document.createElement("div");
-
-    if (node.layout === "image-left") {
-      var imageLeft = createMediaBlock(node.media);
-      if (imageLeft) {
-        left.appendChild(imageLeft);
+function createSceneComponentRegistry(renderContext) {
+  return {
+    title: function (component, course, state) {
+      var text = interpolateText(component.text, course, state);
+      if (!text) {
+        return null;
       }
 
-      var imageLeftRightColumn = createLayoutColumn(node.right, course, state);
-      if (imageLeftRightColumn) {
-        right.appendChild(imageLeftRightColumn);
-      } else {
-        appendDefaultPresentation(right, node, course, state);
-      }
-    } else if (node.layout === "image-right") {
-      var imageRightLeftColumn = createLayoutColumn(node.left, course, state);
-      if (imageRightLeftColumn) {
-        left.appendChild(imageRightLeftColumn);
-      } else {
-        appendDefaultPresentation(left, node, course, state);
+      var tag = component.level === 1 ? "h1" : component.level === 3 ? "h3" : "h2";
+      var element = document.createElement(tag);
+      element.className = "scene-component-title";
+      element.textContent = text;
+      return element;
+    },
+    paragraph: function (component, course, state) {
+      return createBodyBlock(
+        component.text,
+        course,
+        state,
+        component.tone === "muted" ? "body scene-component-muted" : "body"
+      );
+    },
+    image: function (component, course, state) {
+      return createMediaBlock({
+        type: component.mediaType,
+        src: component.src,
+        alt: interpolateText(component.alt, course, state),
+        caption: interpolateText(component.caption, course, state)
+      });
+    },
+    callout: function (component, course, state) {
+      var text = interpolateText(component.text, course, state);
+
+      if (!text) {
+        return null;
       }
 
-      var imageRight = createMediaBlock(node.media);
-      if (imageRight) {
-        right.appendChild(imageRight);
-      }
-    } else {
-      var leftColumn = createLayoutColumn(node.left, course, state);
-      var rightColumn = createLayoutColumn(node.right, course, state);
+      var callout = document.createElement("div");
+      callout.className = "callout-block scene-callout-" + component.variant;
 
-      if (leftColumn) {
-        left.appendChild(leftColumn);
+      if (component.title) {
+        var calloutTitle = document.createElement("strong");
+        calloutTitle.textContent = interpolateText(component.title, course, state);
+        callout.appendChild(calloutTitle);
       }
 
-      if (rightColumn) {
-        right.appendChild(rightColumn);
+      var calloutText = document.createElement("p");
+      calloutText.textContent = text;
+      callout.appendChild(calloutText);
+      return callout;
+    },
+    button: function (component) {
+      var wrapper = document.createElement("div");
+      var button = document.createElement("button");
+      button.className = component.variant === "secondary" ? "secondary" : "";
+      button.disabled = Boolean(component.disabled);
+      button.textContent = component.label;
+      wrapper.appendChild(button);
+      return wrapper;
+    },
+    question_block: function (component, course, state) {
+      var question = document.createElement("div");
+      question.className = "callout-block";
+      var label = document.createElement("strong");
+      label.textContent = component.multiple ? "Question (multiple)" : "Question";
+      var prompt = document.createElement("p");
+      prompt.textContent = interpolateText(component.prompt, course, state);
+      question.appendChild(label);
+      question.appendChild(prompt);
+
+      if (component.helperText) {
+        var helper = document.createElement("p");
+        helper.className = "body scene-component-muted";
+        helper.textContent = interpolateText(component.helperText, course, state);
+        question.appendChild(helper);
       }
+
+      return question;
+    },
+    result_card: function (component, course, state) {
+      var result = document.createElement("div");
+      result.className = "callout-block";
+      var title = document.createElement("strong");
+      title.textContent = "Result: " + component.outcome;
+      var text = document.createElement("p");
+      text.textContent = interpolateText(component.summary, course, state);
+      result.appendChild(title);
+      result.appendChild(text);
+      return result;
+    },
+    quote: function (component, course, state) {
+      var quote = document.createElement("blockquote");
+      quote.className = "quote-block";
+      var quoteText = document.createElement("p");
+      quoteText.textContent = interpolateText(component.text, course, state);
+      quote.appendChild(quoteText);
+
+      if (component.attribution) {
+        var footer = document.createElement("footer");
+        footer.textContent = interpolateText(component.attribution, course, state);
+        quote.appendChild(footer);
+      }
+
+      return quote;
+    },
+    divider: function (component, course, state) {
+      var divider = document.createElement("div");
+      divider.className = "scene-component-divider";
+
+      if (component.label) {
+        var label = document.createElement("span");
+        label.textContent = interpolateText(component.label, course, state);
+        divider.appendChild(label);
+      }
+
+      return divider;
+    },
+    list: function (component, course, state) {
+      return createListBlock(component.items, course, state, component.ordered);
+    },
+    email_header: function (component, course, state) {
+      var wrapper = document.createElement("div");
+      wrapper.className = "scene-email-header";
+
+      [
+        ["From", component.from],
+        ["Subject", component.subject]
+      ].forEach(function (entry) {
+        var group = document.createElement("div");
+        var label = document.createElement("span");
+        label.className = "scene-shell-label";
+        label.textContent = entry[0];
+        var value = document.createElement("strong");
+        value.textContent = interpolateText(entry[1], course, state);
+        group.appendChild(label);
+        group.appendChild(value);
+        wrapper.appendChild(group);
+      });
+
+      if (component.previewText) {
+        var preview = document.createElement("p");
+        preview.className = "body scene-component-muted";
+        preview.textContent = interpolateText(component.previewText, course, state);
+        wrapper.appendChild(preview);
+      }
+
+      return wrapper;
+    },
+    email_body: function (component, course, state) {
+      return createBodyBlock(component.text, course, state, "scene-email-body");
+    },
+    email_attachment_list: function (component, course, state) {
+      var attachments = createListBlock(component.attachments, course, state, false);
+
+      if (!attachments) {
+        return null;
+      }
+
+      var wrapper = document.createElement("div");
+      wrapper.className = "scene-email-attachments";
+      var title = document.createElement("strong");
+      title.textContent = "Attachments";
+      wrapper.appendChild(title);
+      wrapper.appendChild(attachments);
+      return wrapper;
+    },
+    email_warning_banner: function (component, course, state) {
+      var banner = document.createElement("div");
+      banner.className = "scene-email-warning scene-email-warning-" + component.severity;
+      banner.textContent = interpolateText(component.text, course, state);
+      return banner;
+    },
+    chat_message: function (component, course, state) {
+      var message = document.createElement("div");
+      message.className = "scene-chat-message scene-chat-message-" + component.role;
+      var meta = document.createElement("div");
+      meta.className = "scene-chat-meta";
+      var sender = document.createElement("strong");
+      sender.textContent = interpolateText(component.sender, course, state);
+      meta.appendChild(sender);
+
+      if (component.timestamp) {
+        var timestamp = document.createElement("span");
+        timestamp.textContent = interpolateText(component.timestamp, course, state);
+        meta.appendChild(timestamp);
+      }
+
+      var text = document.createElement("p");
+      text.textContent = interpolateText(component.text, course, state);
+      message.appendChild(meta);
+      message.appendChild(text);
+      return message;
+    },
+    chat_system_notice: function (component, course, state) {
+      var notice = document.createElement("div");
+      notice.className = "scene-chat-notice";
+      notice.textContent = interpolateText(component.text, course, state);
+      return notice;
+    },
+    card: function (component, course, state) {
+      var card = document.createElement("div");
+      card.className = "scene-dashboard-card scene-dashboard-card-" + component.status;
+      var title = document.createElement("strong");
+      title.textContent = interpolateText(component.title, course, state);
+      card.appendChild(title);
+
+      if (component.text) {
+        var text = document.createElement("p");
+        text.textContent = interpolateText(component.text, course, state);
+        card.appendChild(text);
+      }
+
+      return card;
+    },
+    metric: function (component, course, state) {
+      var metric = document.createElement("div");
+      metric.className = "scene-dashboard-metric scene-dashboard-metric-" + component.tone;
+      var label = document.createElement("span");
+      label.className = "scene-shell-label";
+      label.textContent = interpolateText(component.label, course, state);
+      var value = document.createElement("strong");
+      value.textContent = interpolateText(component.value, course, state);
+      metric.appendChild(label);
+      metric.appendChild(value);
+      return metric;
+    },
+    status_badge: function (component, course, state) {
+      var badge = document.createElement("span");
+      badge.className = "scene-status-badge scene-status-badge-" + component.status;
+      badge.textContent = interpolateText(component.label, course, state);
+      return badge;
+    },
+    panel_title: function (component, course, state) {
+      var title = document.createElement("h3");
+      title.className = "scene-panel-title";
+      title.textContent = interpolateText(component.text, course, state);
+      return title;
+    },
+    dashboard_notice: function (component, course, state) {
+      var notice = document.createElement("div");
+      notice.className = "scene-dashboard-notice scene-dashboard-notice-" + component.variant;
+
+      if (component.title) {
+        var title = document.createElement("strong");
+        title.textContent = interpolateText(component.title, course, state);
+        notice.appendChild(title);
+      }
+
+      var text = document.createElement("p");
+      text.textContent = interpolateText(component.text, course, state);
+      notice.appendChild(text);
+      return notice;
+    },
+    email_link: function (component, course, state) {
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        "scene-interaction-control scene-email-link-control" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+
+      var meta = document.createElement("div");
+      meta.className = "scene-email-link-meta";
+      var label = document.createElement("strong");
+      label.textContent = interpolateText(component.label, course, state);
+      meta.appendChild(label);
+
+      if (component.hrefLabel) {
+        var href = document.createElement("span");
+        href.textContent = interpolateText(component.hrefLabel, course, state);
+        meta.appendChild(href);
+      }
+
+      button.appendChild(meta);
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        button.appendChild(feedback);
+      }
+      return button;
+    },
+    email_attachment: function (component, course, state) {
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        "scene-interaction-control scene-email-attachment-control" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+
+      var meta = document.createElement("div");
+      meta.className = "scene-email-link-meta";
+      var label = document.createElement("strong");
+      label.textContent = interpolateText(component.label, course, state);
+      meta.appendChild(label);
+
+      if (component.fileName) {
+        var fileName = document.createElement("span");
+        fileName.textContent = interpolateText(component.fileName, course, state);
+        meta.appendChild(fileName);
+      }
+
+      button.appendChild(meta);
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        button.appendChild(feedback);
+      }
+      return button;
+    },
+    email_action_button: function (component, course, state) {
+      var wrapper = document.createElement("div");
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        (component.variant === "secondary" ? "secondary " : "") +
+        "scene-interaction-button" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.textContent = interpolateText(component.label, course, state);
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+      wrapper.appendChild(button);
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        wrapper.appendChild(feedback);
+      }
+      return wrapper;
+    },
+    chat_reply_option: function (component, course, state) {
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        "scene-interaction-control scene-chat-reply-option" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+      var label = document.createElement("strong");
+      label.textContent = interpolateText(component.label, course, state);
+      button.appendChild(label);
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        button.appendChild(feedback);
+      }
+      return button;
+    },
+    chat_choice_message: function (component, course, state) {
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        "scene-chat-message scene-chat-message-" +
+        component.role +
+        " scene-chat-choice-message" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+      var meta = document.createElement("div");
+      meta.className = "scene-chat-meta";
+      var sender = document.createElement("strong");
+      sender.textContent = interpolateText(component.sender, course, state);
+      meta.appendChild(sender);
+
+      if (component.timestamp) {
+        var timestamp = document.createElement("span");
+        timestamp.textContent = interpolateText(component.timestamp, course, state);
+        meta.appendChild(timestamp);
+      }
+
+      var text = document.createElement("p");
+      text.textContent = interpolateText(component.text, course, state);
+      button.appendChild(meta);
+      button.appendChild(text);
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        button.appendChild(feedback);
+      }
+      return button;
+    },
+    dashboard_action_card: function (component, course, state) {
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        "scene-dashboard-card scene-dashboard-card-" +
+        component.status +
+        " scene-dashboard-action-card" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+      var title = document.createElement("strong");
+      title.textContent = interpolateText(component.title, course, state);
+      button.appendChild(title);
+      if (component.text) {
+        var text = document.createElement("p");
+        text.textContent = interpolateText(component.text, course, state);
+        button.appendChild(text);
+      }
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        button.appendChild(feedback);
+      }
+      return button;
+    },
+    dashboard_flag_toggle: function (component, course, state) {
+      var wrapper = document.createElement("div");
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        "scene-status-badge scene-status-badge-" +
+        component.status +
+        " scene-dashboard-flag-toggle" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.textContent = interpolateText(component.label, course, state);
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+      wrapper.appendChild(button);
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        wrapper.appendChild(feedback);
+      }
+      return wrapper;
+    },
+    dashboard_review_item: function (component, course, state) {
+      var button = document.createElement("button");
+      var selected = isSceneInteractionSelected(component, renderContext);
+      button.className =
+        "scene-dashboard-card scene-dashboard-card-" +
+        component.status +
+        " scene-dashboard-review-item" +
+        (selected ? " is-selected" : "");
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.addEventListener("click", function () {
+        renderContext.handleSceneInteraction(component.id);
+      });
+      var title = document.createElement("strong");
+      title.textContent = interpolateText(component.title, course, state);
+      button.appendChild(title);
+      if (component.text) {
+        var text = document.createElement("p");
+        text.textContent = interpolateText(component.text, course, state);
+        button.appendChild(text);
+      }
+      var feedback = createInteractionFeedback(component, course, state, renderContext);
+      if (feedback) {
+        button.appendChild(feedback);
+      }
+      return button;
     }
+  };
+}
 
-    grid.appendChild(left);
-    grid.appendChild(right);
-    container.appendChild(grid);
+function createSceneSlotMap() {
+  return {
+    main: [],
+    left: [],
+    right: [],
+    footer: [],
+    header: [],
+    sidebar: []
+  };
+}
+
+function appendSlotItems(container, items, className) {
+  if (!items || items.length === 0) {
+    return null;
+  }
+
+  var wrapper = document.createElement("div");
+  wrapper.className = className || "scene-slot-stack";
+
+  items.forEach(function (item) {
+    wrapper.appendChild(item);
+  });
+
+  container.appendChild(wrapper);
+  return wrapper;
+}
+
+function createSceneLayoutRegistry() {
+  return {
+    card: function (container, scene, slots) {
+      var shell = document.createElement("div");
+      shell.className = "scene-shell scene-shell-card";
+      shell.setAttribute("data-scene-layout", scene.layout);
+      appendSlotItems(shell, slots.main, "scene-slot-stack");
+      appendSlotItems(shell, slots.footer, "scene-slot-stack scene-slot-footer");
+      container.appendChild(shell);
+    },
+    stacked: function (container, scene, slots) {
+      var shell = document.createElement("div");
+      shell.className = "scene-shell scene-shell-stacked";
+      shell.setAttribute("data-scene-layout", scene.layout);
+      appendSlotItems(shell, slots.main, "scene-slot-stack");
+      appendSlotItems(shell, slots.footer, "scene-slot-stack scene-slot-footer");
+      container.appendChild(shell);
+    },
+    two_column: function (container, scene, slots) {
+      var shell = document.createElement("div");
+      shell.className = "scene-shell scene-shell-two-column";
+      shell.setAttribute("data-scene-layout", scene.layout);
+      appendSlotItems(shell, slots.main, "scene-slot-stack");
+
+      var grid = document.createElement("div");
+      grid.className = "scene-layout-grid";
+      appendSlotItems(grid, slots.left, "scene-slot-stack");
+      appendSlotItems(grid, slots.right, "scene-slot-stack");
+      shell.appendChild(grid);
+      appendSlotItems(shell, slots.footer, "scene-slot-stack scene-slot-footer");
+      container.appendChild(shell);
+    },
+    email_shell: function (container, scene, slots) {
+      var shell = document.createElement("div");
+      shell.className = "scene-shell scene-shell-email";
+      shell.setAttribute("data-scene-layout", scene.layout);
+      var topBar = document.createElement("div");
+      topBar.className = "scene-shell-email-bar";
+      topBar.textContent = "Inbox";
+      shell.appendChild(topBar);
+      appendSlotItems(shell, slots.header, "scene-slot-stack scene-shell-email-header");
+      appendSlotItems(shell, slots.main, "scene-slot-stack scene-shell-frame scene-shell-email-frame");
+      appendSlotItems(shell, slots.footer, "scene-slot-stack scene-slot-footer");
+      container.appendChild(shell);
+    },
+    chat_shell: function (container, scene, slots) {
+      var shell = document.createElement("div");
+      shell.className = "scene-shell scene-shell-chat";
+      shell.setAttribute("data-scene-layout", scene.layout);
+      appendSlotItems(shell, slots.header, "scene-slot-stack scene-shell-chat-header");
+      appendSlotItems(shell, slots.main, "scene-slot-stack scene-shell-frame scene-shell-chat-stream");
+      appendSlotItems(shell, slots.footer, "scene-slot-stack scene-slot-footer");
+      container.appendChild(shell);
+    },
+    dashboard_shell: function (container, scene, slots) {
+      var shell = document.createElement("div");
+      shell.className = "scene-shell scene-shell-dashboard";
+      shell.setAttribute("data-scene-layout", scene.layout);
+      appendSlotItems(shell, slots.header, "scene-slot-stack scene-shell-dashboard-header");
+      var grid = document.createElement("div");
+      grid.className = "scene-shell-dashboard-grid";
+      appendSlotItems(grid, slots.sidebar, "scene-slot-stack scene-shell-dashboard-sidebar");
+      appendSlotItems(grid, slots.main, "scene-slot-stack scene-shell-dashboard-main");
+      shell.appendChild(grid);
+      appendSlotItems(shell, slots.footer, "scene-slot-stack scene-slot-footer");
+      container.appendChild(shell);
+    },
+    result_shell: function (container, scene, slots) {
+      var shell = document.createElement("div");
+      shell.className = "scene-shell scene-shell-result";
+      shell.setAttribute("data-scene-layout", scene.layout);
+      appendSlotItems(shell, slots.main, "scene-slot-stack");
+      appendSlotItems(shell, slots.footer, "scene-slot-stack scene-slot-footer");
+      container.appendChild(shell);
+    }
+  };
+}
+
+function renderNodePresentation(container, node, course, state, renderContext) {
+  var scene = node.scene || buildLegacyScene(node);
+  var componentRegistry = createSceneComponentRegistry(renderContext);
+  var layoutRegistry = createSceneLayoutRegistry();
+  var layoutRenderer = layoutRegistry[scene.layout];
+
+  if (!layoutRenderer) {
+    container.textContent = "Unknown scene layout: " + scene.layout;
     return;
   }
 
-  appendDefaultPresentation(container, node, course, state);
+  var slots = createSceneSlotMap();
+
+  scene.components.forEach(function (component) {
+    if (
+      component.visibleWhen &&
+      !evaluateScenarioStateConditions(component.visibleWhen, state.scenarioState || {})
+    ) {
+      return;
+    }
+
+    var renderer = componentRegistry[component.type];
+    var renderedComponent = renderer
+      ? renderer(component, course, state)
+      : createBodyBlock("Unknown component type: " + component.type, course, state, "body");
+
+    if (!renderedComponent) {
+      return;
+    }
+
+    renderedComponent.setAttribute("data-component-type", component.type);
+
+    if (!slots[component.slot]) {
+      slots.main.push(renderedComponent);
+      return;
+    }
+
+    slots[component.slot].push(renderedComponent);
+  });
+
+  layoutRenderer(container, scene, slots);
 }
 
 function deriveLessonStatus(course, state) {
@@ -719,8 +1897,28 @@ function evaluateQuiz(node, selectedOptionIds) {
       isCorrect: isCorrect,
       scoreAwarded: isCorrect ? node.correctScore : node.incorrectScore
     },
-    nextNodeId: isCorrect ? (node.passNext || node.next) : (node.failNext || node.next)
+    passed: isCorrect
   };
+}
+
+function resolveChoiceOptionNext(option, state) {
+  return resolveScenarioStateRoute(option.nextWhen, state.scenarioState, option.next);
+}
+
+function resolveQuizNext(node, state, passed) {
+  if (passed) {
+    return resolveScenarioStateRoute(
+      node.passNextWhen,
+      state.scenarioState,
+      node.passNext || node.next
+    );
+  }
+
+  return resolveScenarioStateRoute(
+    node.failNextWhen,
+    state.scenarioState,
+    node.failNext || node.next
+  );
 }
 
 function createRuntimeController(course, persistedState) {
@@ -820,9 +2018,23 @@ function createRuntimeController(course, persistedState) {
         return;
       }
 
-      setState(transitionToNode(course, state, node.next), "advanceContent");
+      setState(
+        transitionToNode(
+          course,
+          Object.assign({}, state, {
+            actionHistory: appendActionHistory(state, {
+              nodeId: node.id,
+              action: "advance",
+              optionIds: [],
+              interactionIds: []
+            })
+          }),
+          resolveScenarioStateRoute(node.nextWhen, state.scenarioState, node.next)
+        ),
+        "advanceContent"
+      );
     },
-    selectChoice: function (optionId) {
+    selectChoice: function (optionId, interactionId) {
       var snapshot = getSnapshot();
       var node = snapshot.currentNode;
 
@@ -843,10 +2055,26 @@ function createRuntimeController(course, persistedState) {
         selectedOptionId: option.id,
         scoreAwarded: option.score
       });
+      nextState = Object.assign({}, nextState, {
+        scenarioState: applyScenarioStateUpdates(course, nextState.scenarioState, option.stateUpdates),
+        actionHistory: appendActionHistory(state, {
+          nodeId: node.id,
+          action: interactionId ? "interaction" : "choice",
+          optionIds: [option.id],
+          interactionIds: interactionId ? [interactionId] : []
+        })
+      });
 
-      setState(transitionToNode(course, nextState, option.next), "selectChoice");
+      setState(
+        transitionToNode(
+          course,
+          nextState,
+          resolveScenarioStateRoute(option.nextWhen, nextState.scenarioState, option.next)
+        ),
+        "selectChoice"
+      );
     },
-    submitQuiz: function (selectedOptionIds) {
+    submitQuiz: function (selectedOptionIds, interactionIds) {
       var snapshot = getSnapshot();
       var node = snapshot.currentNode;
 
@@ -860,8 +2088,32 @@ function createRuntimeController(course, persistedState) {
 
       var evaluated = evaluateQuiz(node, selectedOptionIds);
       var nextState = applyAnswer(state, node.id, evaluated.answer);
+      var selectedOptions = node.options.filter(function (option) {
+        return evaluated.answer.selectedOptionIds.indexOf(option.id) !== -1;
+      });
 
-      setState(transitionToNode(course, nextState, evaluated.nextNodeId || null), "submitQuiz");
+      nextState = Object.assign({}, nextState, {
+        scenarioState: selectedOptions.reduce(function (values, option) {
+          return applyScenarioStateUpdates(course, values, option.stateUpdates);
+        }, nextState.scenarioState),
+        actionHistory: appendActionHistory(state, {
+          nodeId: node.id,
+          action: interactionIds && interactionIds.length > 0 ? "interaction" : "quiz",
+          optionIds: evaluated.answer.selectedOptionIds.slice(),
+          interactionIds: interactionIds ? interactionIds.slice() : []
+        })
+      });
+
+      setState(
+        transitionToNode(
+          course,
+          nextState,
+          evaluated.passed
+            ? resolveScenarioStateRoute(node.passNextWhen, nextState.scenarioState, node.passNext || node.next)
+            : resolveScenarioStateRoute(node.failNextWhen, nextState.scenarioState, node.failNext || node.next)
+        ),
+        "submitQuiz"
+      );
     },
     restart: function () {
       setState(createDefaultState(course), "restart");
@@ -871,10 +2123,12 @@ function createRuntimeController(course, persistedState) {
 
 function createRenderer(root, runtime, course) {
   var selectedQuizOptionIds = [];
+  var selectedQuizInteractionIds = [];
 
   function syncSelections(snapshot) {
     if (!snapshot.currentNode || snapshot.currentNode.type !== "quiz") {
       selectedQuizOptionIds = [];
+      selectedQuizInteractionIds = [];
       return;
     }
 
@@ -882,10 +2136,71 @@ function createRenderer(root, runtime, course) {
 
     if (priorAnswer && priorAnswer.kind === "quiz") {
       selectedQuizOptionIds = priorAnswer.selectedOptionIds.slice();
+      selectedQuizInteractionIds = [];
       return;
     }
 
-    selectedQuizOptionIds = [];
+    var validOptionIds = snapshot.currentNode.options.map(function (option) {
+      return option.id;
+    });
+
+    selectedQuizOptionIds = selectedQuizOptionIds.filter(function (optionId) {
+      return validOptionIds.indexOf(optionId) !== -1;
+    });
+
+    if (selectedQuizOptionIds.length === 0) {
+      selectedQuizInteractionIds = [];
+    } else {
+      selectedQuizInteractionIds = selectedQuizInteractionIds.slice(
+        0,
+        selectedQuizOptionIds.length
+      );
+    }
+  }
+
+  function handleSceneInteraction(interactionId) {
+    var snapshot = runtime.getSnapshot();
+    var node = snapshot.currentNode;
+
+    if (!node) {
+      return;
+    }
+
+    var resolved = resolveNodeInteraction(node, interactionId);
+
+    if (!resolved) {
+      return;
+    }
+
+    if (node.type === "choice") {
+      runtime.selectChoice(resolved.optionId, resolved.interactionId);
+      return;
+    }
+
+    if (node.type === "quiz") {
+      if (node.multiple) {
+        if (selectedQuizOptionIds.indexOf(resolved.optionId) === -1) {
+          selectedQuizOptionIds = selectedQuizOptionIds.concat(resolved.optionId);
+          selectedQuizInteractionIds = selectedQuizInteractionIds.concat(
+            resolved.interactionId
+          );
+        } else {
+          selectedQuizOptionIds = selectedQuizOptionIds.filter(function (optionId) {
+            return optionId !== resolved.optionId;
+          });
+          selectedQuizInteractionIds = selectedQuizInteractionIds.filter(function (
+            interactionId
+          ) {
+            return interactionId !== resolved.interactionId;
+          });
+        }
+      } else {
+        selectedQuizOptionIds = [resolved.optionId];
+        selectedQuizInteractionIds = [resolved.interactionId];
+      }
+
+      render(runtime.getSnapshot());
+    }
   }
 
   function render(snapshot) {
@@ -923,7 +2238,7 @@ function createRenderer(root, runtime, course) {
 
     var title = document.createElement("h1");
     title.className = "title " + statusClass;
-    title.textContent = node.title;
+    title.textContent = course.title;
 
     var meta = document.createElement("div");
     meta.className = "meta";
@@ -931,7 +2246,8 @@ function createRenderer(root, runtime, course) {
       "Status: " + snapshot.lessonStatus,
       "Score: " + snapshot.state.score,
       "Passing score: " + course.passingScore,
-      "Node: " + snapshot.state.currentNodeId
+      "Node: " + snapshot.state.currentNodeId,
+      "Shell: " + ((node.scene && node.scene.layout) || "card")
     ].forEach(function (text) {
       var chip = document.createElement("div");
       chip.className = "chip";
@@ -950,6 +2266,15 @@ function createRenderer(root, runtime, course) {
 
     var actions = document.createElement("div");
     actions.className = "actions";
+    var hasShellInteractions = Boolean(node.interactions && node.interactions.length > 0);
+
+    var sceneRenderContext = {
+      runtime: runtime,
+      getSelectedOptionIds: function () {
+        return selectedQuizOptionIds.slice();
+      },
+      handleSceneInteraction: handleSceneInteraction
+    };
 
     if (node.type === "content") {
       var advanceButton = document.createElement("button");
@@ -960,7 +2285,7 @@ function createRenderer(root, runtime, course) {
       actions.appendChild(advanceButton);
     }
 
-    if (node.type === "choice") {
+    if (node.type === "choice" && !hasShellInteractions) {
       node.options.forEach(function (option) {
         var button = document.createElement("button");
         button.className = "secondary";
@@ -972,7 +2297,7 @@ function createRenderer(root, runtime, course) {
       });
     }
 
-    if (node.type === "quiz") {
+    if (node.type === "quiz" && !hasShellInteractions) {
       var optionList = document.createElement("div");
       optionList.className = "quiz-options";
       var submitButton = document.createElement("button");
@@ -1017,9 +2342,36 @@ function createRenderer(root, runtime, course) {
       submitButton.textContent = "Submit answer";
       submitButton.disabled = selectedQuizOptionIds.length === 0;
       submitButton.addEventListener("click", function () {
-        runtime.submitQuiz(selectedQuizOptionIds.slice());
+        runtime.submitQuiz(
+          selectedQuizOptionIds.slice(),
+          selectedQuizInteractionIds.slice()
+        );
       });
       actions.appendChild(submitButton);
+    }
+
+    if (node.type === "quiz" && hasShellInteractions) {
+      var compactPrompt = document.createElement("p");
+      compactPrompt.className = "body";
+      compactPrompt.textContent =
+        selectedQuizOptionIds.length > 0
+          ? selectedQuizOptionIds.length +
+            " response" +
+            (selectedQuizOptionIds.length === 1 ? "" : "s") +
+            " selected."
+          : "Select a response inside the simulation shell, then submit.";
+      actions.appendChild(compactPrompt);
+
+      var compactSubmitButton = document.createElement("button");
+      compactSubmitButton.textContent = "Submit answer";
+      compactSubmitButton.disabled = selectedQuizOptionIds.length === 0;
+      compactSubmitButton.addEventListener("click", function () {
+        runtime.submitQuiz(
+          selectedQuizOptionIds.slice(),
+          selectedQuizInteractionIds.slice()
+        );
+      });
+      actions.appendChild(compactSubmitButton);
     }
 
     if (node.type === "result") {
@@ -1034,9 +2386,9 @@ function createRenderer(root, runtime, course) {
     root.appendChild(eyebrow);
     root.appendChild(title);
     root.appendChild(meta);
-    renderNodePresentation(body, node, course, snapshot.state);
+    renderNodePresentation(body, node, course, snapshot.state, sceneRenderContext);
 
-    if (node.type === "quiz") {
+    if (node.type === "quiz" && !hasShellInteractions) {
       var prompt = document.createElement("div");
       prompt.className = "callout-block";
       var promptTitle = document.createElement("strong");

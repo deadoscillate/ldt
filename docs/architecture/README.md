@@ -15,3 +15,6 @@ Architecture notes:
 - [compile-pipeline.md](compile-pipeline.md)
 - [boundaries.md](boundaries.md)
 - [course-projects.md](course-projects.md)
+- [scene-component-rendering-model.md](scene-component-rendering-model.md)
+- [adding-a-new-component-type.md](adding-a-new-component-type.md)
+- [../simulation-shells.md](../simulation-shells.md)

@@ -124,6 +124,10 @@ textarea {
   color: #fff3e5;
 }
 
+.landing-nav-links .nav-link-active:not(.button-link) {
+  color: #fff3e5;
+}
+
 .landing-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(20rem, 1fr);
@@ -188,6 +192,15 @@ textarea {
 }
 
 .landing-section .section-heading h2 {
+  color: #f6ede0;
+  text-shadow: none;
+}
+
+.landing-section .section-heading h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
   color: #f6ede0;
   text-shadow: none;
 }
@@ -1709,6 +1722,331 @@ textarea {
   gap: 0.65rem;
 }
 
+.scene-render-root,
+.scene-shell,
+.scene-slot-stack {
+  display: grid;
+  gap: var(--course-card-gap, 0.85rem);
+}
+
+.scene-shell-frame {
+  padding: 1rem 1.1rem;
+  border-radius: var(--course-card-radius, 1rem);
+  border: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+  background: color-mix(
+    in srgb,
+    var(--course-surface, rgba(255, 255, 255, 0.86)) 94%,
+    transparent
+  );
+}
+
+.scene-layout-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--course-section-gap, 1rem);
+  margin-top: 0.4rem;
+}
+
+.scene-component-title {
+  margin: 0;
+}
+
+.scene-shell-label {
+  color: var(--course-muted-text, var(--muted));
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scene-component-muted {
+  color: var(--course-muted-text, var(--muted));
+}
+
+.scene-component-help {
+  color: var(--course-muted-text, var(--muted));
+  font-size: 0.92rem;
+}
+
+.scene-component-divider {
+  display: grid;
+  place-items: center;
+  margin-top: 0.35rem;
+  padding-top: 0.6rem;
+  border-top: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+  color: var(--course-muted-text, var(--muted));
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scene-component-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--course-muted-text, var(--muted));
+  line-height: 1.6;
+}
+
+.scene-shell-email,
+.scene-shell-chat,
+.scene-shell-dashboard {
+  padding: 0.25rem;
+  border-radius: calc(var(--course-card-radius, 1rem) + 0.15rem);
+  background: color-mix(
+    in srgb,
+    var(--course-surface-strong, var(--panel-strong)) 88%,
+    var(--course-secondary, rgba(255, 255, 255, 0.76))
+  );
+}
+
+.scene-shell-email-bar,
+.scene-shell-chat-header,
+.scene-shell-dashboard-header {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--course-card-radius, 1rem);
+  background: color-mix(
+    in srgb,
+    var(--course-surface, rgba(255, 255, 255, 0.86)) 92%,
+    transparent
+  );
+  border: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+}
+
+.scene-shell-email-frame {
+  background: #fffdf8;
+}
+
+.scene-email-header {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.scene-email-body {
+  white-space: pre-wrap;
+  line-height: 1.65;
+  color: var(--course-text, var(--text));
+}
+
+.scene-email-warning {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  font-weight: 600;
+}
+
+.scene-email-warning-warning {
+  background: color-mix(in srgb, var(--course-danger, #8a2f39) 12%, transparent);
+  color: var(--course-danger, #8a2f39);
+}
+
+.scene-email-warning-info {
+  background: color-mix(in srgb, var(--course-primary, var(--accent)) 10%, transparent);
+}
+
+.scene-interaction-control {
+  appearance: none;
+  display: grid;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+  border-radius: 1rem;
+  background: color-mix(
+    in srgb,
+    var(--course-surface, rgba(255, 255, 255, 0.86)) 94%,
+    transparent
+  );
+  color: var(--course-text, var(--text));
+  font: inherit;
+  text-align: left;
+}
+
+.scene-interaction-control.is-selected,
+.scene-interaction-button.is-selected,
+.scene-chat-choice-message.is-selected,
+.scene-dashboard-action-card.is-selected,
+.scene-dashboard-review-item.is-selected,
+.scene-dashboard-flag-toggle.is-selected {
+  box-shadow: inset 0 0 0 2px
+    color-mix(in srgb, var(--course-primary, var(--accent)) 40%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--course-primary, var(--accent)) 38%,
+    var(--course-border, rgba(216, 200, 177, 0.92))
+  );
+}
+
+.scene-email-link-meta {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.scene-email-link-meta span,
+.scene-interaction-feedback {
+  color: var(--course-muted-text, var(--muted));
+  font-size: 0.92rem;
+}
+
+.scene-chat-reply-option,
+.scene-dashboard-action-card,
+.scene-dashboard-review-item {
+  appearance: none;
+  font: inherit;
+  text-align: left;
+}
+
+.scene-dashboard-flag-toggle {
+  appearance: none;
+  justify-content: center;
+  border: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+  font: inherit;
+}
+
+.scene-shell-chat-stream {
+  min-height: 14rem;
+}
+
+.scene-chat-message {
+  max-width: min(34rem, 100%);
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+  background: color-mix(
+    in srgb,
+    var(--course-surface, rgba(255, 255, 255, 0.86)) 92%,
+    transparent
+  );
+}
+
+.scene-chat-message-self {
+  justify-self: end;
+  background: color-mix(in srgb, var(--course-primary, var(--accent)) 12%, white);
+}
+
+.scene-chat-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+  color: var(--course-muted-text, var(--muted));
+  font-size: 0.86rem;
+}
+
+.scene-chat-message p,
+.scene-dashboard-card p,
+.scene-dashboard-notice p {
+  margin: 0;
+}
+
+.scene-chat-notice {
+  justify-self: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--course-secondary, var(--panel-strong)) 80%, white);
+  color: var(--course-muted-text, var(--muted));
+  font-size: 0.9rem;
+}
+
+.scene-shell-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+  gap: var(--course-section-gap, 1rem);
+}
+
+.scene-shell-dashboard-sidebar,
+.scene-shell-dashboard-main {
+  padding: 1rem;
+  border-radius: var(--course-card-radius, 1rem);
+  border: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+  background: color-mix(
+    in srgb,
+    var(--course-surface, rgba(255, 255, 255, 0.86)) 92%,
+    transparent
+  );
+}
+
+.scene-dashboard-card,
+.scene-dashboard-metric,
+.scene-dashboard-notice {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px var(--course-border-style, solid)
+    var(--course-border, rgba(216, 200, 177, 0.92));
+  background: color-mix(
+    in srgb,
+    var(--course-surface, rgba(255, 255, 255, 0.86)) 94%,
+    transparent
+  );
+}
+
+.scene-dashboard-card-warning,
+.scene-status-badge-warning,
+.scene-dashboard-metric-warning {
+  border-color: color-mix(in srgb, var(--course-danger, #8a2f39) 40%, var(--course-border, rgba(216, 200, 177, 0.92)));
+}
+
+.scene-dashboard-card-positive,
+.scene-status-badge-positive,
+.scene-dashboard-metric-positive {
+  border-color: color-mix(in srgb, var(--course-success, #2a6b49) 40%, var(--course-border, rgba(216, 200, 177, 0.92)));
+}
+
+.scene-status-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: color-mix(
+    in srgb,
+    var(--course-secondary, var(--panel-strong)) 80%,
+    transparent
+  );
+}
+
+.scene-panel-title {
+  margin: 0;
+}
+
+.builder-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.scene-render-error {
+  margin-top: 1rem;
+  color: var(--course-danger, #8a2f39);
+}
+
+.scene-component-inspector {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.scene-component-inspector li {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.scene-component-inspector span {
+  color: var(--course-muted-text, var(--muted));
+  font-size: 0.92rem;
+}
+
 .node-media-block {
   display: grid;
   gap: 0.45rem;
@@ -2316,7 +2654,9 @@ textarea {
   .builder-grid,
   .builder-layout-columns,
   .validation-workspace-grid,
-  .node-layout-grid {
+  .node-layout-grid,
+  .scene-layout-grid,
+  .scene-shell-dashboard-grid {
     grid-template-columns: 1fr;
   }
 

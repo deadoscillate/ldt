@@ -43,6 +43,10 @@ import {
 } from "@/lib/course/parse";
 import type { TemplateScalarValue } from "@/lib/course/schema";
 import {
+  buildTemplateFieldDefinitions,
+  type TemplateVariableSchema,
+} from "@/lib/course/template-variables";
+import {
   buildCourseProjectReadme,
   buildSourceDownloadFileName,
   createDuplicatedVariantDraft,
@@ -56,8 +60,20 @@ import type {
   TemplatePackVariant,
 } from "@/lib/course/template-pack";
 import type { TemplateFieldDefinition } from "@/lib/course/template";
-import type { TemplateVariableSchema } from "@/lib/course/template-variables";
 import type { CompiledCourse } from "@/lib/course/types";
+import {
+  buildSharedModuleFamilies,
+  findSharedModuleVersion,
+  summarizeModuleUsageCoverage,
+} from "@/lib/module-library/catalog";
+import {
+  compareModuleVersions,
+  type SharedModuleLibrary,
+} from "@/lib/module-library/schema";
+import {
+  extractSharedModuleFromYaml,
+  insertSharedModuleIntoYaml,
+} from "@/lib/module-library/workflows";
 import {
   buildCourseProjectBuildContext,
   exportCourseProjectBuildMatrix,
@@ -89,7 +105,6 @@ import {
   buildThemeTokenSummary,
 } from "@/lib/theme/apply";
 import type { ThemePack } from "@/lib/theme/schema";
-import type { SharedModuleLibrary } from "@/lib/module-library/schema";
 import {
   buildEditingSurfaceSummary,
   buildFirstExportFeedback,
@@ -270,38 +285,6 @@ function downloadTextFile(fileName: string, contents: string): void {
   window.URL.revokeObjectURL(objectUrl);
 }
 
-function insertSharedModuleIntoYaml(
-  source: string,
-  moduleId: string,
-  version: string
-): string {
-  const parsed = yaml.load(source);
-
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("Source definition must be valid YAML before inserting a shared module.");
-  }
-
-  const document = parsed as {
-    nodes?: unknown[];
-  };
-
-  if (!Array.isArray(document.nodes)) {
-    throw new Error('Source definition must include a top-level "nodes" array.');
-  }
-
-  document.nodes.push({
-    include: {
-      module: moduleId,
-      version,
-    },
-  });
-
-  return yaml.dump(document, {
-    lineWidth: 100,
-    noRefs: true,
-  });
-}
-
 function formatBuildTimestamp(value: string): string {
   const date = new Date(value);
 
@@ -437,9 +420,23 @@ export function CourseWorkbench({
   const [isRunningLogicTests, setIsRunningLogicTests] = useState(false);
   const [requirePassingTestsBeforeExport, setRequirePassingTestsBeforeExport] =
     useState(false);
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
+  const [selectedModuleFamilyId, setSelectedModuleFamilyId] = useState<string | null>(
     moduleLibrary?.modules[0]?.id ?? null
   );
+  const [selectedModuleVersion, setSelectedModuleVersion] = useState<string | null>(
+    null
+  );
+  const [moduleSearchQuery, setModuleSearchQuery] = useState("");
+  const [moduleCategoryFilter, setModuleCategoryFilter] = useState("all");
+  const [moduleIncludeValues, setModuleIncludeValues] = useState<
+    Record<string, TemplateScalarValue>
+  >({});
+  const [moduleExtractStepId, setModuleExtractStepId] = useState<string | null>(null);
+  const [moduleDraftId, setModuleDraftId] = useState("");
+  const [moduleDraftTitle, setModuleDraftTitle] = useState("");
+  const [moduleDraftDescription, setModuleDraftDescription] = useState("");
+  const [moduleDraftCategory, setModuleDraftCategory] = useState("shared");
+  const [moduleDraftTags, setModuleDraftTags] = useState("");
   const [selectedValidationTargetId, setSelectedValidationTargetId] = useState(
     validationCatalog.platforms.find((platform) => platform.id !== "scorm-cloud")?.id ??
       validationCatalog.platforms[0]?.id ??
@@ -458,7 +455,27 @@ export function CourseWorkbench({
     availableProjects.length > 0
       ? availableProjects.map(courseProjectToTemplatePack)
       : templatePacks;
-  const availableSharedModules = moduleLibrary?.modules ?? [];
+  const sharedModuleFamilies = buildSharedModuleFamilies(
+    moduleLibrary,
+    moduleUsageIndex
+  );
+  const moduleCategories = [
+    "all",
+    ...new Set(sharedModuleFamilies.map((family) => family.category)),
+  ];
+  const filteredSharedModuleFamilies = sharedModuleFamilies.filter((family) => {
+    const matchesCategory =
+      moduleCategoryFilter === "all" || family.category === moduleCategoryFilter;
+    const normalizedSearchQuery = moduleSearchQuery.trim().toLowerCase();
+    const matchesSearch =
+      normalizedSearchQuery.length === 0 ||
+      family.title.toLowerCase().includes(normalizedSearchQuery) ||
+      family.id.toLowerCase().includes(normalizedSearchQuery) ||
+      family.description.toLowerCase().includes(normalizedSearchQuery) ||
+      family.tags.some((tag) => tag.toLowerCase().includes(normalizedSearchQuery));
+
+    return matchesCategory && matchesSearch;
+  });
   const selectedProject =
     availableProjects.find((project) => project.id === activeProjectId) ?? null;
   const selectedPack =
@@ -482,10 +499,20 @@ export function CourseWorkbench({
     validationCatalog.platforms.find(
       (platform) => platform.id === selectedValidationTargetId
     ) ?? validationCatalog.platforms[0];
-  const selectedSharedModule =
-    availableSharedModules.find((module) => module.id === selectedModuleId) ??
-    availableSharedModules[0] ??
+  const selectedSharedModuleFamily =
+    sharedModuleFamilies.find((family) => family.id === selectedModuleFamilyId) ??
+    filteredSharedModuleFamilies[0] ??
     null;
+  const selectedSharedModule = findSharedModuleVersion(
+    selectedSharedModuleFamily,
+    selectedModuleVersion
+  );
+  const selectedModuleFields = selectedSharedModule
+    ? buildTemplateFieldDefinitions(
+        selectedSharedModule.templateData,
+        selectedSharedModule.variableSchema
+      )
+    : [];
   const selectedStartingPath = onboardingState.selectedPath
     ? getStudioStartingPath(onboardingState.selectedPath)
     : null;
@@ -496,12 +523,24 @@ export function CourseWorkbench({
   const activeModuleDependencies =
     activeSnapshot.dependencyGraph?.moduleDependencies ?? [];
   const selectedModuleUsageTargets =
-    moduleUsageIndex[selectedSharedModule?.id ?? ""] ?? [];
+    moduleUsageIndex[selectedSharedModuleFamily?.id ?? ""] ?? [];
   const selectedProjectAffectedTargets = selectedProject
     ? selectedModuleUsageTargets.filter(
         (target) => target.projectId === selectedProject.id
       )
     : [];
+  const selectedActiveModuleDependency =
+    selectedSharedModuleFamily
+      ? activeModuleDependencies.find(
+          (dependency) => dependency.moduleId === selectedSharedModuleFamily.id
+        ) ?? null
+      : null;
+  const extractableModuleSteps =
+    activeSnapshot.canonicalCourse?.nodeOrder.map((nodeId) => ({
+      id: nodeId,
+      title: activeSnapshot.canonicalCourse?.nodes[nodeId]?.title ?? nodeId,
+      type: activeSnapshot.canonicalCourse?.nodes[nodeId]?.sourceType ?? "content",
+    })) ?? [];
   const activeProjectBuildSelection =
     selectedProject && selectedTemplate && selectedThemePack && activeVariantId
       ? {
@@ -661,6 +700,95 @@ export function CourseWorkbench({
       setIsPathChooserOpen(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (sharedModuleFamilies.length === 0) {
+      if (selectedModuleFamilyId !== null) {
+        setSelectedModuleFamilyId(null);
+      }
+
+      return;
+    }
+
+    if (
+      !selectedModuleFamilyId ||
+      !sharedModuleFamilies.some((family) => family.id === selectedModuleFamilyId)
+    ) {
+      setSelectedModuleFamilyId(sharedModuleFamilies[0]!.id);
+    }
+  }, [selectedModuleFamilyId, sharedModuleFamilies]);
+
+  useEffect(() => {
+    if (!selectedSharedModuleFamily) {
+      if (selectedModuleVersion !== null) {
+        setSelectedModuleVersion(null);
+      }
+
+      return;
+    }
+
+    if (
+      !selectedModuleVersion ||
+      !selectedSharedModuleFamily.versions.some(
+        (module) => module.version === selectedModuleVersion
+      )
+    ) {
+      setSelectedModuleVersion(selectedSharedModuleFamily.latestVersion);
+    }
+  }, [selectedModuleVersion, selectedSharedModuleFamily]);
+
+  useEffect(() => {
+    if (!selectedSharedModule) {
+      setModuleIncludeValues({});
+      return;
+    }
+
+    setModuleIncludeValues(
+      templateFieldsToValues(
+        buildTemplateFieldDefinitions(
+          selectedSharedModule.templateData,
+          selectedSharedModule.variableSchema
+        )
+      )
+    );
+  }, [selectedSharedModule?.id, selectedSharedModule?.version]);
+
+  useEffect(() => {
+    if (extractableModuleSteps.length === 0) {
+      if (moduleExtractStepId !== null) {
+        setModuleExtractStepId(null);
+      }
+
+      return;
+    }
+
+    if (
+      !moduleExtractStepId ||
+      !extractableModuleSteps.some((step) => step.id === moduleExtractStepId)
+    ) {
+      setModuleExtractStepId(extractableModuleSteps[0]!.id);
+    }
+  }, [extractableModuleSteps, moduleExtractStepId]);
+
+  useEffect(() => {
+    if (!moduleExtractStepId) {
+      return;
+    }
+
+    if (!moduleDraftId.trim()) {
+      setModuleDraftId(moduleExtractStepId);
+    }
+
+    if (!moduleDraftTitle.trim()) {
+      const matchingStep = extractableModuleSteps.find(
+        (step) => step.id === moduleExtractStepId
+      );
+
+      if (matchingStep) {
+        setModuleDraftTitle(matchingStep.title);
+      }
+    }
+  }, [extractableModuleSteps, moduleDraftId, moduleDraftTitle, moduleExtractStepId]);
 
   function clearLastExportedPackage(): void {
     if (exportObjectUrlRef.current) {
@@ -1847,10 +1975,20 @@ export function CourseWorkbench({
     }
 
     try {
+      const effectiveIncludeOverrides = Object.fromEntries(
+        Object.entries(moduleIncludeValues).filter(([key, value]) => {
+          const field = selectedModuleFields.find((candidate) => candidate.key === key);
+          const moduleDefaultValue =
+            selectedSharedModule.templateData[key] ?? field?.value ?? "";
+
+          return value !== moduleDefaultValue;
+        })
+      );
       const nextSource = insertSharedModuleIntoYaml(
         draftYaml,
         selectedSharedModule.id,
-        selectedSharedModule.version
+        selectedSharedModule.version,
+        effectiveIncludeOverrides
       );
       setAuthoringMode("source");
       setActiveStudioSurface("source");
@@ -1865,7 +2003,7 @@ export function CourseWorkbench({
           tone: "success",
           title: "Shared module inserted",
           message:
-            "The module include was appended to the source definition. Wire the next-step references in source mode so the new shared step participates in the course flow.",
+            "The module include was appended to the source definition with the current variable overrides. Wire the next-step references in source mode so the new shared step participates in the course flow.",
         },
         false,
         selectedVariableSchema
@@ -1873,6 +2011,7 @@ export function CourseWorkbench({
       trackStudioEvent("shared_module_included", {
         moduleId: selectedSharedModule.id,
         moduleVersion: selectedSharedModule.version,
+        overrideCount: Object.keys(effectiveIncludeOverrides).length,
       });
     } catch (error) {
       setFeedback({
@@ -1882,6 +2021,71 @@ export function CourseWorkbench({
           error instanceof Error
             ? error.message
             : "The shared module could not be inserted into the current source definition.",
+      });
+    }
+  }
+
+  function handleExtractSharedModule(): void {
+    if (!moduleExtractStepId) {
+      return;
+    }
+
+    if (!moduleDraftId.trim() || !moduleDraftTitle.trim() || !moduleDraftCategory.trim()) {
+      setFeedback({
+        tone: "error",
+        title: "Module draft needs details",
+        message:
+          "Choose a source step, then provide a module id, title, and category before extracting a reusable module draft.",
+      });
+      return;
+    }
+
+    try {
+      const extracted = extractSharedModuleFromYaml({
+        source: draftYaml,
+        nodeId: moduleExtractStepId,
+        moduleId: moduleDraftId,
+        title: moduleDraftTitle,
+        description: moduleDraftDescription || `Reusable module extracted from ${moduleExtractStepId}.`,
+        category: moduleDraftCategory,
+        tags: moduleDraftTags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      });
+
+      setAuthoringMode("source");
+      setActiveStudioSurface("source");
+      setDraftYaml(extracted.nextSource);
+      clearLastExportedPackage();
+      clearLastBatchExport();
+      setSourceLabel(`Source definition extracted ${moduleExtractStepId} into ${moduleDraftId}`);
+      updateDraftPipeline(
+        extracted.nextSource,
+        templateDataValues,
+        {
+          tone: "success",
+          title: "Shared module draft generated",
+          message:
+            "The selected step was replaced with a pinned shared-module include. Review the downloaded module source and registry entry, then add them to module-library/ before rebuilding.",
+        },
+        false,
+        selectedVariableSchema
+      );
+      downloadTextFile(`${moduleDraftId}.yaml`, extracted.moduleSource);
+      downloadTextFile(`${moduleDraftId}.registry-entry.yaml`, extracted.registryEntrySource);
+      trackStudioEvent("shared_module_extracted", {
+        moduleId: moduleDraftId,
+        sourceStepId: moduleExtractStepId,
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        title: "Shared module extraction failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The selected step could not be extracted into a shared module draft.",
       });
     }
   }
@@ -2454,7 +2658,9 @@ export function CourseWorkbench({
                 Use Source view to define structured training modules. Use Builder
                 view to work through guided fields and preview the compiled course.
                 Sapio Forge separates course source from course output so training
-                systems stay reusable, testable, and version-controlled.
+                systems stay reusable, testable, and version-controlled. Shared
+                modules let you compose courses from reusable source components
+                instead of duplicating the same lesson logic across projects.
               </p>
               {selectedStartingPath ? (
                 <p className="panel-copy">
@@ -3151,8 +3357,8 @@ export function CourseWorkbench({
               </div>
               <p className="panel-copy">
                 {authoringMode === "builder"
-                  ? "Use guided forms to update the current source-backed variant, then switch to Source view any time to inspect or edit the YAML directly."
-                  : "Keep YAML as the source of truth. Validation covers schema shape, variables, layouts, and branching integrity before normalization."}
+                  ? "Use guided forms to update the current source-backed variant, then switch to Source view any time to inspect or edit the YAML directly. Builder fields compile into scene shells and ordered components, including email, chat, and dashboard simulations."
+                  : "Keep YAML as the source of truth. Validation covers schema shape, variables, layouts, branching integrity, and the derived scene/component model before normalization."}
               </p>
               <p className="editing-surface-note">{authoringSurfaceSummary.label}</p>
               <button
@@ -3427,6 +3633,7 @@ nodes:
             <div ref={yamlEditorRef}>
               <CourseBuilder
                 course={builderDraft}
+                compiledCourse={activeSnapshot.canonicalCourse}
                 onChange={applyBuilderCourse}
                 validationErrors={displayedValidationErrors}
               />
@@ -4107,16 +4314,19 @@ nodes:
             </section>
           ) : null}
 
-          {availableSharedModules.length > 0 ? (
+          {sharedModuleFamilies.length > 0 ? (
             <section className="panel notes-panel">
               <p className="eyebrow">Shared Module Library</p>
-              <h2>Reusable source modules</h2>
+              <h2>Compose courses from reusable modules</h2>
               <p className="panel-copy">
-                Shared modules are source assets expanded during compile. They stay in
-                the source system of record, show up in dependency graphs, and drive
-                affected rebuilds when reused content changes.
+                Shared modules are first-class source assets. Browse the library,
+                inspect versions and usage, include modules in course source, and see
+                which builds depend on each reusable learning component.
               </p>
               <div className="validation-state-grid">
+                <span className="status-pill">
+                  {sharedModuleFamilies.length} module famil{sharedModuleFamilies.length === 1 ? "y" : "ies"}
+                </span>
                 {activeModuleDependencies.length > 0 ? (
                   activeModuleDependencies.map((dependency) => (
                     <span className="status-pill" key={`${dependency.moduleId}-${dependency.version}`}>
@@ -4127,24 +4337,60 @@ nodes:
                   <span className="status-pill">No shared modules in the active source</span>
                 )}
               </div>
+              <div className="template-data-grid">
+                <label className="template-field">
+                  <span className="template-field-label">Search modules</span>
+                  <input
+                    className="template-field-input"
+                    onChange={(event) => setModuleSearchQuery(event.target.value)}
+                    placeholder="Search by name, id, or tag"
+                    value={moduleSearchQuery}
+                  />
+                </label>
+                <label className="template-field">
+                  <span className="template-field-label">Category</span>
+                  <select
+                    className="template-field-input"
+                    onChange={(event) => setModuleCategoryFilter(event.target.value)}
+                    value={moduleCategoryFilter}
+                  >
+                    {moduleCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category === "all" ? "All categories" : category}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <div className="preflight-check-grid">
-                {availableSharedModules.map((module) => {
-                  const isActive = selectedSharedModule?.id === module.id;
-                  const usageCount = moduleUsageIndex[module.id]?.length ?? 0;
+                {filteredSharedModuleFamilies.map((family) => {
+                  const isActive = selectedSharedModuleFamily?.id === family.id;
 
                   return (
-                    <article className="runtime-status-card" key={`${module.id}-${module.version}`}>
-                      <span className="runtime-status-label">{module.category}</span>
-                      <strong>{module.title}</strong>
+                    <article className="runtime-status-card" key={family.id}>
+                      <span className="runtime-status-label">{family.category}</span>
+                      <strong>{family.title}</strong>
                       <p className="panel-copy">
-                        {module.id}@{module.version} | Used by {usageCount} build
-                        {usageCount === 1 ? "" : "s"}
+                        {family.id} | Latest {family.latestVersion} | {family.versionCount} version
+                        {family.versionCount === 1 ? "" : "s"}
                       </p>
-                      <p className="panel-copy">{module.description}</p>
+                      <p className="panel-copy">
+                        Used by {family.usedByCount} build
+                        {family.usedByCount === 1 ? "" : "s"} |{" "}
+                        {family.testStatus === "module-tests"
+                          ? "Module tests declared"
+                          : family.testStatus === "course-tests"
+                            ? "Covered by course tests"
+                            : "No test coverage yet"}
+                      </p>
+                      <p className="panel-copy">{family.description}</p>
                       <div className="button-row">
                         <button
                           className={isActive ? "primary-button" : "ghost-button"}
-                          onClick={() => setSelectedModuleId(module.id)}
+                          onClick={() => {
+                            setSelectedModuleFamilyId(family.id);
+                            setSelectedModuleVersion(family.latestVersion);
+                          }}
                           type="button"
                         >
                           {isActive ? "Selected" : "Inspect"}
@@ -4154,17 +4400,64 @@ nodes:
                   );
                 })}
               </div>
+              {filteredSharedModuleFamilies.length === 0 ? (
+                <div className="template-data-empty">
+                  <p className="panel-copy">
+                    No shared modules match the current search and category filters.
+                  </p>
+                </div>
+              ) : null}
               {selectedSharedModule ? (
                 <div className="panel-subsection">
                   <div className="section-heading-row">
                     <div>
-                      <p className="eyebrow">Selected module</p>
+                      <p className="eyebrow">Selected module family</p>
                       <p className="panel-copy section-copy">
-                        Inspect metadata, include the module in source mode, or rebuild
-                        the currently selected project's affected targets only.
+                        Modules are reusable source components. Include them with
+                        explicit version pins, inspect where they are reused, and keep
+                        course logic tied back to shared source.
                       </p>
                     </div>
                     <div className="button-row">
+                      <button
+                        className="ghost-button"
+                        onClick={() =>
+                          downloadTextFile(
+                            selectedSharedModule.sourcePath.split("/").pop() ??
+                              `${selectedSharedModule.id}.yaml`,
+                            yaml.dump(
+                              {
+                                id: selectedSharedModule.id,
+                                title: selectedSharedModule.title,
+                                description: selectedSharedModule.description,
+                                version: selectedSharedModule.version,
+                                category: selectedSharedModule.category,
+                                tags: selectedSharedModule.tags,
+                                lastUpdated: selectedSharedModule.lastUpdated,
+                                deprecated: selectedSharedModule.deprecated,
+                                ...(selectedSharedModule.variableSchema
+                                  ? {
+                                      variableSchema:
+                                        selectedSharedModule.variableSchema,
+                                    }
+                                  : {}),
+                                templateData: selectedSharedModule.templateData,
+                                blocks: selectedSharedModule.blocks,
+                                nodes: selectedSharedModule.nodes,
+                                tests: selectedSharedModule.tests,
+                                metadata: selectedSharedModule.metadata,
+                              },
+                              {
+                                lineWidth: 100,
+                                noRefs: true,
+                              }
+                            )
+                          )
+                        }
+                        type="button"
+                      >
+                        Download Module Source
+                      </button>
                       <button
                         className="ghost-button"
                         onClick={handleInsertSharedModule}
@@ -4186,52 +4479,265 @@ nodes:
                   <div className="runtime-status-grid inspector-grid">
                     <div className="runtime-status-card">
                       <span className="runtime-status-label">Module id</span>
-                      <strong>{selectedSharedModule.id}</strong>
+                      <strong>{selectedSharedModuleFamily?.id}</strong>
                     </div>
                     <div className="runtime-status-card">
-                      <span className="runtime-status-label">Version</span>
+                      <span className="runtime-status-label">Selected version</span>
                       <strong>{selectedSharedModule.version}</strong>
                     </div>
                     <div className="runtime-status-card">
-                      <span className="runtime-status-label">Category</span>
-                      <strong>{selectedSharedModule.category}</strong>
+                      <span className="runtime-status-label">Latest version</span>
+                      <strong>{selectedSharedModuleFamily?.latestVersion}</strong>
                     </div>
                     <div className="runtime-status-card">
-                      <span className="runtime-status-label">Source file</span>
-                      <strong>{selectedSharedModule.sourcePath}</strong>
+                      <span className="runtime-status-label">Used by</span>
+                      <strong>
+                        {selectedModuleUsageTargets.length} build target
+                        {selectedModuleUsageTargets.length === 1 ? "" : "s"}
+                      </strong>
                     </div>
                   </div>
                   <p className="panel-copy">
                     Tags: {selectedSharedModule.tags.join(", ")} | Last updated:{" "}
                     {selectedSharedModule.lastUpdated}
                   </p>
+                  <div className="template-data-grid">
+                    <label className="template-field">
+                      <span className="template-field-label">Version pin</span>
+                      <select
+                        className="template-field-input"
+                        onChange={(event) => setSelectedModuleVersion(event.target.value)}
+                        value={selectedSharedModule.version}
+                      >
+                        {selectedSharedModuleFamily?.versions.map((moduleVersion) => (
+                          <option key={moduleVersion.version} value={moduleVersion.version}>
+                            {moduleVersion.version}
+                            {moduleVersion.version ===
+                            selectedSharedModuleFamily.latestVersion
+                              ? " (latest)"
+                              : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="template-field">
+                      <span className="template-field-label">Source path</span>
+                      <input
+                        className="template-field-input"
+                        readOnly
+                        value={selectedSharedModule.sourcePath}
+                      />
+                    </label>
+                  </div>
                   <div className="preflight-check-grid">
-                    <article className="runtime-status-card">
-                      <span className="runtime-status-label">Used by</span>
-                      <strong>{selectedModuleUsageTargets.length} build target{selectedModuleUsageTargets.length === 1 ? "" : "s"}</strong>
-                      <p className="panel-copy">
-                        {selectedModuleUsageTargets.length > 0
-                          ? selectedModuleUsageTargets
-                              .slice(0, 5)
-                              .map((target) => `${target.projectId}/${target.targetKey}`)
-                              .join(", ")
-                          : "No current starter project depends on this module yet."}
-                      </p>
-                    </article>
                     <article className="runtime-status-card">
                       <span className="runtime-status-label">Current source</span>
                       <strong>
-                        {activeModuleDependencies.some(
-                          (dependency) => dependency.moduleId === selectedSharedModule.id
-                        )
-                          ? "In use"
+                        {selectedActiveModuleDependency
+                          ? `${selectedActiveModuleDependency.moduleId}@${selectedActiveModuleDependency.version}`
                           : "Not in active source"}
                       </strong>
                       <p className="panel-copy">
-                        Insert shared modules into source mode, then wire next-step
-                        references explicitly so the compile graph stays reviewable.
+                        {selectedActiveModuleDependency
+                          ? compareModuleVersions(
+                              selectedActiveModuleDependency.version,
+                              selectedSharedModuleFamily?.latestVersion ??
+                                selectedSharedModule.version
+                            ) < 0
+                            ? `Upgrade available: ${selectedActiveModuleDependency.version} -> ${selectedSharedModuleFamily?.latestVersion}.`
+                            : "The active source already pins the current latest version."
+                          : "Include the module in source mode to make the dependency explicit in the course source."}
                       </p>
                     </article>
+                    <article className="runtime-status-card">
+                      <span className="runtime-status-label">Dependencies</span>
+                      <strong>{selectedSharedModule.dependencyReferences.length}</strong>
+                      <p className="panel-copy">
+                        {selectedSharedModule.dependencyReferences.length > 0
+                          ? selectedSharedModule.dependencyReferences
+                              .map(
+                                (dependency) =>
+                                  `${dependency.moduleId}@${dependency.version ?? "latest"}`
+                              )
+                              .join(", ")
+                          : "This module expands directly without nesting other shared modules."}
+                      </p>
+                    </article>
+                    <article className="runtime-status-card">
+                      <span className="runtime-status-label">Variables</span>
+                      <strong>{selectedModuleFields.length}</strong>
+                      <p className="panel-copy">
+                        {selectedModuleFields.length > 0
+                          ? selectedModuleFields
+                              .map((field) => field.label)
+                              .join(", ")
+                          : "This module does not declare include-time variables."}
+                      </p>
+                    </article>
+                    <article className="runtime-status-card">
+                      <span className="runtime-status-label">Tests</span>
+                      <strong>
+                        {selectedSharedModule.tests.length > 0
+                          ? `${selectedSharedModule.tests.length} module test${
+                              selectedSharedModule.tests.length === 1 ? "" : "s"
+                            }`
+                          : "Course-level only"}
+                      </strong>
+                      <p className="panel-copy">
+                        {summarizeModuleUsageCoverage(selectedModuleUsageTargets)}
+                      </p>
+                    </article>
+                  </div>
+                  {selectedModuleFields.length > 0 ? (
+                    <div className="panel-subsection">
+                      <p className="eyebrow">Include variables</p>
+                      <p className="panel-copy section-copy">
+                        Use version-pinned includes plus explicit variable overrides so
+                        module composition stays deterministic in source control.
+                      </p>
+                      <TemplateDataEditor
+                        fields={selectedModuleFields}
+                        onChange={(key, value) =>
+                          setModuleIncludeValues((currentValues) => ({
+                            ...currentValues,
+                            [key]: value,
+                          }))
+                        }
+                        values={moduleIncludeValues}
+                      />
+                    </div>
+                  ) : null}
+                  {selectedSharedModule.tests.length > 0 ? (
+                    <div className="panel-subsection">
+                      <p className="eyebrow">Declared module tests</p>
+                      <div className="preflight-check-grid">
+                        {selectedSharedModule.tests.map((moduleTest) => (
+                          <article
+                            className="runtime-status-card"
+                            key={`${selectedSharedModule.id}-${moduleTest.id}`}
+                          >
+                            <span className="runtime-status-label">{moduleTest.id}</span>
+                            <strong>{moduleTest.name}</strong>
+                            <p className="panel-copy">{moduleTest.description}</p>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="panel-subsection">
+                    <p className="eyebrow">Used by</p>
+                    <p className="panel-copy section-copy">
+                      Shared-module reuse is visible before build time. Use this list to
+                      inspect which course families and targets would be affected by a
+                      module change.
+                    </p>
+                    <div className="preflight-check-grid">
+                      {selectedModuleUsageTargets.length > 0 ? (
+                        selectedModuleUsageTargets.map((target) => (
+                          <article
+                            className="runtime-status-card"
+                            key={`${target.projectId}-${target.targetKey}-${target.version}`}
+                          >
+                            <span className="runtime-status-label">
+                              {target.projectId}
+                            </span>
+                            <strong>{target.courseTitle}</strong>
+                            <p className="panel-copy">
+                              {target.targetKey} | {target.version} |{" "}
+                              {target.logicTestCount > 0
+                                ? `${target.logicTestCount} logic test suite${
+                                    target.logicTestCount === 1 ? "" : "s"
+                                  }`
+                                : "No logic tests"}
+                            </p>
+                          </article>
+                        ))
+                      ) : (
+                        <article className="runtime-status-card">
+                          <span className="runtime-status-label">Used by</span>
+                          <strong>Not yet referenced</strong>
+                          <p className="panel-copy">
+                            No current starter project depends on this module family yet.
+                          </p>
+                        </article>
+                      )}
+                    </div>
+                  </div>
+                  <div className="panel-subsection">
+                    <div className="section-heading-row">
+                      <div>
+                        <p className="eyebrow">Extract module draft</p>
+                        <p className="panel-copy section-copy">
+                          Turn a current source step into a reusable module draft. Sapio
+                          Forge downloads the new module source and registry entry, then
+                          replaces the step with a pinned include reference.
+                        </p>
+                      </div>
+                      <button
+                        className="ghost-button"
+                        onClick={handleExtractSharedModule}
+                        type="button"
+                      >
+                        Extract Step To Module Draft
+                      </button>
+                    </div>
+                    <div className="template-data-grid">
+                      <label className="template-field">
+                        <span className="template-field-label">Source step</span>
+                        <select
+                          className="template-field-input"
+                          onChange={(event) => setModuleExtractStepId(event.target.value)}
+                          value={moduleExtractStepId ?? ""}
+                        >
+                          {extractableModuleSteps.map((step) => (
+                            <option key={step.id} value={step.id}>
+                              {step.id} - {step.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="template-field">
+                        <span className="template-field-label">Module id</span>
+                        <input
+                          className="template-field-input"
+                          onChange={(event) => setModuleDraftId(event.target.value)}
+                          value={moduleDraftId}
+                        />
+                      </label>
+                      <label className="template-field">
+                        <span className="template-field-label">Module title</span>
+                        <input
+                          className="template-field-input"
+                          onChange={(event) => setModuleDraftTitle(event.target.value)}
+                          value={moduleDraftTitle}
+                        />
+                      </label>
+                      <label className="template-field">
+                        <span className="template-field-label">Description</span>
+                        <input
+                          className="template-field-input"
+                          onChange={(event) => setModuleDraftDescription(event.target.value)}
+                          value={moduleDraftDescription}
+                        />
+                      </label>
+                      <label className="template-field">
+                        <span className="template-field-label">Category</span>
+                        <input
+                          className="template-field-input"
+                          onChange={(event) => setModuleDraftCategory(event.target.value)}
+                          value={moduleDraftCategory}
+                        />
+                      </label>
+                      <label className="template-field">
+                        <span className="template-field-label">Tags</span>
+                        <input
+                          className="template-field-input"
+                          onChange={(event) => setModuleDraftTags(event.target.value)}
+                          placeholder="security, intro, reporting"
+                          value={moduleDraftTags}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -4379,14 +4885,44 @@ nodes:
                 <strong>{structureInspector.variableCount}</strong>
               </div>
               <div className="runtime-status-card">
+                <span className="runtime-status-label">Scenario state</span>
+                <strong>{structureInspector.scenarioStateCount}</strong>
+              </div>
+              <div className="runtime-status-card">
                 <span className="runtime-status-label">Node count</span>
                 <strong>{structureInspector.nodeCount}</strong>
               </div>
+              <div className="runtime-status-card">
+                <span className="runtime-status-label">Scene shells</span>
+                <strong>{structureInspector.sceneLayouts.length}</strong>
+              </div>
+              <div className="runtime-status-card">
+                <span className="runtime-status-label">Components</span>
+                <strong>{structureInspector.componentCount}</strong>
+              </div>
             </div>
+            <p className="panel-copy">
+              Scenario state:{" "}
+              {structureInspector.scenarioStateKeys.length > 0
+                ? structureInspector.scenarioStateKeys.join(", ")
+                : "Not defined"}
+            </p>
             <p className="panel-copy">
               Node types used:{" "}
               {structureInspector.nodeTypes.length > 0
                 ? structureInspector.nodeTypes.join(", ")
+                : "Unavailable"}
+            </p>
+            <p className="panel-copy">
+              Scene shells:{" "}
+              {structureInspector.sceneLayouts.length > 0
+                ? structureInspector.sceneLayouts.join(", ")
+                : "Unavailable"}
+            </p>
+            <p className="panel-copy">
+              Component types:{" "}
+              {structureInspector.componentTypes.length > 0
+                ? structureInspector.componentTypes.join(", ")
                 : "Unavailable"}
             </p>
             <div className="validation-state-grid">

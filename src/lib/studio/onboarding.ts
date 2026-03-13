@@ -85,7 +85,7 @@ export const STUDIO_STARTING_PATHS: readonly StudioPathDefinition[] = [
     label: "Intermediate",
     title: "Start from a template pack",
     description:
-      "Use a reusable template, variable set, and theme to generate a specific course variant without rewriting shared source.",
+      "Use reusable templates, shared modules, variable sets, and themes to generate a specific course variant without rewriting shared source.",
     actionLabel: "Open template path",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
@@ -99,7 +99,7 @@ export const STUDIO_STARTING_PATHS: readonly StudioPathDefinition[] = [
     label: "Advanced",
     title: "Open source and project mode",
     description:
-      "Inspect the source project, work directly in YAML, validate the canonical model, and build reproducible SCORM output from structured source.",
+      "Inspect the source project, work directly in YAML, validate the canonical model, trace shared module dependencies, and build reproducible SCORM output from structured source.",
     actionLabel: "Open source path",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
@@ -140,7 +140,7 @@ export const STARTER_EXAMPLES: readonly StarterExampleDefinition[] = [
     audience: "advanced",
     title: "Course family project",
     description:
-      "Inspect a multi-variant project in source mode and validate the shared template plus variable sets.",
+      "Inspect a multi-variant project in source mode and validate the shared template, variable sets, and shared module composition.",
     projectId: "security-awareness",
     templateId: "phishing-awareness",
     variantId: "healthcare",
@@ -152,7 +152,7 @@ export const STARTER_EXAMPLES: readonly StarterExampleDefinition[] = [
     audience: "advanced",
     title: "Theme and CI build example",
     description:
-      "Open a multi-theme project and follow the source-first path toward reproducible batch builds.",
+      "Open a multi-theme project and follow the source-first path toward reproducible batch builds and affected rebuilds from shared-module changes.",
     projectId: "workplace-conduct",
     templateId: "conduct-reporting",
     variantId: "corporate",

@@ -3,13 +3,30 @@ import type {
   CompiledCourse,
   CompiledNode,
   CompiledQuizNode,
+  ScenarioStateValue,
 } from "@/lib/course/types";
+import {
+  applyScenarioStateUpdates,
+  createScenarioStateRecord,
+  resolveScenarioStateRoute,
+} from "@/lib/course/scenario-state";
 import type {
   ChoiceAnswerRecord,
   QuizAnswerRecord,
+  RuntimeActionRecord,
   RuntimeAnswerRecord,
   RuntimeState,
 } from "@/lib/runtime/types";
+
+export interface ResolvedNodeInteraction {
+  interactionId: string;
+  optionId: string;
+  actionMode: "trigger" | "toggle";
+  feedback: string;
+  correct: boolean | null;
+  scoreDelta: number | null;
+  nextNodeId: string | null;
+}
 
 function timestamp(): string {
   return new Date().toISOString();
@@ -45,6 +62,57 @@ function answerScore(answer: RuntimeAnswerRecord | undefined): number {
   return answer?.scoreAwarded ?? 0;
 }
 
+function isValidScenarioStateValue(
+  course: CompiledCourse,
+  key: string,
+  value: unknown
+): value is ScenarioStateValue {
+  const definition = course.scenarioState[key];
+
+  if (!definition) {
+    return false;
+  }
+
+  switch (definition.type) {
+    case "boolean":
+      return typeof value === "boolean";
+    case "number":
+      return typeof value === "number" && Number.isFinite(value);
+    case "string":
+      return typeof value === "string";
+    case "enum":
+      return typeof value === "string" && definition.options.includes(value);
+  }
+}
+
+function normalizeScenarioState(
+  course: CompiledCourse,
+  values: Record<string, unknown> | null | undefined
+): Record<string, ScenarioStateValue> {
+  const nextValues = createScenarioStateRecord(course.scenarioState);
+
+  Object.entries(values ?? {}).forEach(([key, value]) => {
+    if (isValidScenarioStateValue(course, key, value)) {
+      nextValues[key] = value;
+    }
+  });
+
+  return nextValues;
+}
+
+function appendActionHistory(
+  state: RuntimeState,
+  record: Omit<RuntimeActionRecord, "timestamp">
+): RuntimeActionRecord[] {
+  return [
+    ...state.actionHistory,
+    {
+      ...record,
+      timestamp: timestamp(),
+    },
+  ];
+}
+
 function createBaseState(course: CompiledCourse): RuntimeState {
   return {
     courseId: course.id,
@@ -52,6 +120,8 @@ function createBaseState(course: CompiledCourse): RuntimeState {
     score: 0,
     history: [course.startNodeId],
     answers: {},
+    scenarioState: createScenarioStateRecord(course.scenarioState),
+    actionHistory: [],
     completed: course.nodes[course.startNodeId]?.type === "result",
     updatedAt: timestamp(),
   };
@@ -72,12 +142,19 @@ function normalizeAnswers(
   return nextAnswers;
 }
 
+function normalizeActionHistory(
+  course: CompiledCourse,
+  records: RuntimeActionRecord[] | undefined
+): RuntimeActionRecord[] {
+  return (records ?? []).filter((record) => Boolean(course.nodes[record.nodeId]));
+}
+
 function transitionToNode(
   course: CompiledCourse,
   state: RuntimeState,
   nextNodeId: string | null
 ): RuntimeState {
-  if (!nextNodeId) {
+  if (!nextNodeId || !course.nodes[nextNodeId]) {
     return {
       ...state,
       completed: true,
@@ -118,7 +195,7 @@ function applyScoredAnswer(
 function evaluateQuiz(
   node: CompiledQuizNode,
   selectedOptionIds: string[]
-): { answer: QuizAnswerRecord; nextNodeId: string | null } {
+): { answer: QuizAnswerRecord; passed: boolean } {
   const dedupedSelections = [...new Set(selectedOptionIds)];
   const selectedSet = new Set(dedupedSelections);
   const correctOptions = node.options
@@ -131,9 +208,6 @@ function evaluateQuiz(
     correctOptions.every((optionId) => selectedSet.has(optionId));
 
   const scoreAwarded = isCorrect ? node.correctScore : node.incorrectScore;
-  const nextNodeId = isCorrect
-    ? node.passNext ?? node.next
-    : node.failNext ?? node.next;
 
   return {
     answer: {
@@ -142,8 +216,82 @@ function evaluateQuiz(
       isCorrect,
       scoreAwarded,
     },
-    nextNodeId: nextNodeId ?? null,
+    passed: isCorrect,
   };
+}
+
+function resolveChoiceOptionNext(
+  option: CompiledChoiceNode["options"][number],
+  state: RuntimeState
+): string | null {
+  return resolveScenarioStateRoute(option.nextWhen, state.scenarioState, option.next);
+}
+
+function resolveQuizNext(
+  node: CompiledQuizNode,
+  state: RuntimeState,
+  passed: boolean
+): string | null {
+  if (passed) {
+    return resolveScenarioStateRoute(
+      node.passNextWhen,
+      state.scenarioState,
+      node.passNext ?? node.next
+    );
+  }
+
+  return resolveScenarioStateRoute(
+    node.failNextWhen,
+    state.scenarioState,
+    node.failNext ?? node.next
+  );
+}
+
+export function resolveNodeInteraction(
+  node: CompiledNode,
+  interactionId: string
+): ResolvedNodeInteraction | null {
+  const interaction = node.interactions.find(
+    (candidate) => candidate.id === interactionId
+  );
+
+  if (!interaction) {
+    return null;
+  }
+
+  if (node.type === "choice") {
+    const option = (node as CompiledChoiceNode).options.find(
+      (candidate) => candidate.id === interaction.optionId
+    );
+
+    return {
+      interactionId: interaction.id,
+      optionId: interaction.optionId,
+      actionMode: "trigger",
+      feedback: interaction.feedback || option?.feedback || "",
+      correct: null,
+      scoreDelta: option?.score ?? null,
+      nextNodeId: option?.next ?? null,
+    };
+  }
+
+  if (node.type === "quiz") {
+    const option = (node as CompiledQuizNode).options.find(
+      (candidate) => candidate.id === interaction.optionId
+    );
+
+    return {
+      interactionId: interaction.id,
+      optionId: interaction.optionId,
+      actionMode: "toggle",
+      feedback: interaction.feedback || option?.feedback || "",
+      correct: option?.correct ?? null,
+      scoreDelta: null,
+      nextNodeId: null,
+    };
+  }
+
+  return null;
 }
 
 export function initializeRuntime(
@@ -172,6 +320,8 @@ export function initializeRuntime(
       currentNodeId
     ),
     answers,
+    scenarioState: normalizeScenarioState(course, persistedState.scenarioState),
+    actionHistory: normalizeActionHistory(course, persistedState.actionHistory),
     completed:
       persistedState.completed ||
       course.nodes[currentNodeId]?.type === "result" ||
@@ -208,13 +358,28 @@ export function advanceContentNode(
     return state;
   }
 
-  return transitionToNode(course, state, currentNode.next);
+  const nextNodeId = resolveScenarioStateRoute(
+    currentNode.nextWhen,
+    state.scenarioState,
+    currentNode.next
+  );
+
+  return transitionToNode(course, {
+    ...state,
+    actionHistory: appendActionHistory(state, {
+      nodeId: currentNode.id,
+      action: "advance",
+      optionIds: [],
+      interactionIds: [],
+    }),
+  }, nextNodeId);
 }
 
 export function applyChoiceSelection(
   course: CompiledCourse,
   state: RuntimeState,
-  optionId: string
+  optionId: string,
+  interactionId?: string | null
 ): RuntimeState {
   const currentNode = getCurrentNode(course, state);
 
@@ -230,19 +395,38 @@ export function applyChoiceSelection(
     return state;
   }
 
-  const nextState = applyScoredAnswer(state, currentNode.id, {
-    kind: "choice",
-    selectedOptionId: option.id,
-    scoreAwarded: option.score,
-  });
+  const nextScenarioState = applyScenarioStateUpdates(
+    course.scenarioState,
+    state.scenarioState,
+    option.stateUpdates
+  );
+  const nextState = applyScoredAnswer(
+    {
+      ...state,
+      scenarioState: nextScenarioState,
+      actionHistory: appendActionHistory(state, {
+        nodeId: currentNode.id,
+        action: interactionId ? "interaction" : "choice",
+        optionIds: [option.id],
+        interactionIds: interactionId ? [interactionId] : [],
+      }),
+    },
+    currentNode.id,
+    {
+      kind: "choice",
+      selectedOptionId: option.id,
+      scoreAwarded: option.score,
+    }
+  );
 
-  return transitionToNode(course, nextState, option.next);
+  return transitionToNode(course, nextState, resolveChoiceOptionNext(option, nextState));
 }
 
 export function submitQuizAnswer(
   course: CompiledCourse,
   state: RuntimeState,
-  selectedOptionIds: string[]
+  selectedOptionIds: string[],
+  interactionIds: string[] = []
 ): RuntimeState {
   const currentNode = getCurrentNode(course, state);
 
@@ -256,8 +440,29 @@ export function submitQuizAnswer(
     return state;
   }
 
-  const { answer, nextNodeId } = evaluateQuiz(quizNode, selectedOptionIds);
-  const nextState = applyScoredAnswer(state, quizNode.id, answer);
+  const { answer, passed } = evaluateQuiz(quizNode, selectedOptionIds);
+  const selectedOptions = quizNode.options.filter((option) =>
+    answer.selectedOptionIds.includes(option.id)
+  );
+  const nextScenarioState = selectedOptions.reduce(
+    (values, option) =>
+      applyScenarioStateUpdates(course.scenarioState, values, option.stateUpdates),
+    state.scenarioState
+  );
+  const nextState = applyScoredAnswer(
+    {
+      ...state,
+      scenarioState: nextScenarioState,
+      actionHistory: appendActionHistory(state, {
+        nodeId: quizNode.id,
+        action: interactionIds.length > 0 ? "interaction" : "quiz",
+        optionIds: answer.selectedOptionIds,
+        interactionIds,
+      }),
+    },
+    quizNode.id,
+    answer
+  );
 
-  return transitionToNode(course, nextState, nextNodeId);
+  return transitionToNode(course, nextState, resolveQuizNext(quizNode, nextState, passed));
 }

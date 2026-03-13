@@ -23,6 +23,7 @@ function createTestModuleLibrary(): SharedModuleLibrary {
         lastUpdated: "2026-03-12",
         deprecated: false,
         templateData: {},
+        variableSchema: null,
         blocks: {},
         nodes: [
           {
@@ -33,6 +34,7 @@ function createTestModuleLibrary(): SharedModuleLibrary {
             next: "passed",
           },
         ],
+        tests: [],
         metadata: {},
         sourcePath: "modules/intro_a.yaml",
         registry: {
@@ -58,6 +60,7 @@ function createTestModuleLibrary(): SharedModuleLibrary {
         lastUpdated: "2026-03-12",
         deprecated: false,
         templateData: {},
+        variableSchema: null,
         blocks: {},
         nodes: [
           {
@@ -67,6 +70,7 @@ function createTestModuleLibrary(): SharedModuleLibrary {
             },
           },
         ],
+        tests: [],
         metadata: {},
         sourcePath: "modules/module_a.yaml",
         registry: {
@@ -97,6 +101,7 @@ function createTestModuleLibrary(): SharedModuleLibrary {
         lastUpdated: "2026-03-12",
         deprecated: false,
         templateData: {},
+        variableSchema: null,
         blocks: {},
         nodes: [
           {
@@ -106,6 +111,7 @@ function createTestModuleLibrary(): SharedModuleLibrary {
             },
           },
         ],
+        tests: [],
         metadata: {},
         sourcePath: "modules/module_b.yaml",
         registry: {
@@ -141,6 +147,12 @@ test("shared module library loads the starter registry and module source files",
         module.id === "phishing_intro" && module.version === "1.0.0"
     )
   );
+  const phishingIntro = moduleLibrary.modules.find(
+    (module) => module.id === "phishing_intro" && module.version === "1.0.0"
+  );
+
+  assert.ok(phishingIntro?.variableSchema);
+  assert.equal(phishingIntro?.tests.length, 1);
 });
 
 test("course pipeline resolves shared module includes into the canonical model", async () => {
@@ -224,4 +236,43 @@ nodes:
 
   assert.equal(snapshot.failedStageId, "resolve-templates");
   assert.match(snapshot.errors[0] ?? "", /circular module include/i);
+});
+
+test("shared module resolution validates declared include variables", async () => {
+  const moduleLibrary = await loadModuleLibrary();
+
+  assert.ok(moduleLibrary);
+
+  const snapshot = runCoursePipeline(
+    `
+id: invalid-module-inputs
+title: Invalid module inputs
+description: Test course
+start: reporting-procedure
+passingScore: 0
+nodes:
+  - include:
+      module: reporting_procedure
+      version: 1.0.0
+      with:
+        unknownValue: nope
+  - id: follow-through
+    type: result
+    title: Done
+    outcome: passed
+`,
+    {
+      moduleLibrary,
+    }
+  );
+
+  assert.equal(snapshot.failedStageId, "resolve-templates");
+  assert.match(
+    snapshot.errors.join("\n"),
+    /Template variable "unknownValue" is not declared/i
+  );
+  assert.match(
+    snapshot.errors.join("\n"),
+    /Template variable "companyName" is required/i
+  );
 });

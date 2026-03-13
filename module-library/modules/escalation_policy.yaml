@@ -9,6 +9,23 @@ tags:
   - intro
 lastUpdated: 2026-03-12
 deprecated: false
+variableSchema:
+  variables:
+    courseTitle:
+      type: text
+      label: Course title
+      description: Opening title shown in the escalation scenario.
+    escalationDesk:
+      type: text
+      label: Escalation desk
+      description: Team or desk name referenced in the handoff goal.
+tests:
+  - id: escalation-intro-preserves-handoff-goal
+    name: Escalation intro preserves the handoff goal
+    description: Confirms the shared escalation intro continues into the first response step.
+    tags:
+      - escalation
+      - intro
 nodes:
   - id: intro
     type: content

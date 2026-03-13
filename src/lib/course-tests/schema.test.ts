@@ -20,7 +20,7 @@ tests:
       - step: intro
         advance: true
       - step: report
-        select: approved
+        interact: report-button
     expect:
       terminalStep: passed
       scoreAtLeast: 10
@@ -37,7 +37,7 @@ tests:
   assert.equal(suite.tests[0]?.actions.length, 2);
   assert.deepEqual(suite.tests[0]?.actions[1], {
     step: "report",
-    select: "approved",
+    interact: "report-button",
   });
   assert.equal(suite.tests[0]?.expect.successStatus, "passed");
 });

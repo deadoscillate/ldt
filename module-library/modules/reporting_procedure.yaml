@@ -11,6 +11,29 @@ lastUpdated: 2026-03-12
 deprecated: false
 templateData:
   reportingLabel: approved reporting channel
+variableSchema:
+  variables:
+    companyName:
+      type: text
+      label: Company name
+      description: Organization name referenced in the reporting-procedure reminder.
+    reportingChannel:
+      type: text
+      label: Reporting channel
+      description: Explicit reporting route surfaced in the callout copy.
+    reportingLabel:
+      type: text
+      label: Reporting label
+      description: Short label used for the approved reporting route.
+      required: false
+      default: approved reporting channel
+tests:
+  - id: reporting-callout-keeps-channel-visible
+    name: Reporting channel remains visible
+    description: Confirms the shared reporting procedure keeps the approved route explicit.
+    tags:
+      - compliance
+      - reporting
 nodes:
   - id: reporting-procedure
     type: content

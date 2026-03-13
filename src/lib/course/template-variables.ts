@@ -214,12 +214,12 @@ function coerceTemplateValue(
   }
 }
 
-export function parseTemplateVariableSchemaYaml(
-  source: string
+export function parseTemplateVariableSchemaObject(
+  sourceObject: unknown,
+  fallbackPath = "template-schema"
 ): TemplateVariableSchema {
   try {
-    const parsed = yaml.load(source) ?? {};
-    const document = templateVariableSchemaDocumentSchema.parse(parsed);
+    const document = templateVariableSchemaDocumentSchema.parse(sourceObject ?? {});
 
     return {
       allowAdditionalVariables: document.allowAdditionalVariables,
@@ -242,7 +242,7 @@ export function parseTemplateVariableSchemaYaml(
   } catch (error) {
     if (error instanceof ZodError) {
       throw new Error(
-        formatZodIssues(error, "template-schema")[0] ??
+        formatZodIssues(error, fallbackPath)[0] ??
           "Invalid template variable schema."
       );
     }
@@ -253,6 +253,12 @@ export function parseTemplateVariableSchemaYaml(
 
     throw error;
   }
+}
+
+export function parseTemplateVariableSchemaYaml(
+  source: string
+): TemplateVariableSchema {
+  return parseTemplateVariableSchemaObject(yaml.load(source) ?? {}, "template-schema");
 }
 
 export function buildTemplateFieldDefinitions(

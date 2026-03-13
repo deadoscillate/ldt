@@ -14,18 +14,37 @@ import {
   isBlockIncludeEntry,
   isModuleIncludeEntry,
   type CalloutBlockDocument,
+  type BranchNodeDocument,
+  type ChatShellDocument,
+  type ChoiceNodeDocument,
+  type ContentNodeDocument,
   type CourseDocument,
+  type CourseDocumentNode,
   type CourseTemplateDocument,
   type CourseTemplateEntryDocument,
   type CourseTemplateNodeDocument,
+  type DashboardShellDocument,
+  type EmailShellDocument,
+  type QuestionNodeDocument,
+  type QuizNodeDocument,
+  type ResultNodeDocument,
   type LayoutColumnDocument,
   type MediaDocument,
   type QuoteBlockDocument,
+  type ScenarioStateConditionDocument,
+  type ScenarioStateRouteDocument,
+  type ScenarioStateUpdateDocument,
+  type ScenarioStateVariableDocument,
+  type ShellInteractionDocument,
+  type TemplateChatShellDocument,
   type TemplateCalloutBlockDocument,
+  type TemplateDashboardShellDocument,
+  type TemplateEmailShellDocument,
   type TemplateLayoutColumnDocument,
   type TemplateMediaDocument,
   type TemplateQuoteBlockDocument,
   type TemplateScalarValue,
+  type TemplateShellInteractionDocument,
   type TemplateTextValue,
   type ThemeDocument,
 } from "@/lib/course/schema";
@@ -84,7 +103,15 @@ function formatIssuePath(path: string): string {
 }
 
 function allowsRuntimePlaceholders(path: string): boolean {
-  return path.includes(".body") || path.includes(".callout.text") || path.includes(".quote.text");
+  return (
+    path.includes(".body") ||
+    path.includes(".callout.text") ||
+    path.includes(".quote.text") ||
+    path.includes(".email.warningBanner") ||
+    path.includes(".chat.systemNotice") ||
+    path.includes(".dashboard.notice") ||
+    path.includes(".dashboard.cards")
+  );
 }
 
 function interpolateString(
@@ -143,6 +170,32 @@ function interpolateValue(
   return interpolateString(value, templateData, path, issues);
 }
 
+function interpolateNumber(
+  value: string | number | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): number | undefined {
+  const resolved = interpolateValue(value, templateData, path, issues);
+
+  if (resolved === undefined) {
+    return undefined;
+  }
+
+  if (typeof resolved === "number") {
+    return resolved;
+  }
+
+  const parsed = Number(resolved);
+
+  if (Number.isNaN(parsed)) {
+    issues.push(`${formatIssuePath(path)} must resolve to a number.`);
+    return undefined;
+  }
+
+  return parsed;
+}
+
 function interpolateScalarValue(
   value: TemplateScalarValue,
   templateData: Record<string, TemplateScalarValue>,
@@ -154,6 +207,152 @@ function interpolateScalarValue(
   }
 
   return interpolateString(value, templateData, path, issues);
+}
+
+function interpolateScenarioStateCondition(
+  value: ScenarioStateConditionDocument,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): ScenarioStateConditionDocument {
+  return {
+    variable: interpolateString(value.variable, templateData, `${path}.variable`, issues),
+    equals:
+      value.equals !== undefined
+        ? interpolateScalarValue(value.equals, templateData, `${path}.equals`, issues)
+        : undefined,
+    notEquals:
+      value.notEquals !== undefined
+        ? interpolateScalarValue(
+            value.notEquals,
+            templateData,
+            `${path}.notEquals`,
+            issues
+          )
+        : undefined,
+    oneOf: value.oneOf?.map((candidate, index) =>
+      interpolateScalarValue(candidate, templateData, `${path}.oneOf[${index}]`, issues)
+    ),
+    gt: value.gt,
+    gte: value.gte,
+    lt: value.lt,
+    lte: value.lte,
+  };
+}
+
+function interpolateScenarioStateConditions(
+  values: ScenarioStateConditionDocument[] | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): ScenarioStateConditionDocument[] | undefined {
+  if (!values) {
+    return undefined;
+  }
+
+  return values.map((value, index) =>
+    interpolateScenarioStateCondition(
+      value,
+      templateData,
+      `${path}[${index}]`,
+      issues
+    )
+  );
+}
+
+function interpolateScenarioStateUpdates(
+  values: ScenarioStateUpdateDocument[] | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): ScenarioStateUpdateDocument[] | undefined {
+  if (!values) {
+    return undefined;
+  }
+
+  return values.map((value, index) => ({
+    variable: interpolateString(
+      value.variable,
+      templateData,
+      `${path}[${index}].variable`,
+      issues
+    ),
+    set:
+      value.set !== undefined
+        ? interpolateScalarValue(
+            value.set,
+            templateData,
+            `${path}[${index}].set`,
+            issues
+          )
+        : undefined,
+    increment: value.increment,
+    decrement: value.decrement,
+  }));
+}
+
+function interpolateScenarioStateRoutes(
+  values: ScenarioStateRouteDocument[] | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): ScenarioStateRouteDocument[] | undefined {
+  if (!values) {
+    return undefined;
+  }
+
+  return values.map((value, index) => ({
+    when:
+      interpolateScenarioStateConditions(
+        value.when,
+        templateData,
+        `${path}[${index}].when`,
+        issues
+      ) ?? [],
+    next: interpolateString(value.next, templateData, `${path}[${index}].next`, issues),
+  }));
+}
+
+function interpolateScenarioStateDefinitions(
+  values: Record<string, ScenarioStateVariableDocument> | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): Record<string, ScenarioStateVariableDocument> | undefined {
+  if (!values) {
+    return undefined;
+  }
+
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [
+      key,
+      {
+        type: value.type,
+        initial: interpolateScalarValue(
+          value.initial,
+          templateData,
+          `${path}.${key}.initial`,
+          issues
+        ),
+        description: value.description
+          ? interpolateString(
+              value.description,
+              templateData,
+              `${path}.${key}.description`,
+              issues
+            )
+          : undefined,
+        options: value.options?.map((option, index) =>
+          interpolateString(
+            option,
+            templateData,
+            `${path}.${key}.options[${index}]`,
+            issues
+          )
+        ),
+      },
+    ])
+  );
 }
 
 function interpolateMedia(
@@ -245,7 +444,454 @@ function interpolateCallout(
       : undefined,
     text:
       interpolateTextValue(value.text, templateData, `${path}.text`, issues) ?? "",
+    visibleIf: interpolateScenarioStateConditions(
+      value.visibleIf,
+      templateData,
+      `${path}.visibleIf`,
+      issues
+    ),
   };
+}
+
+function interpolateStringArray(
+  values: string[] | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): string[] | undefined {
+  if (!values) {
+    return undefined;
+  }
+
+  return values.map((value, index) =>
+    interpolateString(value, templateData, `${path}[${index}]`, issues)
+  );
+}
+
+function interpolateEmailShell(
+  value: TemplateEmailShellDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): EmailShellDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    from: interpolateString(value.from, templateData, `${path}.from`, issues),
+    subject: interpolateString(value.subject, templateData, `${path}.subject`, issues),
+    previewText: value.previewText
+      ? interpolateString(value.previewText, templateData, `${path}.previewText`, issues)
+      : undefined,
+    attachments: interpolateStringArray(
+      value.attachments,
+      templateData,
+      `${path}.attachments`,
+      issues
+    ),
+    warningBanner: value.warningBanner
+      ? interpolateTextValue(value.warningBanner, templateData, `${path}.warningBanner`, issues)
+      : undefined,
+    warningBannerVisibleIf: interpolateScenarioStateConditions(
+      value.warningBannerVisibleIf,
+      templateData,
+      `${path}.warningBannerVisibleIf`,
+      issues
+    ),
+  };
+}
+
+function interpolateChatShell(
+  value: TemplateChatShellDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): ChatShellDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    title: value.title
+      ? interpolateString(value.title, templateData, `${path}.title`, issues)
+      : undefined,
+    systemNotice: value.systemNotice
+      ? interpolateTextValue(value.systemNotice, templateData, `${path}.systemNotice`, issues)
+      : undefined,
+    systemNoticeVisibleIf: interpolateScenarioStateConditions(
+      value.systemNoticeVisibleIf,
+      templateData,
+      `${path}.systemNoticeVisibleIf`,
+      issues
+    ),
+    messages: value.messages.map((message, index) => ({
+      sender: interpolateString(
+        message.sender,
+        templateData,
+        `${path}.messages[${index}].sender`,
+        issues
+      ),
+      text: interpolateString(
+        message.text,
+        templateData,
+        `${path}.messages[${index}].text`,
+        issues
+      ),
+      timestamp: message.timestamp
+        ? interpolateString(
+            message.timestamp,
+            templateData,
+            `${path}.messages[${index}].timestamp`,
+            issues
+          )
+        : undefined,
+      role: message.role,
+      visibleIf: interpolateScenarioStateConditions(
+        message.visibleIf,
+        templateData,
+        `${path}.messages[${index}].visibleIf`,
+        issues
+      ),
+    })),
+  };
+}
+
+function interpolateDashboardShell(
+  value: TemplateDashboardShellDocument | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): DashboardShellDocument | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return {
+    title: value.title
+      ? interpolateString(value.title, templateData, `${path}.title`, issues)
+      : undefined,
+    navItems: interpolateStringArray(value.navItems, templateData, `${path}.navItems`, issues),
+    notice: value.notice
+      ? interpolateTextValue(value.notice, templateData, `${path}.notice`, issues)
+      : undefined,
+    noticeVisibleIf: interpolateScenarioStateConditions(
+      value.noticeVisibleIf,
+      templateData,
+      `${path}.noticeVisibleIf`,
+      issues
+    ),
+    cards: value.cards?.map((card, index) => ({
+      title: interpolateString(card.title, templateData, `${path}.cards[${index}].title`, issues),
+      text: card.text
+        ? interpolateTextValue(card.text, templateData, `${path}.cards[${index}].text`, issues)
+        : undefined,
+      metricLabel: card.metricLabel
+        ? interpolateString(
+            card.metricLabel,
+            templateData,
+            `${path}.cards[${index}].metricLabel`,
+            issues
+          )
+        : undefined,
+      metricValue: card.metricValue
+        ? interpolateString(
+            card.metricValue,
+            templateData,
+            `${path}.cards[${index}].metricValue`,
+            issues
+          )
+        : undefined,
+      status: card.status,
+      visibleIf: interpolateScenarioStateConditions(
+        card.visibleIf,
+        templateData,
+        `${path}.cards[${index}].visibleIf`,
+        issues
+      ),
+    })),
+  };
+}
+
+function interpolateShellInteractions(
+  value: TemplateShellInteractionDocument[] | undefined,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): ShellInteractionDocument[] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const nextInteractions: ShellInteractionDocument[] = [];
+
+  value.forEach((interaction, index) => {
+    const interactionPath = `${path}[${index}]`;
+    const feedback: string | undefined = interaction.feedback
+      ? interpolateTextValue(
+          interaction.feedback,
+          templateData,
+          `${interactionPath}.feedback`,
+          issues
+        )
+      : undefined;
+
+    switch (interaction.type) {
+      case "email_link":
+        nextInteractions.push({
+          type: "email_link" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          label: interpolateString(
+            interaction.label,
+            templateData,
+            `${interactionPath}.label`,
+            issues
+          ),
+          hrefLabel: interaction.hrefLabel
+            ? interpolateString(
+                interaction.hrefLabel,
+                templateData,
+                `${interactionPath}.hrefLabel`,
+                issues
+              )
+            : undefined,
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+      case "email_attachment":
+        nextInteractions.push({
+          type: "email_attachment" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          label: interpolateString(
+            interaction.label,
+            templateData,
+            `${interactionPath}.label`,
+            issues
+          ),
+          fileName: interaction.fileName
+            ? interpolateString(
+                interaction.fileName,
+                templateData,
+                `${interactionPath}.fileName`,
+                issues
+              )
+            : undefined,
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+      case "email_action_button":
+        nextInteractions.push({
+          type: "email_action_button" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          label: interpolateString(
+            interaction.label,
+            templateData,
+            `${interactionPath}.label`,
+            issues
+          ),
+          variant: interaction.variant,
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+      case "chat_reply_option":
+        nextInteractions.push({
+          type: "chat_reply_option" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          label: interpolateString(
+            interaction.label,
+            templateData,
+            `${interactionPath}.label`,
+            issues
+          ),
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+      case "chat_choice_message":
+        nextInteractions.push({
+          type: "chat_choice_message" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          sender: interpolateString(
+            interaction.sender,
+            templateData,
+            `${interactionPath}.sender`,
+            issues
+          ),
+          text: interpolateString(
+            interaction.text,
+            templateData,
+            `${interactionPath}.text`,
+            issues
+          ),
+          timestamp: interaction.timestamp
+            ? interpolateString(
+                interaction.timestamp,
+                templateData,
+                `${interactionPath}.timestamp`,
+                issues
+              )
+            : undefined,
+          role: interaction.role,
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+      case "dashboard_action_card":
+        nextInteractions.push({
+          type: "dashboard_action_card" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          title: interpolateString(
+            interaction.title,
+            templateData,
+            `${interactionPath}.title`,
+            issues
+          ),
+          text:
+            interpolateTextValue(
+              interaction.text,
+              templateData,
+              `${interactionPath}.text`,
+              issues
+            ) ?? undefined,
+          status: interaction.status,
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+      case "dashboard_flag_toggle":
+        nextInteractions.push({
+          type: "dashboard_flag_toggle" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          label: interpolateString(
+            interaction.label,
+            templateData,
+            `${interactionPath}.label`,
+            issues
+          ),
+          status: interaction.status,
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+      case "dashboard_review_item":
+        nextInteractions.push({
+          type: "dashboard_review_item" as const,
+          id: interpolateString(interaction.id, templateData, `${interactionPath}.id`, issues),
+          optionId: interpolateString(
+            interaction.optionId,
+            templateData,
+            `${interactionPath}.optionId`,
+            issues
+          ),
+          title: interpolateString(
+            interaction.title,
+            templateData,
+            `${interactionPath}.title`,
+            issues
+          ),
+          text:
+            interpolateTextValue(
+              interaction.text,
+              templateData,
+              `${interactionPath}.text`,
+              issues
+            ) ?? undefined,
+          status: interaction.status,
+          feedback,
+          visibleIf: interpolateScenarioStateConditions(
+            interaction.visibleIf,
+            templateData,
+            `${interactionPath}.visibleIf`,
+            issues
+          ),
+        });
+        return;
+    }
+
+    issues.push(`${interactionPath}.type is not supported.`);
+  });
+
+  return nextInteractions;
 }
 
 function interpolateTheme(
@@ -322,6 +968,49 @@ function registerModuleDependency(
         ? "course-uses-module"
         : "module-includes-module",
   });
+}
+
+function validateSharedModuleTemplateData(input: {
+  inheritedTemplateData: Record<string, TemplateScalarValue>;
+  moduleTemplateData: Record<string, TemplateScalarValue>;
+  includeOverrides: Record<string, TemplateScalarValue>;
+  variableSchema: TemplateVariableSchema | null;
+  issuePath: string;
+  issues: string[];
+}): Record<string, TemplateScalarValue> {
+  if (!input.variableSchema) {
+    return {
+      ...input.inheritedTemplateData,
+      ...input.moduleTemplateData,
+      ...input.includeOverrides,
+    };
+  }
+
+  const declaredKeys = Object.keys(input.variableSchema.variables);
+  const inheritedDeclaredValues = Object.fromEntries(
+    declaredKeys.flatMap((key) =>
+      key in input.inheritedTemplateData
+        ? [[key, input.inheritedTemplateData[key]]]
+        : []
+    )
+  );
+  const validated = validateTemplateVariableValues(
+    {
+      ...inheritedDeclaredValues,
+      ...input.moduleTemplateData,
+      ...input.includeOverrides,
+    },
+    input.variableSchema
+  );
+
+  validated.issues.forEach((issue) => {
+    input.issues.push(`${formatIssuePath(input.issuePath)}: ${issue}`);
+  });
+
+  return {
+    ...input.inheritedTemplateData,
+    ...validated.values,
+  };
 }
 
 function expandEntries(
@@ -454,24 +1143,27 @@ function expandEntries(
         ),
       ])
     );
-    const moduleTemplateData = {
-      ...context.templateData,
-      ...(module.templateData ?? {}),
-      ...includeOverrides,
-    };
+    const moduleTemplateData = validateSharedModuleTemplateData({
+      inheritedTemplateData: context.templateData,
+      moduleTemplateData: module.templateData ?? {},
+      includeOverrides,
+      variableSchema: module.variableSchema,
+      issuePath: `${entryPath}.include.with`,
+      issues: context.issues,
+    });
 
     const moduleNodes = expandEntries(
-        module.nodes,
-        {
-          ...context,
-          blocks: module.blocks,
-          templateData: moduleTemplateData,
-          blockStack: [],
-          moduleStack: [...context.moduleStack, moduleKey],
-          currentDependencyNode: `module:${moduleKey}`,
-        },
-        `modules.${module.id}@${module.version}.nodes`
-      );
+      module.nodes,
+      {
+        ...context,
+        blocks: module.blocks,
+        templateData: moduleTemplateData,
+        blockStack: [],
+        moduleStack: [...context.moduleStack, moduleKey],
+        currentDependencyNode: `module:${moduleKey}`,
+      },
+      `modules.${module.id}@${module.version}.nodes`
+    );
     moduleNodes.forEach((moduleNode, moduleIndex) => {
       try {
         expandedNodes.push(
@@ -503,13 +1195,14 @@ function interpolateNode(
   templateData: Record<string, TemplateScalarValue>,
   path: string,
   issues: string[]
-): Record<string, unknown> {
+): CourseDocumentNode {
   const basePath = path;
   const interpolatedBase = {
     id: interpolateString(node.id, templateData, `${basePath}.id`, issues),
     title: interpolateString(node.title, templateData, `${basePath}.title`, issues),
     body: interpolateTextValue(node.body, templateData, `${basePath}.body`, issues),
     layout: node.layout,
+    shell: node.shell,
     media: interpolateMedia(node.media, templateData, `${basePath}.media`, issues),
     left: interpolateColumn(node.left, templateData, `${basePath}.left`, issues),
     right: interpolateColumn(node.right, templateData, `${basePath}.right`, issues),
@@ -520,6 +1213,20 @@ function interpolateNode(
       `${basePath}.callout`,
       issues
     ),
+    email: interpolateEmailShell(node.email, templateData, `${basePath}.email`, issues),
+    chat: interpolateChatShell(node.chat, templateData, `${basePath}.chat`, issues),
+    dashboard: interpolateDashboardShell(
+      node.dashboard,
+      templateData,
+      `${basePath}.dashboard`,
+      issues
+    ),
+    interactions: interpolateShellInteractions(
+      node.interactions,
+      templateData,
+      `${basePath}.interactions`,
+      issues
+    ) as ShellInteractionDocument[] | undefined,
   };
 
   switch (node.type) {
@@ -533,7 +1240,13 @@ function interpolateNode(
           `${basePath}.next`,
           issues
         ) as string | undefined,
-      };
+        nextWhen: interpolateScenarioStateRoutes(
+          node.nextWhen,
+          templateData,
+          `${basePath}.nextWhen`,
+          issues
+        ),
+      } as ContentNodeDocument;
     case "choice":
     case "branch":
       return {
@@ -558,14 +1271,35 @@ function interpolateNode(
             `${basePath}.options[${optionIndex}].next`,
             issues
           ),
-          score: interpolateValue(
-            option.score,
+          score:
+            interpolateNumber(
+              option.score,
+              templateData,
+              `${basePath}.options[${optionIndex}].score`,
+              issues
+            ) ?? 0,
+          feedback: option.feedback
+            ? interpolateTextValue(
+                option.feedback,
+                templateData,
+                `${basePath}.options[${optionIndex}].feedback`,
+                issues
+              )
+            : undefined,
+          stateUpdates: interpolateScenarioStateUpdates(
+            option.stateUpdates,
             templateData,
-            `${basePath}.options[${optionIndex}].score`,
+            `${basePath}.options[${optionIndex}].stateUpdates`,
             issues
-          ) as string | number | undefined,
+          ),
+          nextWhen: interpolateScenarioStateRoutes(
+            option.nextWhen,
+            templateData,
+            `${basePath}.options[${optionIndex}].nextWhen`,
+            issues
+          ),
         })),
-      };
+      } as ChoiceNodeDocument | BranchNodeDocument;
     case "quiz":
       return {
         ...interpolatedBase,
@@ -591,38 +1325,70 @@ function interpolateNode(
             issues
           ),
           correct: option.correct,
+          feedback: option.feedback
+            ? interpolateTextValue(
+                option.feedback,
+                templateData,
+                `${basePath}.options[${optionIndex}].feedback`,
+                issues
+              )
+            : undefined,
+          stateUpdates: interpolateScenarioStateUpdates(
+            option.stateUpdates,
+            templateData,
+            `${basePath}.options[${optionIndex}].stateUpdates`,
+            issues
+          ),
         })),
-        correctScore: interpolateValue(
+        correctScore: interpolateNumber(
           node.correctScore,
           templateData,
           `${basePath}.correctScore`,
           issues
-        ) as string | number | undefined,
-        incorrectScore: interpolateValue(
+        ),
+        incorrectScore: interpolateNumber(
           node.incorrectScore,
           templateData,
           `${basePath}.incorrectScore`,
           issues
-        ) as string | number | undefined,
+        ),
         passNext: interpolateValue(
           node.passNext,
           templateData,
           `${basePath}.passNext`,
           issues
         ) as string | undefined,
+        passNextWhen: interpolateScenarioStateRoutes(
+          node.passNextWhen,
+          templateData,
+          `${basePath}.passNextWhen`,
+          issues
+        ),
         failNext: interpolateValue(
           node.failNext,
           templateData,
           `${basePath}.failNext`,
           issues
         ) as string | undefined,
+        failNextWhen: interpolateScenarioStateRoutes(
+          node.failNextWhen,
+          templateData,
+          `${basePath}.failNextWhen`,
+          issues
+        ),
         next: interpolateValue(
           node.next,
           templateData,
           `${basePath}.next`,
           issues
         ) as string | undefined,
-      };
+        nextWhen: interpolateScenarioStateRoutes(
+          node.nextWhen,
+          templateData,
+          `${basePath}.nextWhen`,
+          issues
+        ),
+      } as QuizNodeDocument;
     case "question":
       return {
         ...interpolatedBase,
@@ -648,44 +1414,76 @@ function interpolateNode(
             issues
           ),
           correct: option.correct,
+          feedback: option.feedback
+            ? interpolateTextValue(
+                option.feedback,
+                templateData,
+                `${basePath}.options[${optionIndex}].feedback`,
+                issues
+              )
+            : undefined,
+          stateUpdates: interpolateScenarioStateUpdates(
+            option.stateUpdates,
+            templateData,
+            `${basePath}.options[${optionIndex}].stateUpdates`,
+            issues
+          ),
         })),
-        correctScore: interpolateValue(
+        correctScore: interpolateNumber(
           node.correctScore,
           templateData,
           `${basePath}.correctScore`,
           issues
-        ) as string | number | undefined,
-        incorrectScore: interpolateValue(
+        ),
+        incorrectScore: interpolateNumber(
           node.incorrectScore,
           templateData,
           `${basePath}.incorrectScore`,
           issues
-        ) as string | number | undefined,
+        ),
         passNext: interpolateValue(
           node.passNext,
           templateData,
           `${basePath}.passNext`,
           issues
         ) as string | undefined,
+        passNextWhen: interpolateScenarioStateRoutes(
+          node.passNextWhen,
+          templateData,
+          `${basePath}.passNextWhen`,
+          issues
+        ),
         failNext: interpolateValue(
           node.failNext,
           templateData,
           `${basePath}.failNext`,
           issues
         ) as string | undefined,
+        failNextWhen: interpolateScenarioStateRoutes(
+          node.failNextWhen,
+          templateData,
+          `${basePath}.failNextWhen`,
+          issues
+        ),
         next: interpolateValue(
           node.next,
           templateData,
           `${basePath}.next`,
           issues
         ) as string | undefined,
-      };
+        nextWhen: interpolateScenarioStateRoutes(
+          node.nextWhen,
+          templateData,
+          `${basePath}.nextWhen`,
+          issues
+        ),
+      } as QuestionNodeDocument;
     case "result":
       return {
         ...interpolatedBase,
         type: "result",
         outcome: node.outcome,
-      };
+      } as ResultNodeDocument;
   }
 }
 
@@ -757,21 +1555,28 @@ export function resolveCourseTemplate(
         )
       : "",
     theme: interpolateTheme(sourceDocument.theme, templateData, issues),
+    state: interpolateScenarioStateDefinitions(
+      sourceDocument.state,
+      templateData,
+      "course.state",
+      issues
+    ),
     start: interpolateString(
       sourceDocument.start,
       templateData,
       "course.start",
       issues
     ),
-    passingScore: interpolateValue(
+    passingScore:
+      interpolateNumber(
       sourceDocument.passingScore,
       templateData,
       "course.passingScore",
       issues
-    ),
+      ) ?? 0,
     nodes: expandedNodes.map((node, index) =>
       interpolateNode(node, templateData, `nodes[${index}]`, issues)
-    ),
+    ) as CourseDocumentNode[],
   };
 
   if (issues.length > 0) {

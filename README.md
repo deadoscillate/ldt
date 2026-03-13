@@ -6,7 +6,7 @@ Build learning systems like software.
 
 Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.
 
-Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, and reproducible builds for training content.
+Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, reusable simulation shells, and reproducible builds for training content.
 
 ## Key Idea
 
@@ -18,6 +18,8 @@ Sapio Forge replaces slide-based course builders with structured authoring, reus
 
 - structured course definitions
 - reusable module libraries
+- scene/component rendering pipeline with email, chat, and dashboard shells
+- persistent multi-step simulation state with deterministic branching
 - SCORM compilation
 - version-controlled training systems
 
@@ -27,7 +29,9 @@ It is designed for a source-controlled workflow:
 
 - course projects live in plain-text YAML
 - templates, variable sets, and theme packs stay separate
-- browser preview is compiled from validated source
+- browser preview is compiled from validated source into scene shells and components
+- realistic simulation scenes are authored through constrained email, chat, and dashboard shells
+- learner decisions can persist across scenes through typed scenario state
 - SCORM 1.2 packages are reproducible build artifacts
 
 If you are evaluating the platform, start here. The repo already includes example course projects, reusable template packs, reusable theme packs, and GitHub Actions workflows for validation and builds.
@@ -91,7 +95,8 @@ starter-repo.yaml
    ```
 
 3. Open the starter studio at `http://localhost:3000/studio`.
-   The studio loads starter examples directly from `course-projects/`.
+   The studio loads starter examples directly from `course-projects/`, including
+   phishing email, escalation chat, and dashboard review simulations.
 
 4. Validate a starter project locally.
 
@@ -148,6 +153,7 @@ The platform follows a strict source-to-build model:
 3. Compilation
    - canonical in-memory course model
    - compiled preview model
+   - scene shells and typed components derived from validated source
 4. Export build
    - SCORM 1.2 package
    - build manifest
@@ -191,6 +197,15 @@ The studio now exposes two clear starting modes:
 Use Builder mode when you want the fastest first module.
 
 Use the starter repo and project mode when you want source-controlled team workflows.
+
+For shell-specific authoring guidance, see:
+
+- [docs/simulation-shells.md](docs/simulation-shells.md)
+- [docs/shell-specific-interactions.md](docs/shell-specific-interactions.md)
+- [docs/stateful-multi-step-simulations.md](docs/stateful-multi-step-simulations.md)
+- [docs/authoring-stateful-scenarios.md](docs/authoring-stateful-scenarios.md)
+- [docs/building-email-chat-and-dashboard-simulations.md](docs/building-email-chat-and-dashboard-simulations.md)
+- [docs/building-interactive-email-chat-and-dashboard-simulations.md](docs/building-interactive-email-chat-and-dashboard-simulations.md)
 
 ## Beta feedback loop
 
@@ -289,15 +304,19 @@ an affected rebuild run instead of rebuilding every default target.
 
 ## Shared modules
 
-Shared modules make repeatable training libraries easier to maintain:
+Shared module libraries are now a first-class Sapio Forge workflow.
+
+They make repeatable training libraries easier to maintain:
 
 - define reusable source modules in `module-library/modules/*.yaml`
 - register them in `module-library/registry.yaml`
-- include them in course source with pinned versions
+- declare module variables and lightweight module tests in source
+- include them in course source with pinned versions and explicit overrides
 - expand them at compile time before preview or SCORM export
-- trace them through dependency graphs and affected rebuilds
+- browse them in the studio with used-by and affected-build visibility
+- trace them through dependency graphs, affected rebuilds, and course logic tests
 
-See [docs/shared-modules.md](docs/shared-modules.md) for authoring, versioning, and rebuild guidance.
+See [docs/shared-modules.md](docs/shared-modules.md) for authoring, versioning, and rebuild guidance, and [docs/composing-courses-from-modules.md](docs/composing-courses-from-modules.md) for composition examples.
 
 ## How to Customize
 

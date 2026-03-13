@@ -139,6 +139,65 @@ nodes:
   );
 });
 
+test("schema validation rejects unknown simulation shells", () => {
+  const invalidSource = `
+id: invalid-shell-course
+title: Invalid Shell
+start: intro
+nodes:
+  - id: intro
+    type: content
+    shell: crm_shell
+    title: Welcome
+    body: Hello
+`;
+
+  const snapshot = runCoursePipeline(invalidSource);
+
+  assert.equal(snapshot.failedStageId, "validate-schema");
+  assert.ok(
+    snapshot.errors.some((issue) => issue.includes("Invalid option"))
+  );
+});
+
+test("state validation rejects references to unknown scenario variables", () => {
+  const invalidSource = `
+id: invalid-state-course
+title: Invalid State
+start: intro
+nodes:
+  - id: intro
+    type: content
+    title: Welcome
+    body: Hello
+    next: passed
+    nextWhen:
+      - when:
+          - variable: reported_mail
+            equals: true
+        next: failed
+  - id: passed
+    type: result
+    title: Passed
+    outcome: passed
+    body: Done.
+  - id: failed
+    type: result
+    title: Failed
+    outcome: failed
+    body: Done.
+`;
+
+  const snapshot = runCoursePipeline(invalidSource);
+
+  assert.equal(snapshot.failedStageId, "validate-graph");
+  assert.ok(
+    snapshot.errors.some((issue) =>
+      issue.includes('references unknown state variable "reported_mail"')
+    )
+  );
+});
+
 test("builder-driven canonical courses remain valid export input", () => {
   const snapshot = runCoursePipeline(validSource, {
     templateDataOverrides: {

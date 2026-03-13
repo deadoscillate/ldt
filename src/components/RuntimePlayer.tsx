@@ -11,6 +11,7 @@ import {
   initializeRuntime,
   isPassingScore,
   restartRuntime,
+  resolveNodeInteraction,
   submitQuizAnswer,
 } from "@/lib/runtime/engine";
 import {
@@ -18,7 +19,6 @@ import {
   loadRuntimeState,
   saveRuntimeState,
 } from "@/lib/runtime/storage";
-import { renderTemplatedText } from "@/lib/runtime/templating";
 import { buildThemeStyleVariables } from "@/lib/theme/apply";
 import type { RuntimeState } from "@/lib/runtime/types";
 
@@ -48,6 +48,9 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
     buildInitialState(course)
   );
   const [selectedQuizOptionIds, setSelectedQuizOptionIds] = useState<string[]>([]);
+  const [selectedQuizInteractionIds, setSelectedQuizInteractionIds] = useState<
+    string[]
+  >([]);
 
   useEffect(() => {
     const restoredState = initializeRuntime(course, loadRuntimeState(course.id));
@@ -59,7 +62,6 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
   }, [course.id, runtimeState]);
 
   const currentNode = getCurrentNode(course, runtimeState);
-  const body = renderTemplatedText(currentNode.body, course, runtimeState);
   const stepNumber = Math.max(
     1,
     course.nodeOrder.findIndex((nodeId) => nodeId === currentNode.id) + 1
@@ -75,10 +77,14 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
         ? "Completed"
         : "In Progress";
   const themeStyle = buildThemeStyleVariables(course.theme);
+  const hasShellInteractions = currentNode.interactions.length > 0;
+  const scenarioStateEntries = Object.entries(runtimeState.scenarioState);
+  const actionHistory = runtimeState.actionHistory.slice(-6);
 
   useEffect(() => {
     if (currentNode.type !== "quiz") {
       setSelectedQuizOptionIds([]);
+      setSelectedQuizInteractionIds([]);
       return;
     }
 
@@ -86,10 +92,15 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
 
     if (priorAnswer?.kind === "quiz") {
       setSelectedQuizOptionIds(priorAnswer.selectedOptionIds);
+      setSelectedQuizInteractionIds([]);
       return;
     }
 
-    setSelectedQuizOptionIds([]);
+    setSelectedQuizOptionIds((selectedIds) =>
+      selectedIds.filter((selectedId) =>
+        currentNode.options.some((option) => option.id === selectedId)
+      )
+    );
   }, [currentNode.id, currentNode.type, runtimeState.answers]);
 
   function handleRestart(): void {
@@ -112,6 +123,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
 
     if (!(currentNode as CompiledQuizNode).multiple) {
       setSelectedQuizOptionIds([optionId]);
+      setSelectedQuizInteractionIds([]);
       return;
     }
 
@@ -122,13 +134,52 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
     );
   }
 
+  function handleSceneInteraction(interactionId: string): void {
+    const interaction = resolveNodeInteraction(currentNode, interactionId);
+
+    if (!interaction) {
+      return;
+    }
+
+    if (currentNode.type === "choice") {
+      setRuntimeState((state) =>
+        applyChoiceSelection(course, state, interaction.optionId, interactionId)
+      );
+      return;
+    }
+
+    if (currentNode.type === "quiz") {
+      if (!(currentNode as CompiledQuizNode).multiple) {
+        setSelectedQuizOptionIds([interaction.optionId]);
+        setSelectedQuizInteractionIds([interactionId]);
+        return;
+      }
+
+      setSelectedQuizOptionIds((selectedIds) =>
+        selectedIds.includes(interaction.optionId)
+          ? selectedIds.filter((selectedId) => selectedId !== interaction.optionId)
+          : [...selectedIds, interaction.optionId]
+      );
+      setSelectedQuizInteractionIds((selectedIds) =>
+        selectedIds.includes(interactionId)
+          ? selectedIds.filter((selectedId) => selectedId !== interactionId)
+          : [...selectedIds, interactionId]
+      );
+    }
+  }
+
   function handleSubmitQuiz(): void {
     if (currentNode.type !== "quiz" || selectedQuizOptionIds.length === 0) {
       return;
     }
 
     setRuntimeState((state) =>
-      submitQuizAnswer(course, state, selectedQuizOptionIds)
+      submitQuizAnswer(
+        course,
+        state,
+        selectedQuizOptionIds,
+        selectedQuizInteractionIds
+      )
     );
   }
 
@@ -180,6 +231,14 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
           <span className="runtime-status-label">Completion status</span>
           <strong>{completionStatus}</strong>
         </div>
+        <div className="runtime-status-card">
+          <span className="runtime-status-label">Scenario state</span>
+          <strong>
+            {scenarioStateEntries.length > 0
+              ? `${scenarioStateEntries.length} variable${scenarioStateEntries.length === 1 ? "" : "s"}`
+              : "None"}
+          </strong>
+        </div>
       </div>
 
       <p className="runtime-tracking-note">
@@ -194,11 +253,74 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
         </p>
       ) : null}
 
+      <details className="details-panel">
+        <summary>Scene inspector</summary>
+        <div className="details-copy">
+          <p className="panel-copy">
+            Current scene shell: <strong>{currentNode.scene.layout}</strong>. The
+            runtime resolves each component through the scene registry while keeping
+            branching and scoring logic in the canonical node model.
+          </p>
+          {scenarioStateEntries.length > 0 ? (
+            <>
+              <p className="panel-copy">
+                Scenario state persists across scenes, so earlier learner actions can
+                change what appears next and how later decisions are scored.
+              </p>
+              <ul className="scene-component-inspector">
+                {scenarioStateEntries.map(([key, value]) => (
+                  <li key={key}>
+                    <strong>{key}</strong>
+                    <span>
+                      value <code>{String(value)}</code>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          {actionHistory.length > 0 ? (
+            <>
+              <p className="panel-copy">
+                Recent action path: review the latest learner actions to replay the
+                scenario flow step by step while authoring.
+              </p>
+              <ul className="scene-component-inspector">
+                {actionHistory.map((entry, index) => (
+                  <li key={`${entry.timestamp}-${index}`}>
+                    <strong>{entry.nodeId}</strong>
+                    <span>
+                      {entry.action}
+                      {entry.optionIds.length > 0
+                        ? ` -> ${entry.optionIds.join(", ")}`
+                        : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <ul className="scene-component-inspector">
+            {currentNode.scene.components.map((component) => (
+              <li key={component.id}>
+                <strong>{component.type}</strong>
+                <span>
+                  slot <code>{component.slot}</code>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
+
       <article className="node-card">
         <header className="node-header">
           <div>
-          <p className="eyebrow">Rendered Node</p>
-            <h3>{currentNode.title}</h3>
+            <p className="eyebrow">Rendered Scene</p>
+            <h3>{currentNode.id}</h3>
+            <p className="panel-copy runtime-subcopy">
+              Shell: <strong>{currentNode.scene.layout}</strong>
+            </p>
           </div>
           {currentNode.type === "result" ? (
             <span
@@ -215,7 +337,13 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
           ) : null}
         </header>
 
-        <NodePresentation body={body} course={course} node={currentNode} />
+        <NodePresentation
+          course={course}
+          node={currentNode}
+          onSceneInteraction={hasShellInteractions ? handleSceneInteraction : undefined}
+          selectedOptionIds={selectedQuizOptionIds}
+          state={runtimeState}
+        />
 
         {currentNode.type === "content" ? (
           <div className="action-stack runtime-action-stack">
@@ -225,7 +353,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
           </div>
         ) : null}
 
-        {currentNode.type === "choice" ? (
+        {currentNode.type === "choice" && !hasShellInteractions ? (
           <div className="action-stack runtime-action-stack">
             {currentNode.options.map((option) => (
               <button
@@ -240,7 +368,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
           </div>
         ) : null}
 
-        {currentNode.type === "quiz" ? (
+        {currentNode.type === "quiz" && !hasShellInteractions ? (
           <div className="quiz-block">
             <p className="quiz-question">{currentNode.question}</p>
             <div className="quiz-options">
@@ -260,6 +388,24 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
                 );
               })}
             </div>
+            <button
+              className="primary-button runtime-primary"
+              disabled={selectedQuizOptionIds.length === 0}
+              onClick={handleSubmitQuiz}
+              type="button"
+            >
+              Submit answer
+            </button>
+          </div>
+        ) : null}
+
+        {currentNode.type === "quiz" && hasShellInteractions ? (
+          <div className="quiz-block quiz-block-compact">
+            <p className="quiz-question">
+              {selectedQuizOptionIds.length > 0
+                ? `${selectedQuizOptionIds.length} response${selectedQuizOptionIds.length === 1 ? "" : "s"} selected.`
+                : "Select a response inside the simulation shell, then submit."}
+            </p>
             <button
               className="primary-button runtime-primary"
               disabled={selectedQuizOptionIds.length === 0}

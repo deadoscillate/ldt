@@ -11,7 +11,13 @@ export interface StructureInspectorData {
   title: string;
   startNodeId: string;
   variableCount: number;
+  scenarioStateCount: number;
+  scenarioStateKeys: string[];
   nodeCount: number;
+  sceneCount: number;
+  sceneLayouts: string[];
+  componentCount: number;
+  componentTypes: string[];
   nodeTypes: string[];
   validationStates: ValidationState[];
 }
@@ -69,13 +75,39 @@ export function buildStructureInspectorData(input: {
         .filter(Boolean)
         .sort()
     : [];
+  const sceneLayouts = course
+    ? [...new Set(course.nodeOrder.map((nodeId) => course.nodes[nodeId]?.scene.layout))]
+        .filter(Boolean)
+        .sort()
+    : [];
+  const componentTypes = course
+    ? [
+        ...new Set(
+          course.nodeOrder.flatMap(
+            (nodeId) => course.nodes[nodeId]?.scene.components.map((component) => component.type) ?? []
+          )
+        ),
+      ].sort()
+    : [];
+  const componentCount = course
+    ? course.nodeOrder.reduce(
+        (count, nodeId) => count + (course.nodes[nodeId]?.scene.components.length ?? 0),
+        0
+      )
+    : 0;
 
   return {
     courseId: course?.id ?? "Unavailable",
     title: course?.title ?? "Unavailable",
     startNodeId: course?.startNodeId ?? "Unavailable",
     variableCount: input.templateFields.length,
+    scenarioStateCount: course?.scenarioStateOrder.length ?? 0,
+    scenarioStateKeys: course?.scenarioStateOrder ?? [],
     nodeCount: course?.nodeOrder.length ?? 0,
+    sceneCount: course?.nodeOrder.length ?? 0,
+    sceneLayouts,
+    componentCount,
+    componentTypes,
     nodeTypes,
     validationStates: buildValidationStates(input.errors, input.isReadyToExport),
   };

@@ -31,6 +31,14 @@ Builder mode is a convenience projection over the same normalized course structu
 
 The browser preview consumes the canonical model directly.
 
+Each canonical node now also carries a derived `scene` object so rendering flows through:
+
+- scene shell selection
+- component registry lookup
+- ordered component rendering
+
+The node graph still owns logic. The scene only owns presentation.
+
 ### Export
 
 SCORM export consumes the canonical model as input to the adapter/build layer.

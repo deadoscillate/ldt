@@ -26,8 +26,10 @@ test("project logic tests simulate learner paths and report deterministic outcom
     run.report.results.some(
       (result) =>
         result.testId === "correct-answer-passes" &&
+        result.actual.pathTaken.includes("intro") &&
         result.actual.terminalStep === "passed" &&
-        result.actual.score === 10
+        result.actual.score === 10 &&
+        result.actionTrace.some((trace) => trace.action === "interact")
     )
   );
   assert.ok(

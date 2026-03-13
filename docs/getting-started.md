@@ -18,6 +18,12 @@ Open:
 
 The studio loads starter examples from `course-projects/`.
 
+The starter set now includes three structured simulation contexts:
+
+- phishing email review with `email_shell`
+- customer escalation messaging with `chat_shell`
+- conduct-reporting dashboard review with `dashboard_shell`
+
 If you are new to the platform:
 
 - choose `Build your first course` for the beginner path
@@ -77,3 +83,5 @@ tsx scripts/course-project-build.ts export-all --project course-projects/workpla
 - keep exported SCORM packages out of source control
 
 For the shortest guided path to a first export, see [first-module.md](first-module.md).
+
+For shell-specific authoring guidance, see [simulation-shells.md](simulation-shells.md).

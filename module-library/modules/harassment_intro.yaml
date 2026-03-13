@@ -9,6 +9,19 @@ tags:
   - intro
 lastUpdated: 2026-03-12
 deprecated: false
+variableSchema:
+  variables:
+    courseTitle:
+      type: text
+      label: Course title
+      description: Opening title shown in the conduct-reporting scenario.
+tests:
+  - id: harassment-intro-opens-reporting-flow
+    name: Harassment intro opens the reporting flow
+    description: Confirms the shared introduction continues into the first reporting decision.
+    tags:
+      - conduct
+      - intro
 nodes:
   - id: intro
     type: content

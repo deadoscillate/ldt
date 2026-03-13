@@ -80,6 +80,38 @@ Supported layout values:
 
 Each layout is a structured field in source and renders through shared runtime templates. The layout system is meant to improve consistency, not to become a free-form canvas.
 
+## Scenes and components
+
+Sapio Forge now compiles each validated node into a scene shell plus ordered components.
+
+In practice:
+
+- source YAML still defines nodes, layouts, media, callouts, and branching
+- the compiler derives a scene from that source
+- preview and SCORM export render that scene through a component registry
+
+This keeps authoring source stable while making the visual layer easier to extend.
+
+Current scene shells include:
+
+- `card`
+- `stacked`
+- `two_column`
+- `result_shell`
+
+Current core components include:
+
+- `title`
+- `paragraph`
+- `image`
+- `callout`
+- `question_block`
+- `result_card`
+- `quote`
+- `list`
+
+This is a rendering architecture change, not a move toward freeform slide editing.
+
 ## Templates and variables
 
 Templates support:

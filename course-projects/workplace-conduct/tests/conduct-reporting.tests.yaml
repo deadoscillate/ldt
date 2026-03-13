@@ -1,17 +1,18 @@
 id: conduct-reporting
 title: Workplace conduct logic tests
-description: Protect the reporting workflow with deterministic branching and score assertions.
+description: Protect the reporting workflow with deterministic branching, score assertions, and persistent state checks.
 target:
   templateId: conduct-reporting
   themeId: default
 tests:
   - id: documented-reporting-passes
     name: Documented reporting path passes
-    description: A learner who documents the issue, answers correctly, and follows the approved channel should pass.
+    description: A learner who documents the issue, preserves evidence, reviews the case, and submits through the approved channel should pass.
     tags:
       - scored
       - pass
       - compliance
+      - stateful
     target:
       variantId: corporate
     actions:
@@ -26,21 +27,32 @@ tests:
       - step: reporting-procedure
         advance: true
       - step: follow-through
-        select: channel
+        interact: review-evidence
+      - step: case-resolution
+        advance: true
+      - step: final-decision
+        select: submit-now
     expect:
       terminalStep: passed
       score: 10
       completionStatus: completed
       successStatus: passed
-      pathLength: 6
+      pathLength: 8
       variables:
         companyName: Fabrikam Services
+      state:
+        documentedFacts: true
+        preservedEvidence: true
+        reviewedCase: true
+        escalatedCase: true
+        riskScore: 0
   - id: public-post-path-fails
     name: Public post path fails
-    description: Public escalation without documentation should fail immediately.
+    description: Public escalation plus another delay should drive the case into the high-risk failure path.
     tags:
       - fail
       - branch
+      - stateful
     target:
       variantId: hospital
     actions:
@@ -48,9 +60,19 @@ tests:
         advance: true
       - step: first-response
         select: post
+      - step: follow-through
+        interact: wait-flag
+      - step: case-resolution
+        advance: true
     expect:
       terminalStep: failed
       score: 0
       completionStatus: completed
       successStatus: failed
-      pathLength: 3
+      pathLength: 5
+      state:
+        documentedFacts: false
+        preservedEvidence: false
+        reviewedCase: false
+        escalatedCase: false
+        riskScore: 3

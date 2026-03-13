@@ -72,7 +72,12 @@ nodes:
   assert.equal(inspectorData.startNodeId, "intro");
   assert.equal(inspectorData.variableCount, 1);
   assert.equal(inspectorData.nodeCount, 2);
+  assert.equal(inspectorData.sceneCount, 2);
+  assert.equal(inspectorData.componentCount > 0, true);
   assert.deepEqual(inspectorData.nodeTypes, ["content", "result"]);
+  assert.deepEqual(inspectorData.sceneLayouts, ["card", "result_shell"]);
+  assert.ok(inspectorData.componentTypes.includes("title"));
+  assert.ok(inspectorData.componentTypes.includes("result_card"));
   assert.deepEqual(
     inspectorData.validationStates.map((state) => state.valid),
     [true, true, true, true]

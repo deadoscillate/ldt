@@ -63,6 +63,8 @@ export interface ModuleUsageTargetSummary {
   targetKey: string;
   courseId: string;
   courseTitle: string;
+  version: string;
+  logicTestCount: number;
 }
 
 export type ModuleUsageIndex = Record<string, ModuleUsageTargetSummary[]>;
@@ -188,8 +190,17 @@ export function buildModuleUsageIndex(
         const resolvedSelection = resolveCourseProjectBuildSelection(project, selection, {
           moduleLibrary,
         });
+        const seenDependencies = new Set<string>();
 
         resolvedSelection.dependencyGraph.moduleDependencies.forEach((dependency) => {
+          const dependencyKey = `${dependency.moduleId}@${dependency.version}::${resolvedSelection.dependencyGraph.targetKey}`;
+
+          if (seenDependencies.has(dependencyKey)) {
+            return;
+          }
+
+          seenDependencies.add(dependencyKey);
+
           const currentTargets = usageIndex[dependency.moduleId] ?? [];
           currentTargets.push({
             projectId: project.id,
@@ -197,6 +208,8 @@ export function buildModuleUsageIndex(
             targetKey: resolvedSelection.dependencyGraph.targetKey,
             courseId: resolvedSelection.dependencyGraph.courseId,
             courseTitle: resolvedSelection.dependencyGraph.courseTitle,
+            version: dependency.version,
+            logicTestCount: project.logicTestSuites.length,
           });
           usageIndex[dependency.moduleId] = currentTargets.sort((leftTarget, rightTarget) =>
             `${leftTarget.projectId}/${leftTarget.targetKey}`.localeCompare(

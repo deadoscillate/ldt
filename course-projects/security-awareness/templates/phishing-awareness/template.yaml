@@ -9,6 +9,28 @@ templateData:
   companyName: Northwind Health
   reportingChannel: security@northwindhealth.example
   policyUrl: https://example.com/security/phishing
+state:
+  reportedPhishing:
+    type: boolean
+    initial: false
+    description: Tracks whether the learner used the approved reporting channel.
+  openedAttachment:
+    type: boolean
+    initial: false
+    description: Tracks whether the learner opened the suspicious attachment.
+  investigationStatus:
+    type: enum
+    initial: inbox
+    description: Tracks the current stage of the phishing investigation.
+    options:
+      - inbox
+      - reviewing
+      - reported
+      - compromised
+  riskScore:
+    type: number
+    initial: 0
+    description: Tracks accumulated phishing risk from unsafe actions.
 blocks:
   result_block:
     - id: passed
@@ -33,21 +55,69 @@ nodes:
       version: 1.0.0
   - id: inspect-email
     type: branch
-    layout: callout
+    layout: text
+    shell: email_shell
     title: First move
-    body: Which action should happen before you click or reply?
-    callout:
-      title: Structured rule
-      text: Pause, inspect the request, then use the approved reporting path.
+    email:
+      from: IT Support
+      subject: "Urgent password reset required"
+      previewText: "Your {{companyName}} access will expire today unless you confirm."
+      warningBanner: "The workstation is now at risk. Follow the compromised-device path immediately."
+      warningBannerVisibleIf:
+        - variable: openedAttachment
+          equals: true
+      attachments:
+        - password-reset.html
+    body:
+      - "The message claims your access will expire unless you act immediately."
+      - "Which action should happen before you click or reply?"
     options:
       - id: inspect
         label: Inspect the sender, links, and request
         next: red-flags
         score: 0
-      - id: click
-        label: Click the request immediately
-        next: failed
+        stateUpdates:
+          - variable: investigationStatus
+            set: reviewing
+      - id: report-now
+        label: Report the message through the approved channel
+        next: follow-up
         score: 0
+        stateUpdates:
+          - variable: reportedPhishing
+            set: true
+          - variable: investigationStatus
+            set: reported
+      - id: click
+        label: Open the attachment immediately
+        next: follow-up
+        score: 0
+        stateUpdates:
+          - variable: openedAttachment
+            set: true
+          - variable: investigationStatus
+            set: compromised
+          - variable: riskScore
+            increment: 2
+    interactions:
+      - id: inspect-sender
+        type: email_link
+        optionId: inspect
+        label: Inspect sender details
+        hrefLabel: it-support@northwind-verify.example
+        feedback: "Correct: inspect unexpected sender details before you act."
+      - id: report-phishing
+        type: email_action_button
+        optionId: report-now
+        label: Report phishing
+        variant: primary
+        feedback: "Reporting is the safest action once the email looks suspicious."
+      - id: open-password-reset
+        type: email_attachment
+        optionId: click
+        label: Open attachment
+        fileName: password-reset.html
+        feedback: "Incorrect: opening an unexpected attachment is unsafe."
   - id: red-flags
     type: question
     layout: question
@@ -58,7 +128,7 @@ nodes:
     correctScore: 10
     incorrectScore: 0
     passNext: password-hygiene-reminder
-    failNext: failed
+    failNext: follow-up
     options:
       - id: urgent
         label: The message uses urgency and pressure
@@ -69,6 +139,9 @@ nodes:
       - id: logo
         label: The email includes the company logo
         correct: false
+        stateUpdates:
+          - variable: riskScore
+            increment: 1
   - include:
       module: password_hygiene_reminder
       version: 1.0.0
@@ -85,8 +158,50 @@ nodes:
         label: Report it to {{reportingChannel}}
         next: passed
         score: 0
+        stateUpdates:
+          - variable: reportedPhishing
+            set: true
+          - variable: investigationStatus
+            set: reported
       - id: ask
         label: Reply and ask whether it is legitimate
         next: failed
         score: 0
+        stateUpdates:
+          - variable: riskScore
+            increment: 1
+          - variable: investigationStatus
+            set: compromised
+  - id: follow-up
+    type: content
+    layout: text
+    shell: email_shell
+    title: Inbox follow-up
+    email:
+      from: Security Operations
+      subject: "Mailbox status update"
+      previewText: "The next response depends on what you did in the suspicious email."
+      warningBanner: "A malicious attachment was opened. This path now requires containment and device remediation."
+      warningBannerVisibleIf:
+        - variable: openedAttachment
+          equals: true
+    body:
+      - "Security systems respond differently depending on whether you reported the message or interacted with it."
+      - "Advance to see the result of your earlier decision."
+    callout:
+      title: Approved response confirmed
+      text: Security has already quarantined the message because it was reported promptly.
+      visibleIf:
+        - variable: reportedPhishing
+          equals: true
+    next: report
+    nextWhen:
+      - when:
+          - variable: openedAttachment
+            equals: true
+        next: failed
+      - when:
+          - variable: reportedPhishing
+            equals: true
+        next: passed
   - include: result_block

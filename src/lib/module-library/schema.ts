@@ -6,6 +6,10 @@ import {
   type CourseTemplateEntryDocument,
   type TemplateScalarValue,
 } from "@/lib/course/schema";
+import {
+  parseTemplateVariableSchemaObject,
+  type TemplateVariableSchema,
+} from "@/lib/course/template-variables";
 
 export interface SharedModuleDependencyReference {
   moduleId: string;
@@ -22,6 +26,13 @@ export interface SharedModuleRegistryEntry {
   tags: string[];
   lastUpdated: string;
   deprecated: boolean;
+}
+
+export interface SharedModuleTestCase {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
 }
 
 export interface SharedModuleRegistry {
@@ -41,8 +52,10 @@ export interface SharedModuleDocument {
   lastUpdated: string;
   deprecated: boolean;
   templateData: Record<string, TemplateScalarValue>;
+  variableSchema: TemplateVariableSchema | null;
   blocks: Record<string, CourseTemplateEntryDocument[]>;
   nodes: CourseTemplateEntryDocument[];
+  tests: SharedModuleTestCase[];
   metadata: Record<string, TemplateScalarValue>;
 }
 
@@ -73,6 +86,14 @@ const scalarSchema = z.union([z.string(), z.number(), z.boolean()]);
 const dateLikeSchema = z.union([z.string().trim().min(1), z.date()]).transform((value) =>
   value instanceof Date ? value.toISOString().slice(0, 10) : value
 );
+const sharedModuleTestCaseSchema = z
+  .object({
+    id: identifierSchema,
+    name: z.string().trim().min(1),
+    description: z.string().trim().min(1).optional().default(""),
+    tags: z.array(z.string().trim().min(1)).optional().default([]),
+  })
+  .strict();
 
 const registryEntrySchema = z
   .object({
@@ -97,7 +118,24 @@ const moduleRegistrySchema = z
   })
   .strict();
 
-const sharedModuleDocumentSchema: z.ZodType<SharedModuleDocument> = z
+interface SharedModuleDocumentSource {
+  id: string;
+  title: string;
+  description: string;
+  version: string;
+  category: string;
+  tags: string[];
+  lastUpdated: string;
+  deprecated: boolean;
+  templateData: Record<string, TemplateScalarValue>;
+  variableSchema?: unknown;
+  blocks: Record<string, CourseTemplateEntryDocument[]>;
+  nodes: CourseTemplateEntryDocument[];
+  tests: SharedModuleTestCase[];
+  metadata: Record<string, TemplateScalarValue>;
+}
+
+const sharedModuleDocumentSchema: z.ZodType<SharedModuleDocumentSource> = z
   .object({
     id: identifierSchema,
     title: z.string().trim().min(1),
@@ -108,6 +146,7 @@ const sharedModuleDocumentSchema: z.ZodType<SharedModuleDocument> = z
     lastUpdated: dateLikeSchema,
     deprecated: z.boolean().optional().default(false),
     templateData: z.record(identifierSchema, scalarSchema).optional().default({}),
+    variableSchema: z.unknown().optional(),
     blocks: z
       .record(
         identifierSchema,
@@ -120,6 +159,7 @@ const sharedModuleDocumentSchema: z.ZodType<SharedModuleDocument> = z
     nodes: z
       .array(courseTemplateEntrySchema)
       .min(1, "Shared modules must include at least one entry."),
+    tests: z.array(sharedModuleTestCaseSchema).optional().default([]),
     metadata: z.record(identifierSchema, scalarSchema).optional().default({}),
   })
   .strict();
@@ -255,7 +295,17 @@ export function parseSharedModuleRegistryYaml(source: string): SharedModuleRegis
 
 export function parseSharedModuleYaml(source: string): SharedModuleDocument {
   try {
-    return sharedModuleDocumentSchema.parse(yaml.load(source) ?? {});
+    const parsed = sharedModuleDocumentSchema.parse(yaml.load(source) ?? {});
+
+    return {
+      ...parsed,
+      variableSchema: parsed.variableSchema
+        ? parseTemplateVariableSchemaObject(
+            parsed.variableSchema,
+            "shared-module.variableSchema"
+          )
+        : null,
+    };
   } catch (error) {
     if (error instanceof ZodError) {
       throw new Error(

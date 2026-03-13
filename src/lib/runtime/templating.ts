@@ -15,6 +15,12 @@ export function renderTemplatedText(
     maxScore: String(course.maxScore),
     passingScore: String(course.passingScore),
     percent: String(percent),
+    ...Object.fromEntries(
+      Object.entries(state.scenarioState ?? {}).map(([key, value]) => [
+        key,
+        String(value),
+      ])
+    ),
   };
 
   return value.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (match, key) => {

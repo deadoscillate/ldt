@@ -21,6 +21,7 @@ import {
   type ResolvedCourseTemplate,
   type ResolveCourseTemplateOptions,
 } from "@/lib/course/template";
+import { collectNodeSceneWarnings } from "@/lib/course/scenes";
 import type { CanonicalCourse } from "@/lib/course/types";
 import type { CourseSourceDependencyGraph } from "@/lib/module-library/dependency";
 
@@ -242,7 +243,8 @@ export function runCoursePipeline(
       stages[3] = {
         ...stages[3],
         status: "success",
-        details: "Resolved source normalized into the canonical in-memory course model.",
+        details:
+          "Resolved source normalized into the canonical in-memory course model with derived scene shells and typed render components.",
       };
     } catch (error) {
       errors =
@@ -265,10 +267,19 @@ export function runCoursePipeline(
       errors = graphIssues;
       failedStageId = "validate-graph";
     } else {
+      warnings = [
+        ...warnings,
+        ...canonicalCourse.nodeOrder.flatMap((nodeId) =>
+          canonicalCourse.nodes[nodeId]
+            ? collectNodeSceneWarnings(canonicalCourse.nodes[nodeId])
+            : []
+        ),
+      ];
       stages[4] = {
         ...stages[4],
         status: "success",
-        details: "Branching references, duplicate ids, score rules, and graph constraints passed.",
+        details:
+          "Branching references, duplicate ids, score rules, graph constraints, and scene/component validation passed.",
       };
       stages[5] = {
         ...stages[5],

@@ -8,6 +8,27 @@ templateData:
   courseDescription: Practice the immediate actions for documenting and reporting workplace harassment concerns.
   companyName: Fabrikam Services
   reportingChannel: HR or the approved conduct channel
+state:
+  documentedFacts:
+    type: boolean
+    initial: false
+    description: Tracks whether the learner has documented facts for the case.
+  preservedEvidence:
+    type: boolean
+    initial: false
+    description: Tracks whether relevant evidence has been preserved.
+  reviewedCase:
+    type: boolean
+    initial: false
+    description: Tracks whether the learner reviewed the conduct case before deciding.
+  escalatedCase:
+    type: boolean
+    initial: false
+    description: Tracks whether the learner routed the case through the approved channel.
+  riskScore:
+    type: number
+    initial: 0
+    description: Tracks risk from delayed or weak reporting decisions.
 blocks:
   intro_block:
     - id: intro
@@ -19,6 +40,18 @@ blocks:
         title: Reporting principle
         text: The source definition makes the reporting flow explicit and repeatable.
       next: first-response
+  reminder_block:
+    - id: reporting-procedure
+      type: content
+      layout: callout
+      title: Reporting procedure
+      body:
+        - "Record the facts, preserve relevant evidence, and route the concern through {{reportingChannel}}."
+        - "Structured reporting keeps the next step clear for {{companyName}}."
+      callout:
+        title: Approved channel
+        text: Route the concern through {{reportingChannel}} instead of informal side conversations.
+      next: follow-through
   result_block:
     - id: passed
       type: result
@@ -51,10 +84,16 @@ nodes:
         label: Document what happened and use {{reportingChannel}}
         next: report-essentials
         score: 0
+        stateUpdates:
+          - variable: documentedFacts
+            set: true
       - id: post
         label: Post about it publicly so leadership notices
-        next: failed
+        next: follow-through
         score: 0
+        stateUpdates:
+          - variable: riskScore
+            increment: 2
   - id: report-essentials
     type: question
     layout: question
@@ -64,30 +103,179 @@ nodes:
     multiple: true
     correctScore: 10
     incorrectScore: 0
-    passNext: follow-through
-    failNext: failed
+    passNext: reporting-procedure
+    failNext: follow-through
     options:
       - id: facts
         label: Record dates, locations, and who was present
         correct: true
+        stateUpdates:
+          - variable: documentedFacts
+            set: true
       - id: preserve
         label: Preserve relevant messages or evidence
         correct: true
+        stateUpdates:
+          - variable: preservedEvidence
+            set: true
       - id: gossip
         label: Share the story informally for advice
         correct: false
+        stateUpdates:
+          - variable: riskScore
+            increment: 1
+  - include: reminder_block
   - id: follow-through
     type: choice
     layout: text
+    shell: dashboard_shell
     title: Follow-through
+    dashboard:
+      title: Conduct case workspace
+      notice: "Documented facts are ready. Use the approved conduct channel instead of delaying the report."
+      noticeVisibleIf:
+        - variable: documentedFacts
+          equals: true
+      navItems:
+        - Open cases
+        - Evidence log
+        - Reporting channels
+      cards:
+        - title: Documentation status
+          text: Facts, dates, locations, and witnesses are ready to submit.
+          metricLabel: Case priority
+          metricValue: High
+          status: warning
+          visibleIf:
+            - variable: documentedFacts
+              equals: true
+        - title: Evidence preserved
+          text: Messages or files have been saved with the case.
+          metricLabel: Evidence
+          metricValue: Ready
+          status: positive
+          visibleIf:
+            - variable: preservedEvidence
+              equals: true
+        - title: Risk warning
+          text: The case has not been reviewed carefully enough to close safely.
+          metricLabel: Risk
+          metricValue: Elevated
+          status: danger
+          visibleIf:
+            - variable: riskScore
+              gte: 2
     body: What is the strongest next step?
     options:
+      - id: review
+        label: Review the case evidence carefully before submitting
+        next: case-resolution
+        score: 0
+        stateUpdates:
+          - variable: reviewedCase
+            set: true
       - id: channel
         label: Report through {{reportingChannel}}
+        next: case-resolution
+        score: 0
+        stateUpdates:
+          - variable: escalatedCase
+            set: true
+      - id: wait
+        label: Wait and see whether it keeps happening
+        next: case-resolution
+        score: 0
+        stateUpdates:
+          - variable: riskScore
+            increment: 1
+    interactions:
+      - id: review-evidence
+        type: dashboard_review_item
+        optionId: review
+        title: Review evidence log
+        text: Confirm dates, locations, and preserved messages before you submit the report.
+        status: neutral
+        feedback: "Reviewing the evidence log supports a responsible report."
+      - id: submit-report
+        type: dashboard_action_card
+        optionId: channel
+        title: Submit through approved channel
+        text: Route the documented facts to {{reportingChannel}} now.
+        status: positive
+        feedback: "Correct: use the approved reporting path without delaying the case."
+      - id: wait-flag
+        type: dashboard_flag_toggle
+        optionId: wait
+        label: Mark for later follow-up
+        status: warning
+        feedback: "Incorrect: delaying the report leaves the issue unaddressed."
+  - id: case-resolution
+    type: content
+    layout: text
+    shell: dashboard_shell
+    title: Case resolution check
+    dashboard:
+      title: Conduct case workspace
+      notice: "High risk remains because the case was delayed or important details were missed."
+      noticeVisibleIf:
+        - variable: riskScore
+          gte: 2
+      navItems:
+        - Resolution
+        - Evidence
+        - Reporting
+      cards:
+        - title: Review status
+          text: The case has been reviewed and is ready for a final reporting decision.
+          metricLabel: Reviewed
+          metricValue: Ready
+          status: positive
+          visibleIf:
+            - variable: reviewedCase
+              equals: true
+        - title: Channel status
+          text: The case is already moving through the approved reporting path.
+          metricLabel: Escalated
+          metricValue: In progress
+          status: positive
+          visibleIf:
+            - variable: escalatedCase
+              equals: true
+    body: Advance to resolve the case based on the actions taken so far.
+    next: final-decision
+    nextWhen:
+      - when:
+          - variable: riskScore
+            gte: 2
+        next: failed
+      - when:
+          - variable: escalatedCase
+            equals: true
+        next: passed
+  - id: final-decision
+    type: choice
+    layout: callout
+    title: Final reporting decision
+    body: The case has been reviewed. What should happen now?
+    callout:
+      title: Report without delay
+      text: Once the facts and evidence are ready, route the concern through the approved channel.
+      visibleIf:
+        - variable: reviewedCase
+          equals: true
+    options:
+      - id: submit-now
+        label: Submit the documented concern through {{reportingChannel}}
         next: passed
         score: 0
-      - id: wait
+        stateUpdates:
+          - variable: escalatedCase
+            set: true
+      - id: postpone
         label: Wait and see whether it keeps happening
         next: failed
         score: 0
+        stateUpdates:
+          - variable: riskScore
+            increment: 1
   - include: result_block

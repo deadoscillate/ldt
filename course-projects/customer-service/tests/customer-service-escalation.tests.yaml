@@ -1,6 +1,6 @@
 id: customer-service-escalation
 title: Customer service escalation logic tests
-description: Minimal course tests for the starter project flow.
+description: Deterministic tests for the stateful escalation scenario.
 target:
   templateId: customer-service-escalation
   variantId: retail-support
@@ -8,17 +8,20 @@ target:
 tests:
   - id: structured-escalation-passes
     name: Structured escalation path passes
-    description: The starter project happy path should end with a passed result and the quiz score.
+    description: An empathetic opening, strong escalation statement, and clear handoff should pass.
     tags:
       - starter
       - pass
+      - stateful
     actions:
       - step: intro
         advance: true
       - step: first-response
-        select: acknowledge
+        interact: empathy-reply
       - step: escalation-question
         select: best
+      - step: follow-up
+        advance: true
       - step: wrap-up
         select: complete
     expect:
@@ -26,23 +29,40 @@ tests:
       score: 10
       completionStatus: completed
       successStatus: passed
-      pathLength: 5
+      pathLength: 6
       variables:
         companyName: Alpine Retail
-  - id: policy-first-path-fails
-    name: Policy-first path fails
-    description: Starting with a rigid policy answer should fail the escalation scenario.
+      state:
+        escalatedCustomer: false
+        verifiedOrder: true
+        customerMood: reassured
+        empathyScore: 2
+  - id: policy-first-path-needs-recovery
+    name: Policy-first path fails without recovery
+    description: A rigid opening should escalate the customer and end in failure if the recovery step is mishandled.
     tags:
       - starter
       - fail
+      - stateful
     actions:
       - step: intro
         advance: true
       - step: first-response
-        select: policy
+        interact: policy-reply
+      - step: escalation-question
+        select: weak
+      - step: follow-up
+        advance: true
+      - step: recovery
+        interact: dismiss-reply
     expect:
       terminalStep: failed
       score: 0
       completionStatus: completed
       successStatus: failed
-      pathLength: 3
+      pathLength: 6
+      state:
+        escalatedCustomer: true
+        verifiedOrder: false
+        customerMood: escalated
+        empathyScore: -2

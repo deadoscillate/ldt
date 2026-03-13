@@ -12,6 +12,35 @@ deprecated: false
 templateData:
   introImageSrc: https://placehold.co/720x420/png?text=Phishing+Inbox
   introImageAlt: Suspicious inbox example
+variableSchema:
+  variables:
+    courseTitle:
+      type: text
+      label: Course title
+      description: Runtime title shown at the opening of the phishing scenario.
+    companyName:
+      type: text
+      label: Company name
+      description: Organization name referenced in the shared phishing intro.
+    introImageSrc:
+      type: url
+      label: Intro image URL
+      description: Optional image shown beside the opening phishing scenario copy.
+      required: false
+      default: https://placehold.co/720x420/png?text=Phishing+Inbox
+    introImageAlt:
+      type: text
+      label: Intro image alt text
+      description: Alt text for the phishing inbox image.
+      required: false
+      default: Suspicious inbox example
+tests:
+  - id: intro-routes-to-inspect-email
+    name: Intro continues into inspect-email
+    description: Confirms the shared phishing intro routes into the first inspection step.
+    tags:
+      - navigation
+      - phishing
 nodes:
   - id: intro
     type: content

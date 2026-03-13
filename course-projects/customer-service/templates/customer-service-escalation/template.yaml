@@ -9,6 +9,27 @@ templateData:
   companyName: Alpine Retail
   escalationDesk: Escalations Desk
   escalationEmail: escalations@alpineretail.example
+state:
+  escalatedCustomer:
+    type: boolean
+    initial: false
+    description: Tracks whether the customer's frustration has been escalated by the agent.
+  verifiedOrder:
+    type: boolean
+    initial: false
+    description: Tracks whether the agent confirmed the case details before escalating.
+  empathyScore:
+    type: number
+    initial: 0
+    description: Tracks whether the conversation is moving toward de-escalation.
+  customerMood:
+    type: enum
+    initial: frustrated
+    description: Tracks the current tone of the conversation.
+    options:
+      - frustrated
+      - reassured
+      - escalated
 blocks:
   result_block:
     - id: passed
@@ -34,17 +55,59 @@ nodes:
   - id: first-response
     type: branch
     layout: text
+    shell: chat_shell
     title: Opening response
+    chat:
+      title: "{{companyName}} escalation chat"
+      systemNotice: "Customer sentiment is elevated. The next reply should reduce tension and prepare a clean handoff."
+      messages:
+        - sender: Customer
+          role: other
+          timestamp: 9:41 AM
+          text: "I have already called twice. Nobody has fixed this order."
+        - sender: Agent
+          role: self
+          timestamp: 9:42 AM
+          text: "I am reviewing the case now."
     body: What should you say first?
     options:
       - id: acknowledge
         label: Acknowledge the frustration and promise to help
         next: escalation-question
         score: 0
+        stateUpdates:
+          - variable: empathyScore
+            increment: 2
+          - variable: customerMood
+            set: reassured
       - id: policy
         label: Start by reading the return policy
-        next: failed
+        next: escalation-question
         score: 0
+        stateUpdates:
+          - variable: escalatedCustomer
+            set: true
+          - variable: empathyScore
+            decrement: 1
+          - variable: customerMood
+            set: escalated
+    interactions:
+      - id: empathy-reply
+        type: chat_choice_message
+        optionId: acknowledge
+        sender: Agent
+        role: self
+        timestamp: 9:43 AM
+        text: I can see why this is frustrating. Let me confirm the details and help you get this resolved.
+        feedback: "Correct: acknowledge the frustration before you move into escalation."
+      - id: policy-reply
+        type: chat_choice_message
+        optionId: policy
+        sender: Agent
+        role: self
+        timestamp: 9:43 AM
+        text: Before I do anything else, I need to read our return policy back to you.
+        feedback: "Incorrect: policy-first language increases tension and delays resolution."
   - id: escalation-question
     type: question
     layout: question
@@ -53,15 +116,58 @@ nodes:
     prompt: Which response is the strongest escalation move?
     correctScore: 10
     incorrectScore: 0
-    passNext: wrap-up
-    failNext: failed
+    passNext: follow-up
+    failNext: follow-up
     options:
       - id: best
         label: I can help with this. Let me confirm the details and route it to {{escalationDesk}}.
         correct: true
+        stateUpdates:
+          - variable: verifiedOrder
+            set: true
       - id: weak
         label: Someone should probably look into this later.
         correct: false
+        stateUpdates:
+          - variable: escalatedCustomer
+            set: true
+          - variable: empathyScore
+            decrement: 1
+          - variable: customerMood
+            set: escalated
+  - id: follow-up
+    type: content
+    layout: text
+    shell: chat_shell
+    title: Customer follow-up
+    chat:
+      title: "{{companyName}} escalation chat"
+      systemNotice: "Manager attention is now required because the customer remains escalated."
+      systemNoticeVisibleIf:
+        - variable: escalatedCustomer
+          equals: true
+      messages:
+        - sender: Customer
+          role: other
+          timestamp: 9:45 AM
+          text: "Thanks for taking ownership. I just want to know what happens next."
+          visibleIf:
+            - variable: customerMood
+              equals: reassured
+        - sender: Customer
+          role: other
+          timestamp: 9:45 AM
+          text: "This is still getting worse. I need a manager right now."
+          visibleIf:
+            - variable: customerMood
+              equals: escalated
+    body: Advance to see whether the conversation needs recovery or a normal handoff.
+    next: wrap-up
+    nextWhen:
+      - when:
+          - variable: escalatedCustomer
+            equals: true
+        next: recovery
   - id: wrap-up
     type: choice
     layout: callout
@@ -79,4 +185,46 @@ nodes:
         label: Transfer the customer without context
         next: failed
         score: 0
+        stateUpdates:
+          - variable: escalatedCustomer
+            set: true
+  - id: recovery
+    type: choice
+    layout: text
+    shell: chat_shell
+    title: Recovery step
+    chat:
+      title: "{{companyName}} escalation chat"
+      systemNotice: "The customer is escalated. A recovery response should restore trust before the handoff."
+      messages:
+        - sender: Customer
+          role: other
+          timestamp: 9:46 AM
+          text: "I need someone to own this now."
+    body: Which reply repairs the escalation?
+    options:
+      - id: recover
+        label: Apologize, confirm the case, and explain the handoff
+        next: passed
+        score: 0
+        stateUpdates:
+          - variable: escalatedCustomer
+            set: false
+          - variable: customerMood
+            set: reassured
+      - id: dismiss
+        label: Transfer the customer without context
+        next: failed
+        score: 0
+    interactions:
+      - id: recovery-reply
+        type: chat_reply_option
+        optionId: recover
+        label: Apologize and explain the handoff
+        feedback: "Correct: ownership and context can still recover the escalation."
+      - id: dismiss-reply
+        type: chat_reply_option
+        optionId: dismiss
+        label: Transfer without context
+        feedback: "Incorrect: the customer is already escalated and needs a clear handoff."
   - include: result_block

@@ -7,15 +7,15 @@ export const BRAND = {
   testName: "Sapio Forge Test",
   tagline: "Build learning systems like software.",
   shortDescription: "Structured learning infrastructure.",
-  metaTitle: "Sapio Forge — Course-as-Code Learning Platform",
+  metaTitle: "Sapio Forge - Course-as-Code Learning Platform",
   positioningStatement:
     "Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.",
   longDescription:
-    "Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, and reproducible builds for training content.",
+    "Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, reusable simulation shells, and reproducible builds for training content.",
   heroSubheadline:
     "Define training modules as structured source, compile them into SCORM packages, and deploy them anywhere.",
   metaDescription:
-    "Structured authoring and reproducible SCORM builds for modern training systems.",
+    "Structured authoring, reusable simulation shells, and reproducible SCORM builds for modern training systems.",
   landingValueProp:
     "Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.",
   contactEmail: "hello@sapioforge.app",
