@@ -18,7 +18,11 @@ export default function UpdatesPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Recent Progress</p>
-          <h1>Recent progress in the beta</h1>
+          <h1>What changed recently</h1>
+          <p className="panel-copy">
+            The beta is getting easier to use, more dependable, and better
+            prepared for real training teams.
+          </p>
         </div>
 
         <div className="roadmap-grid">
@@ -33,7 +37,7 @@ export default function UpdatesPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">What&apos;s Next</p>
-          <h2>What we are improving next</h2>
+          <h2>What we are tightening next</h2>
           <p className="panel-copy">
             The roadmap stays focused on making the current workflow clearer and
             more dependable.

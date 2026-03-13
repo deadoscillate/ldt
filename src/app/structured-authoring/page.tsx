@@ -12,7 +12,7 @@ import {
 } from "@/lib/marketing/content";
 
 export const metadata: Metadata = {
-  title: buildBrandTitle("Structured Authoring"),
+  title: buildBrandTitle("How It Works"),
   description: BRAND.metaDescription,
 };
 
@@ -21,8 +21,8 @@ export default function StructuredAuthoringPage() {
     <MarketingShell>
       <section className="landing-section">
         <div className="section-heading">
-          <p className="eyebrow">Course-as-Code</p>
-          <h1>Define the course once, then preview and export it</h1>
+          <p className="eyebrow">How It Works</p>
+          <h1>Start with the training flow, not a pile of duplicated screens</h1>
           <p className="panel-copy">{structuredAuthoringIntro}</p>
         </div>
 
@@ -38,7 +38,7 @@ export default function StructuredAuthoringPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Shared Modules In Action</p>
-          <h2>Reuse shared learning components instead of duplicating content</h2>
+          <h2>Reuse the parts that repeat</h2>
           <p className="panel-copy">{sharedModulesIntro}</p>
         </div>
 
@@ -54,7 +54,7 @@ export default function StructuredAuthoringPage() {
       <section className="landing-section comparison-section">
         <div className="section-heading">
           <p className="eyebrow">Why Sapio Forge Exists</p>
-          <h2>A clearer workflow than duplicated screens and fragile exports</h2>
+          <h2>A simpler workflow than duplicated slides and fragile exports</h2>
           <p className="panel-copy">{comparisonIntro}</p>
         </div>
 

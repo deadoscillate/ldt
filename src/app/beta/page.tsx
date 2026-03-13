@@ -6,7 +6,7 @@ import { BRAND, buildBrandTitle } from "@/lib/app/brand";
 import { loadMarketingPageData } from "@/lib/marketing/load";
 
 export const metadata: Metadata = {
-  title: buildBrandTitle("Beta Scope"),
+  title: buildBrandTitle("Beta"),
   description: BRAND.metaDescription,
 };
 
@@ -18,10 +18,10 @@ export default async function BetaPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Current Beta Scope</p>
-          <h1>What the beta is ready for today</h1>
+          <h1>What you can use in the beta today</h1>
           <p className="panel-copy">
-            The current beta is focused on structured authoring, browser preview,
-            validation, and SCORM export for repeatable training scenarios.
+            The beta is ready for building branching training in the browser,
+            checking it before export, and packaging it as SCORM.
           </p>
         </div>
 
@@ -41,11 +41,11 @@ export default async function BetaPage() {
       <section className="landing-section">
         <article className="panel trust-panel">
           <p className="eyebrow">Trust</p>
-          <h2>Validated in SCORM Cloud with clear scope</h2>
+          <h2>What has been proven so far</h2>
           <p className="panel-copy">{validationCatalog.summary}</p>
           <p className="panel-copy">
-            Broader LMS testing is still in progress. The proof center shows what
-            has and has not been tested so teams can evaluate the platform honestly.
+            Broader LMS testing is still in progress. The proof center shows
+            exactly what has and has not been tested so teams can evaluate the platform without guesswork.
           </p>
         </article>
       </section>

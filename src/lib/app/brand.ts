@@ -9,15 +9,15 @@ export const BRAND = {
   shortDescription: "Structured learning infrastructure.",
   metaTitle: "Sapio Forge - Course-as-Code Learning Platform",
   positioningStatement:
-    "Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.",
+    "Sapio Forge helps teams build branching training in one clear flow, preview it before export, and package it for any LMS.",
   longDescription:
     "Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, and reproducible SCORM builds for training content.",
   heroSubheadline:
-    "Start from a template, edit in guided forms or source, preview the learner experience, and export SCORM packages for any LMS.",
+    "Start from a training template, edit the scenario in guided forms, preview the learner experience, and export a SCORM package for your LMS.",
   metaDescription:
     "Structured authoring, reusable modules, and reproducible SCORM builds for modern training systems.",
   landingValueProp:
-    "Define training modules as structured source, preview them in the browser, and export SCORM packages for any LMS.",
+    "Build branching training from a template, preview it in the browser, and export SCORM when it is ready.",
   contactEmail: "hello@sapioforge.app",
   githubUrl: "https://github.com/deadoscillate/ldt",
   siteUrl: "https://ldt-opccbpr6c-deadoscillates-projects.vercel.app",

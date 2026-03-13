@@ -18,17 +18,18 @@ export default async function WaitlistPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Early Access</p>
-          <h1>Get beta updates without digging through the full site</h1>
+          <h1>Get early access and beta updates</h1>
           <p className="panel-copy">
-            Try the studio now, or join the list for beta updates and broader LMS
-            validation results.
+            Open the studio today, or join the list for product updates and LMS
+            validation progress.
           </p>
         </div>
 
         <article className="panel trust-panel">
           <p className="panel-copy">{validationCatalog.summary}</p>
           <p className="panel-copy">
-            No login required. No LMS setup required. Early feedback is welcome.
+            No login required. Start with a template, preview it in the browser,
+            and export when you are ready.
           </p>
         </article>
       </section>

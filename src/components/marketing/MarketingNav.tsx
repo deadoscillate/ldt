@@ -33,7 +33,7 @@ export function MarketingNav() {
         </nav>
         <div className="landing-nav-links landing-nav-cta">
           <Link className="ghost-button button-link" href="/waitlist">
-            Request Early Access
+            Early Access
           </Link>
           <TrackedLink
             className="primary-button button-link"

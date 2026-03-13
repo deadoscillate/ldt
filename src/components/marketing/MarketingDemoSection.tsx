@@ -23,10 +23,10 @@ export function MarketingDemoSection({
     <section className="landing-section">
       <div className="section-heading">
         <p className="eyebrow">Demo</p>
-        <h2>See how a course moves from source to preview</h2>
+        <h2>See the learner view before you export</h2>
         <p className="panel-copy">
-          This demo uses the same sample content and preview runtime that ship with
-          the studio, so what you see here matches the actual authoring workflow.
+          This demo uses the same sample content and preview runtime that ship
+          with the studio, so what you see here matches the real authoring flow.
         </p>
       </div>
 
@@ -39,11 +39,10 @@ export function MarketingDemoSection({
                   ? `${featuredSample.templateDirectory}/template.yaml`
                   : "template.yaml"}
               </span>
-              <span className="editor-language">YAML</span>
+              <span className="editor-language">Source</span>
             </div>
             <p className="demo-snippet-note">
-              Short sample showing course setup, template values, and the first
-              branching step.
+              Short example showing setup values and the first branching decision.
             </p>
             <pre className="demo-code-preview demo-code-preview-compact">
               {featuredSnippet}
@@ -51,7 +50,7 @@ export function MarketingDemoSection({
           </div>
 
           <details className="details-panel landing-sample-details">
-            <summary>View full sample</summary>
+            <summary>See full example source</summary>
             <pre className="demo-code-preview demo-code-preview-full">
               {featuredSource}
             </pre>
@@ -59,16 +58,16 @@ export function MarketingDemoSection({
 
           <div className="demo-callout-grid">
             <div className="summary-card">
-              <strong>Course source</strong>
-              <span>Keep the flow in one readable source file.</span>
+              <strong>Training flow</strong>
+              <span>Keep the steps and branching in one place.</span>
             </div>
             <div className="summary-card">
-              <strong>Live preview</strong>
-              <span>Check the learner experience before exporting.</span>
+              <strong>Learner preview</strong>
+              <span>Check exactly what learners will see.</span>
             </div>
             <div className="summary-card">
               <strong>SCORM export</strong>
-              <span>Export a SCORM package from the same validated source.</span>
+              <span>Package the same validated lesson for your LMS.</span>
             </div>
           </div>
 
@@ -94,7 +93,7 @@ export function MarketingDemoSection({
           eventName="open_studio_clicked"
           href="/studio"
         >
-          Open Studio
+          Try it in the Studio
         </TrackedLink>
       </div>
     </section>

@@ -23,11 +23,10 @@ export default async function ProductPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Product</p>
-          <h1>Structured authoring for teams who need repeatable training</h1>
+          <h1>Build branching training without rebuilding the same slides</h1>
           <p className="panel-copy">
-            Sapio Forge helps teams define training modules as source, preview the
-            learner experience quickly, and export SCORM without rebuilding the
-            same branching logic by hand.
+            Start from a template, edit the scenario in guided forms, preview
+            the learner experience, and export SCORM when it is ready.
           </p>
         </div>
 
@@ -48,7 +47,7 @@ export default async function ProductPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Core Capabilities</p>
-          <h2>What you can do today</h2>
+          <h2>What teams use it for</h2>
         </div>
 
         <div className="feature-grid">
@@ -71,10 +70,11 @@ export default async function ProductPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Export Output</p>
-          <h2>See exactly what the SCORM package contains</h2>
+          <h2>See what goes into the SCORM package</h2>
           <p className="panel-copy">
-            Export a standards-compliant SCORM 1.2 package generated from the
-            validated course source.
+            The export includes the learner runtime, course definition,
+            manifest, and supporting files from the same lesson you preview in
+            the studio.
           </p>
         </div>
 

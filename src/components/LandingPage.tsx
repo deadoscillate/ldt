@@ -61,12 +61,12 @@ export function LandingPage({
               Open Studio
             </TrackedLink>
             <Link className="ghost-button button-link" href="/waitlist">
-              Request Early Access
+              Early Access
             </Link>
           </div>
           <p className="landing-hero-note">
-            Start in guided editing for the fastest first course. Source and project
-            workflows stay available when you need deeper control.
+            Start in guided editing for the fastest first lesson. Open source and
+            project tools only when you want deeper control.
           </p>
           <WorkflowSteps steps={["Template", "Edit", "Preview", "SCORM"]} />
         </div>
@@ -97,7 +97,7 @@ export function LandingPage({
       <section className="landing-proof-band panel" id="proof">
         <div className="landing-proof-copy">
           <p className="eyebrow">Proof</p>
-          <h2>Know what has been tested so far</h2>
+          <h2>See what has been tested already</h2>
           <p className="panel-copy">{validationCatalog.philosophy}</p>
         </div>
         <div className="proof-checklist" aria-label="Validation checklist">
@@ -112,7 +112,7 @@ export function LandingPage({
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Core Concepts</p>
-          <h2>Why teams use Sapio Forge</h2>
+          <h2>What Sapio Forge helps you do</h2>
           <p className="panel-copy">
             {BRAND.positioningStatement}
           </p>
@@ -131,10 +131,10 @@ export function LandingPage({
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Who It&apos;s For</p>
-          <h2>Built for teams shipping repeatable branching training</h2>
+          <h2>Made for teams building branching training</h2>
           <p className="panel-copy">
-            Most teams start with guided editing, then move into templates,
-            modules, and source-controlled workflows as their process grows.
+            Most teams start in guided editing. Templates, shared modules, and
+            deeper source workflows stay available as the process grows.
           </p>
         </div>
 
@@ -150,7 +150,7 @@ export function LandingPage({
       <section className="landing-section comparison-section">
         <div className="section-heading">
           <p className="eyebrow">Why Sapio Forge Exists</p>
-          <h2>A clearer workflow than duplicated screens and fragile exports</h2>
+          <h2>A simpler workflow than duplicated slides and fragile exports</h2>
           <p className="panel-copy">{comparisonIntro}</p>
         </div>
 
@@ -191,22 +191,21 @@ export function LandingPage({
 
       <section className="landing-section">
         <article className="panel trust-panel">
-          <p className="eyebrow">Go Deeper</p>
-          <h2>Explore the product one topic at a time</h2>
+          <p className="eyebrow">Next Steps</p>
+          <h2>Choose the page that matches what you need</h2>
           <p className="panel-copy">
-            Start with the main overview here, then open the pages that match what
-            you want to learn next: product fit, structured authoring, beta scope,
-            updates, or early access.
+            Start with the main overview here, then open the pages that explain
+            the workflow, beta status, updates, or early access in more detail.
           </p>
           <div className="button-row">
             <Link className="ghost-button button-link" href="/product">
               Product
             </Link>
             <Link className="ghost-button button-link" href="/structured-authoring">
-              Structured
+              How It Works
             </Link>
             <Link className="ghost-button button-link" href="/beta">
-              Beta Scope
+              Beta
             </Link>
             <Link className="ghost-button button-link" href="/updates">
               Updates

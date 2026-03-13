@@ -10,7 +10,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   },
   {
     href: "/structured-authoring",
-    label: "Structured",
+    label: "How It Works",
   },
   {
     href: "/validation",
@@ -18,7 +18,7 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   },
   {
     href: "/beta",
-    label: "Beta Scope",
+    label: "Beta",
   },
   {
     href: "/updates",
@@ -26,6 +26,6 @@ export const MARKETING_NAV_ITEMS: readonly MarketingNavItem[] = [
   },
   {
     href: "/waitlist",
-    label: "Waitlist",
+    label: "Early Access",
   },
 ] as const;

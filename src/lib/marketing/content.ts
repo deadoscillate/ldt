@@ -2,24 +2,24 @@ import { BRAND } from "@/lib/app/brand";
 
 export const featureCards = [
   {
-    title: "Structured course source",
+    title: "One training flow to update",
     description:
-      "Keep course content, branching, and scoring in readable source instead of rebuilding the same screens by hand.",
+      "Keep steps, choices, and scoring in one place instead of duplicating slide screens.",
   },
   {
-    title: "Reusable module libraries",
+    title: "Reuse what repeats",
     description:
-      "Reuse intros, lessons, checks, and procedures across more than one course.",
+      "Reuse intros, checks, reminders, and procedures across more than one lesson.",
   },
   {
-    title: "Reliable SCORM output",
+    title: "Preview before you export",
     description:
-      "Turn validated source into SCORM 1.2 packages you can preview, test, and deliver.",
+      "Check the learner experience before you generate a SCORM package.",
   },
   {
-    title: "Team-friendly workflow",
+    title: "Keep projects easier to maintain",
     description:
-      "Keep source, tests, themes, and builds organized in a way teams can review, reuse, and rebuild.",
+      "Update shared content once and rebuild with fewer hand edits across course families.",
   },
 ] as const;
 
@@ -27,88 +27,88 @@ export const conceptCards = [
   {
     title: "Structured Authoring",
     description:
-      "Define training content in a clear structure instead of duplicating slide screens.",
+      "Build the lesson as one clear training flow instead of copying slide branches.",
   },
   {
     title: "Reusable Modules",
     description:
-      "Reuse lessons, checks, and scenarios across clients, departments, and course families.",
+      "Reuse lessons, checks, and scenario blocks across teams, clients, and departments.",
   },
   {
     title: "Reproducible Builds",
     description:
-      "Generate the same SCORM package from the same source every time.",
+      "Preview, validate, and export the same training flow with fewer last-minute surprises.",
   },
 ] as const;
 
 export const audienceCards = [
-  "Instructional designers who need branching scenarios without rebuilding the same screens by hand.",
-  "Training consultants who need repeatable SCORM projects for different clients or departments.",
-  "Technical L&D teams who want reusable source, cleaner review, and more dependable builds.",
+  "Instructional designers who need branching scenarios without maintaining a web of duplicated slides.",
+  "Training teams who update the same policy, process, or scenario across multiple lessons.",
+  "More technical L&D teams who want reusable modules, cleaner review, and dependable SCORM builds.",
 ] as const;
 
 export const comparisonRows = [
   {
-    label: "Authoring model",
-    thisTool: "Structured source",
-    traditional: "Slide-based authoring",
+    label: "Flow design",
+    thisTool: "One structured training flow",
+    traditional: "Duplicated slide branches",
   },
   {
     label: "Reuse",
-    thisTool: "Reusable modules",
-    traditional: "Manual duplication",
+    thisTool: "Shared modules and templates",
+    traditional: "Manual copy and paste",
   },
   {
-    label: "Builds",
-    thisTool: "Reproducible builds",
-    traditional: "Fragile exports",
+    label: "Preview",
+    thisTool: "Check it before export",
+    traditional: "Problems found late",
   },
   {
-    label: "Maintenance",
-    thisTool: "Version-controlled training systems",
-    traditional: "Difficult to maintain at scale",
+    label: "Updates",
+    thisTool: "Change shared content once",
+    traditional: "Edit many screens by hand",
   },
 ] as const;
 
 export const structuredAuthoringPoints = [
-  "Course source stays readable and reviewable instead of hiding branching in duplicated screens.",
-  "Preview and SCORM output come from the same validated source.",
-  "Templates, saved versions, and modules make repeated course families faster to update.",
-  "Plain-text source works naturally with Git when a team wants a deeper workflow.",
+  "The training flow stays readable instead of hiding logic in duplicated screens.",
+  "Guided editing, preview, and export all work from the same lesson definition.",
+  "Templates and shared modules make repeated course families faster to update.",
+  "Source editing is available when a team wants deeper control, but it is not required to get started.",
 ] as const;
 
 export const sharedModuleExamplePoints = [
-  "One phishing intro module can appear in K-12, healthcare, and enterprise variants.",
-  "A shared reporting procedure can drive multiple conduct-reporting course families.",
-  "One module change can update multiple builds and tests at once.",
+  "One phishing intro can appear in K-12, healthcare, and enterprise variants.",
+  "One reporting procedure can support multiple workplace conduct lessons.",
+  "One shared update can flow into multiple previews, tests, and exports.",
 ] as const;
 
 export const roadmapItems = [
   "Broader LMS validation beyond SCORM Cloud.",
-  "Reusable template packs for common training scenarios.",
-  "Improved authoring workflow inside the studio.",
-  "Additional deployment hardening for production teams.",
+  "Faster and clearer authoring inside the studio.",
+  "Stronger reusable templates and module workflows.",
+  "More dependable validation and export workflows.",
 ] as const;
 
 export const recentProgressItems = [
   "SCORM Cloud validation completed for launch, completion, score, pass/fail, and resume.",
-  "Resume behavior and completion state handling were hardened for SCORM 1.2 delivery.",
-  "Template-driven authoring with reusable blocks and placeholders was added to the studio.",
+  "Starter templates and guided editing were tightened for first-time instructional designers.",
+  "Reusable modules, shells, and scenario workflows were expanded inside the studio.",
 ] as const;
 
 export const productProblemCopy = {
-  problemTitle: "Traditional course tools make branching hard to maintain",
+  problemTitle: "Slide-based branching gets messy fast",
   problemBody:
-    "Many teams still manage branching through duplicated screens, repeated manual edits, and exports that are hard to review or rebuild.",
-  solutionTitle: "Define it once, then preview and export from the same source",
+    "Many teams still manage branching through duplicated screens, repeated edits, and exports that are hard to trust when something changes.",
+  solutionTitle: "Build it once, then preview and export with confidence",
   solutionBody:
-    "Sapio Forge keeps course source readable and reusable, then turns that same definition into a learner preview and SCORM build.",
+    "Sapio Forge keeps the lesson flow in one place, then turns that same definition into a learner preview and a SCORM package.",
 } as const;
 
 export const structuredAuthoringIntro =
-  "Instead of building courses as slide decks, Sapio Forge treats training modules as structured source. Teams can reuse, review, test, and export them with a workflow that is much easier to maintain.";
+  "Instead of spreading branching across duplicated screens, Sapio Forge keeps the lesson in one structured flow. Teams can update it once, preview it quickly, and export it with much less cleanup.";
 
 export const sharedModulesIntro =
-  "Sapio Forge treats intros, reminders, reporting steps, and scenario fragments as reusable modules. One source change can then update the right builds instead of forcing manual copy-and-paste edits.";
+  "Sapio Forge treats intros, reminders, reporting steps, and scenario fragments as reusable blocks. One change can then update the right lessons instead of forcing manual copy-and-paste edits.";
 
-export const comparisonIntro = `${BRAND.productName} is for teams that want training content to stay readable, reusable, and easy to rebuild from source instead of spreading course logic across duplicated screens.`;
+export const comparisonIntro = `${BRAND.productName} is for teams that want training flows to stay readable, reusable, and easier to update instead of spreading branching across duplicated screens.`;
