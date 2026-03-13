@@ -1,0 +1,15 @@
+id: linear-lesson
+title: Linear lesson test examples
+description: Minimal content-only learner-path checks.
+tests:
+  - id: reaches-final-content
+    name: Reaches the final content step
+    actions:
+      - step: intro
+        advance: true
+      - step: policy-overview
+        advance: true
+    expect:
+      terminalStep: summary
+      completionStatus: completed
+      successStatus: none

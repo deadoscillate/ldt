@@ -1,0 +1,15 @@
+id: branching-course
+title: Branching course test examples
+description: Example branch assertions for choice-based navigation.
+tests:
+  - id: approved-branch
+    name: Approved branch reaches the pass result
+    actions:
+      - step: intro
+        advance: true
+      - step: first-decision
+        select: approved
+    expect:
+      terminalStep: passed
+      completionStatus: completed
+      successStatus: passed

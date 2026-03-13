@@ -1,6 +1,8 @@
 # Getting Started
 
-This repository is meant to be cloneable and immediately usable as a structured SCORM authoring starter kit.
+Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.
+
+This starter repository is meant to be cloneable and immediately usable as a course-as-code workflow for training systems.
 
 ## Install and run
 
@@ -29,6 +31,14 @@ npm run validate:project
 
 This validates the default starter project under `course-projects/security-awareness`.
 
+## Run starter logic tests
+
+```bash
+npm run test:course
+```
+
+This simulates learner paths against the compiled course logic before SCORM export.
+
 ## Build one starter SCORM package
 
 ```bash
@@ -55,6 +65,7 @@ Example:
 
 ```bash
 tsx scripts/course-project-build.ts validate --project course-projects/workplace-conduct --all
+tsx scripts/course-project-build.ts test --project course-projects/workplace-conduct
 tsx scripts/course-project-build.ts export-all --project course-projects/workplace-conduct --mode standard
 ```
 

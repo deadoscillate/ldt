@@ -2,7 +2,7 @@ id: customer-service
 title: Customer Service Escalation Project
 description: Single-course project showing the lightest valid Course-as-Code setup with one template, one variant, and one theme.
 version: 0.1.0
-author: LDT Engine
+author: Sapio Forge
 createdAt: 2026-03-12
 updatedAt: 2026-03-12
 defaultTemplateId: customer-service-escalation
@@ -14,6 +14,7 @@ readme: README.md
 gitignore: .gitignore
 buildDirectory: build
 assetsDirectory: assets
+testsDirectory: tests
 templates:
   - id: customer-service-escalation
     title: Customer service escalation

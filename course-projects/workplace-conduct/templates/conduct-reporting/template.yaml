@@ -9,16 +9,6 @@ templateData:
   companyName: Fabrikam Services
   reportingChannel: HR or the approved conduct channel
 blocks:
-  intro_block:
-    - id: intro
-      type: content
-      layout: callout
-      title: "{{courseTitle}}"
-      body: Use facts, documentation, and the approved reporting path.
-      callout:
-        title: Reporting principle
-        text: The source definition makes the reporting flow explicit and repeatable.
-      next: first-response
   result_block:
     - id: passed
       type: result
@@ -37,7 +27,9 @@ blocks:
         - "Responsible reporting starts with facts, documentation, and the right channel."
         - "Final score: {{score}} / {{maxScore}}"
 nodes:
-  - include: intro_block
+  - include:
+      module: harassment_intro
+      version: 1.0.0
   - id: first-response
     type: branch
     layout: quote
@@ -64,7 +56,7 @@ nodes:
     multiple: true
     correctScore: 10
     incorrectScore: 0
-    passNext: follow-through
+    passNext: reporting-procedure
     failNext: failed
     options:
       - id: facts
@@ -76,6 +68,11 @@ nodes:
       - id: gossip
         label: Share the story informally for advice
         correct: false
+  - include:
+      module: reporting_procedure
+      version: 1.0.0
+      with:
+        reportingLabel: "{{reportingChannel}}"
   - id: follow-through
     type: choice
     layout: text

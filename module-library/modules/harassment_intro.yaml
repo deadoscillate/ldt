@@ -1,0 +1,21 @@
+id: harassment_intro
+title: Harassment reporting introduction
+description: Shared opening for workplace conduct and harassment reporting scenarios.
+version: 1.0.0
+category: workplace-conduct
+tags:
+  - conduct
+  - harassment
+  - intro
+lastUpdated: 2026-03-12
+deprecated: false
+nodes:
+  - id: intro
+    type: content
+    layout: callout
+    title: "{{courseTitle}}"
+    body: Use facts, documentation, and the approved reporting path.
+    callout:
+      title: Reporting principle
+      text: Structured source keeps the reporting flow explicit, reviewable, and repeatable.
+    next: first-response

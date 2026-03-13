@@ -23,6 +23,7 @@ Generated outputs include:
 - aggregate build manifests
 - JSON build reports
 - markdown build summaries
+- logic test reports
 
 ## Default project output layout
 
@@ -36,6 +37,9 @@ course-projects/<project-id>/build
   build-manifest.json
   ci-build-report.json
   build-summary.md
+  /tests
+    course-test-report.json
+    course-test-summary.md
 ```
 
 ## Root build directory

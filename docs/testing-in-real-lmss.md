@@ -2,7 +2,7 @@
 
 SCORM Cloud is the current baseline validation target, but production confidence still requires LMS-specific testing.
 
-Use LDT Engine LMS validation builds when you want:
+Use Sapio Forge LMS validation builds when you want:
 
 - API discovery visibility
 - LMSInitialize, LMSSetValue, LMSCommit, and LMSFinish traces

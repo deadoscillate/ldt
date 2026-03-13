@@ -1,6 +1,6 @@
 # Template Packs
 
-Template packs turn repeatable course families into a first-class source workflow.
+Sapio Forge template packs turn repeatable course families into a first-class source workflow.
 
 The starter repository includes three example packs:
 

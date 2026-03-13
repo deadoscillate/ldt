@@ -5,6 +5,7 @@ import type {
   TemplatePackTemplate,
   TemplatePackVariant,
 } from "@/lib/course/template-pack";
+import type { CourseLogicTestSuite } from "@/lib/course-tests/schema";
 import type { ThemePack } from "@/lib/theme/schema";
 
 export const COURSE_PROJECT_BUILD_TARGETS = ["scorm12"] as const;
@@ -52,6 +53,7 @@ export interface CourseProjectConfig {
   gitignorePath: string | null;
   buildDirectory: string;
   assetsDirectory: string;
+  testsDirectory: string;
   templates: CourseProjectTemplateConfig[];
   variants: CourseProjectVariantConfig[];
   themes: CourseProjectThemeConfig[];
@@ -94,10 +96,13 @@ export interface CourseProject {
   buildTargets: CourseProjectBuildTarget[];
   buildDirectory: string;
   assetsDirectory: string;
+  testsDirectory: string;
   readme: string;
   gitignore: string;
   templates: TemplatePackTemplate[];
   themes: ThemePack[];
+  logicTestSuites: CourseLogicTestSuite[];
+  logicTestLoadIssues: string[];
   validation: ProjectValidationResult;
   sourceFiles: CourseProjectSourceFile[];
   binaryFiles: CourseProjectBinaryFile[];
@@ -154,6 +159,7 @@ const courseProjectDocumentSchema = z
     gitignore: z.string().trim().min(1).optional().nullable(),
     buildDirectory: z.string().trim().min(1).optional().default("build"),
     assetsDirectory: z.string().trim().min(1).optional().default("assets"),
+    testsDirectory: z.string().trim().min(1).optional().default("tests"),
     templates: z.array(courseProjectTemplateSchema).min(1),
     variants: z.array(courseProjectVariantSchema).min(1),
     themes: z.array(courseProjectThemeSchema).min(1),
@@ -193,6 +199,7 @@ export function parseCourseProjectYaml(source: string): CourseProjectConfig {
       gitignorePath: parsed.gitignore ?? null,
       buildDirectory: parsed.buildDirectory,
       assetsDirectory: parsed.assetsDirectory,
+      testsDirectory: parsed.testsDirectory,
       templates: parsed.templates.map((template) => ({
         id: template.id,
         title: template.title,

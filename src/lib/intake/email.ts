@@ -1,3 +1,5 @@
+import { BRAND } from "@/lib/app/brand";
+
 interface WaitlistConfirmationResult {
   enabled: boolean;
   sent: boolean;
@@ -46,9 +48,9 @@ export async function sendWaitlistConfirmationEmail(
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL,
         to: [email],
-        subject: "LDT Engine beta access",
+        subject: `${BRAND.productName} beta access`,
         text: [
-          "Thanks for joining the LDT Engine early access list.",
+          `Thanks for joining the ${BRAND.productName} early access list.`,
           `Open the studio: ${studioUrl}`,
           "Early feedback is welcome as you test the current beta workflow.",
         ].join("\n\n"),

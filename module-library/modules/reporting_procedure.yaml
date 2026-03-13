@@ -1,0 +1,25 @@
+id: reporting_procedure
+title: Reporting procedure reminder
+description: Shared reporting-procedure content step used in conduct and compliance modules.
+version: 1.0.0
+category: compliance
+tags:
+  - compliance
+  - reporting
+  - procedure
+lastUpdated: 2026-03-12
+deprecated: false
+templateData:
+  reportingLabel: approved reporting channel
+nodes:
+  - id: reporting-procedure
+    type: content
+    layout: callout
+    title: Reporting procedure
+    body:
+      - "Record the facts, preserve relevant evidence, and route the concern through {{reportingLabel}}."
+      - "Structured reporting keeps the next step clear for {{companyName}}."
+    callout:
+      title: Approved channel
+      text: Route the concern through {{reportingChannel}} instead of informal side conversations.
+    next: follow-through

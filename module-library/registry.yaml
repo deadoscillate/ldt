@@ -1,0 +1,64 @@
+id: sapio-forge-shared-modules
+title: Sapio Forge Shared Module Library
+description: Shared source modules used across starter course projects and reusable course families.
+modules:
+  - id: escalation_policy
+    version: 1.0.0
+    path: modules/escalation_policy.yaml
+    title: Escalation policy intro
+    description: Shared escalation opening used by repeatable customer service workflows.
+    category: customer-service
+    tags:
+      - escalation
+      - customer-service
+      - intro
+    lastUpdated: 2026-03-12
+    deprecated: false
+  - id: harassment_intro
+    version: 1.0.0
+    path: modules/harassment_intro.yaml
+    title: Harassment reporting intro
+    description: Shared introduction for workplace conduct and harassment reporting courses.
+    category: workplace-conduct
+    tags:
+      - conduct
+      - harassment
+      - intro
+    lastUpdated: 2026-03-12
+    deprecated: false
+  - id: password_hygiene_reminder
+    version: 1.0.0
+    path: modules/password_hygiene_reminder.yaml
+    title: Password hygiene reminder
+    description: Shared reminder module used in phishing and security refresher flows.
+    category: security-awareness
+    tags:
+      - security
+      - phishing
+      - password
+    lastUpdated: 2026-03-12
+    deprecated: false
+  - id: phishing_intro
+    version: 1.0.0
+    path: modules/phishing_intro.yaml
+    title: Phishing scenario intro
+    description: Shared phishing scenario opening used by security awareness course families.
+    category: security-awareness
+    tags:
+      - security
+      - phishing
+      - intro
+    lastUpdated: 2026-03-12
+    deprecated: false
+  - id: reporting_procedure
+    version: 1.0.0
+    path: modules/reporting_procedure.yaml
+    title: Reporting procedure reminder
+    description: Shared reporting-procedure step for structured conduct and compliance courses.
+    category: compliance
+    tags:
+      - reporting
+      - compliance
+      - procedure
+    lastUpdated: 2026-03-12
+    deprecated: false

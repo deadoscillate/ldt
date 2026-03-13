@@ -1,0 +1,19 @@
+id: scored-quiz
+title: Scored quiz test examples
+description: Example score and pass/fail assertions for quiz logic.
+tests:
+  - id: full-score-pass
+    name: Full score path passes
+    actions:
+      - step: intro
+        advance: true
+      - step: quiz-1
+        select:
+          - answer-a
+          - answer-b
+    expect:
+      terminalStep: passed
+      score: 10
+      scoreAtLeast: 10
+      completionStatus: completed
+      successStatus: passed

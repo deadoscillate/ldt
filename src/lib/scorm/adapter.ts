@@ -132,7 +132,7 @@ function createDebugStore(isEnabled) {
       var consoleMethod = level === "error" ? "error" : "log";
 
       if (typeof console[consoleMethod] === "function") {
-        console[consoleMethod]("[LDT SCORM]", action, details || {});
+        console[consoleMethod]("[Sapio Forge SCORM]", action, details || {});
       }
     }
 

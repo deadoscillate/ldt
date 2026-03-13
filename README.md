@@ -1,4 +1,25 @@
-# LDT Engine Starter Repository
+# Sapio Forge
+
+Sapio Forge is a structured learning infrastructure platform for building and compiling training modules.
+
+Build learning systems like software.
+
+Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.
+
+Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, and reproducible builds for training content.
+
+## Key Idea
+
+- define courses as structured source
+- compile them into SCORM packages
+- deploy them to any LMS
+
+## Core Capabilities
+
+- structured course definitions
+- reusable module libraries
+- SCORM compilation
+- version-controlled training systems
 
 This repository is a GitHub-ready starter template for teams that want to manage interactive training modules as structured source files.
 
@@ -21,6 +42,8 @@ If you are evaluating the platform, start here. The repo already includes exampl
   - `security-awareness`
   - `workplace-conduct`
   - `customer-service-escalation`
+- `module-library/`
+  - reusable shared source modules plus `registry.yaml`
 - `themes/`
   - `default`
   - `corporate-blue`
@@ -41,6 +64,7 @@ If you are evaluating the platform, start here. The repo already includes exampl
   /security-awareness
   /workplace-conduct
   /customer-service
+/module-library
 /template-packs
 /themes
 /assets
@@ -81,13 +105,25 @@ starter-repo.yaml
    npm run build:project
    ```
 
-6. Build all starter variants for the default starter project.
+6. Run the declarative logic tests for the default starter project.
+
+   ```bash
+   npm run test:course
+   ```
+
+7. Run logic tests across all starter projects.
+
+   ```bash
+   npm run test:all-courses
+   ```
+
+8. Build all starter variants for the default starter project.
 
    ```bash
    npm run build:all
    ```
 
-7. Inspect the generated build outputs.
+9. Inspect the generated build outputs.
 
    ```text
    course-projects/security-awareness/build/
@@ -103,6 +139,7 @@ The platform follows a strict source-to-build model:
    - `project.yaml`
    - template YAML
    - variant YAML
+   - shared module source
    - theme pack files
 2. Validation
    - schema checks
@@ -155,12 +192,30 @@ Use Builder mode when you want the fastest first module.
 
 Use the starter repo and project mode when you want source-controlled team workflows.
 
+## Beta feedback loop
+
+The studio now includes a persistent `Send Feedback` button for external beta users.
+
+Each submission can include:
+
+- feedback type
+- short description
+- optional screenshot or captured studio view
+- current screen, project, template, variant, and theme context
+
+The platform also records lightweight telemetry for onboarding, preview, export, project import/export, and validation friction. See:
+
+- [docs/providing-beta-feedback.md](docs/providing-beta-feedback.md)
+- [docs/beta-telemetry.md](docs/beta-telemetry.md)
+
 ## Validate and build
 
 Default local automation commands:
 
 ```bash
 npm run validate:project
+npm run test:course
+npm run test:all-courses
 npm run compile:project
 npm run build:project
 npm run build:all
@@ -172,17 +227,50 @@ Direct CLI examples:
 
 ```bash
 tsx scripts/course-project-build.ts validate --project course-projects/security-awareness --all
+tsx scripts/course-project-build.ts test --project course-projects/security-awareness
+tsx scripts/course-project-build.ts test --project course-projects/security-awareness --target phishing-awareness/k12-district/default
+tsx scripts/course-project-build.ts test --all-projects
 tsx scripts/course-project-build.ts export --project course-projects/security-awareness --target phishing-awareness/k12-district/default
 tsx scripts/course-project-build.ts export-all --project course-projects/security-awareness --mode validation
+tsx scripts/course-project-build.ts affected --changed module-library/modules/phishing_intro.yaml --mode standard --run-tests
 ```
 
 These commands produce deterministic outputs under each project's `build/` directory, including:
 
 - SCORM zip artifacts
 - per-build manifests
+- dependency graphs
 - aggregate `build-manifest.json`
 - `ci-build-report.json`
 - `build-summary.md`
+- `tests/course-test-report.json`
+- `tests/course-test-summary.md`
+
+Shared modules now participate in the same source-controlled build flow:
+
+- shared module source lives under `module-library/`
+- templates include modules explicitly at compile time
+- dependency graphs record which projects and builds depend on which modules
+- `affected` rebuilds rebuild only the targets touched by a shared-source change
+
+## Testable learning logic
+
+Course projects can now define declarative learner-path tests under `tests/*.yaml`.
+
+These tests simulate the learner against the canonical compiled course model and assert:
+
+- terminal step
+- score
+- completion status
+- pass/fail status
+- variable values derived from the active variant and runtime state
+
+This makes branching and scoring regressions visible before new SCORM builds are exported or merged in CI.
+
+See:
+
+- [docs/testing-course-logic.md](docs/testing-course-logic.md)
+- [docs/why-testable-learning-logic-matters.md](docs/why-testable-learning-logic-matters.md)
 
 ## GitHub Actions
 
@@ -196,6 +284,20 @@ The starter repo ships with working GitHub Actions workflow templates:
   - builds all valid variant/theme combinations for a project
 
 They use the same local CLI commands and upload generated artifacts from `build/`.
+When `module-library/` changes on `main`, the single-project build workflow now switches to
+an affected rebuild run instead of rebuilding every default target.
+
+## Shared modules
+
+Shared modules make repeatable training libraries easier to maintain:
+
+- define reusable source modules in `module-library/modules/*.yaml`
+- register them in `module-library/registry.yaml`
+- include them in course source with pinned versions
+- expand them at compile time before preview or SCORM export
+- trace them through dependency graphs and affected rebuilds
+
+See [docs/shared-modules.md](docs/shared-modules.md) for authoring, versioning, and rebuild guidance.
 
 ## How to Customize
 
@@ -276,6 +378,8 @@ SCORM packages are build artifacts. They are not the editable project.
 - [docs/course-projects.md](docs/course-projects.md)
 - [docs/template-packs.md](docs/template-packs.md)
 - [docs/theme-packs.md](docs/theme-packs.md)
+- [docs/providing-beta-feedback.md](docs/providing-beta-feedback.md)
+- [docs/beta-telemetry.md](docs/beta-telemetry.md)
 - [docs/build-pipeline.md](docs/build-pipeline.md)
 - [docs/build-artifacts.md](docs/build-artifacts.md)
 - [docs/github-actions.md](docs/github-actions.md)

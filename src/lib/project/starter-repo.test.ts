@@ -35,7 +35,7 @@ test("starter repository manifest matches shipped projects, packs, and themes", 
   ]);
   const manifest = loadYaml(manifestYaml) as StarterRepoManifest;
 
-  assert.equal(manifest.id, "ldt-engine-starter");
+  assert.equal(manifest.id, "sapio-forge-starter");
   assert.deepEqual(
     manifest.courseProjects.map((entry) => entry.id).sort(),
     projects.map((project) => project.id).sort()
@@ -66,6 +66,7 @@ test("starter repository includes expected onboarding and structure files", asyn
     "CONTRIBUTING.md",
     "LICENSE",
     ".gitignore",
+    "module-library/README.md",
     "course-projects/README.md",
     "template-packs/README.md",
     "themes/README.md",
@@ -78,7 +79,11 @@ test("starter repository includes expected onboarding and structure files", asyn
     "docs/getting-started.md",
     "docs/first-module.md",
     "docs/build-artifacts.md",
+    "docs/shared-modules.md",
+    "docs/testing-course-logic.md",
+    "docs/why-testable-learning-logic-matters.md",
     "docs/repository-philosophy.md",
+    "docs/rebrand-checklist.md",
   ];
 
   await Promise.all(requiredPaths.map((relativePath) => assertPathExists(relativePath)));
@@ -94,9 +99,12 @@ test("starter repository docs and workflows reference real commands and paths", 
   assert.match(readme, /Quick Start/);
   assert.match(readme, /How to Customize/);
   assert.match(readme, /GitHub Actions/);
+  assert.match(readme, /test:course/);
+  assert.match(readme, /module-library/);
   assert.match(readme, /course-projects\/security-awareness\/build/);
 
   assert.match(gettingStarted, /npm run validate:project/);
+  assert.match(gettingStarted, /npm run test:course/);
   assert.match(gettingStarted, /npm run build:project/);
   assert.match(gettingStarted, /npm run build:all/);
   assert.match(gettingStarted, /course-projects\/workplace-conduct/);

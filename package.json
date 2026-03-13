@@ -1,5 +1,5 @@
 {
-  "name": "ldt-mvp",
+  "name": "sapio-forge",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -12,12 +12,15 @@
     "build:all": "tsx scripts/course-project-build.ts export-all --project course-projects/security-awareness --mode standard",
     "manifest:project": "tsx scripts/course-project-build.ts manifest --project course-projects/security-awareness",
     "clean:build": "tsx scripts/course-project-build.ts clean --project course-projects/security-awareness",
-    "test": "tsx --test src/lib/course/template.test.ts src/lib/course/builder.test.ts src/lib/course/source-files.test.ts src/lib/course/inspector.test.ts src/lib/course/pipeline.test.ts src/lib/course/template-pack.test.ts src/lib/export/scorm-export.test.ts src/lib/export/template-family-export.test.ts src/lib/project/project.test.ts src/lib/project/automation.test.ts src/lib/project/cli.test.ts src/lib/project/github-actions.test.ts src/lib/project/starter-repo.test.ts src/lib/studio/onboarding.test.ts src/lib/theme/theme-pack.test.ts src/lib/validation/load.test.ts",
+    "test:course": "tsx scripts/course-project-build.ts test --project course-projects/security-awareness",
+    "test:all-courses": "tsx scripts/course-project-build.ts test --all-projects",
+    "test": "tsx --test src/lib/app/brand.test.ts src/lib/course/template.test.ts src/lib/course/builder.test.ts src/lib/course/source-files.test.ts src/lib/course/inspector.test.ts src/lib/course/pipeline.test.ts src/lib/course/template-pack.test.ts src/lib/course-tests/schema.test.ts src/lib/events/payload.test.ts src/lib/export/scorm-export.test.ts src/lib/export/template-family-export.test.ts src/lib/intake/feedback.test.ts src/lib/module-library/module-library.test.ts src/lib/project/project.test.ts src/lib/project/automation.test.ts src/lib/project/affected.test.ts src/lib/project/cli.test.ts src/lib/project/github-actions.test.ts src/lib/project/starter-repo.test.ts src/lib/project/testing.test.ts src/lib/studio/onboarding.test.ts src/lib/studio/screenshot.test.ts src/lib/theme/theme-pack.test.ts src/lib/validation/load.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.1",
+    "html-to-image": "^1.11.13",
     "js-yaml": "4.1.1",
     "jszip": "3.10.1",
     "next": "16.1.6",

@@ -4,9 +4,11 @@ on:
   pull_request:
     paths:
       - "course-projects/**"
+      - "module-library/**"
       - "scripts/course-project-build.ts"
       - "src/lib/project/**"
       - "src/lib/course/**"
+      - "src/lib/module-library/**"
       - "src/lib/export/**"
       - "src/lib/theme/**"
       - "package.json"
@@ -15,9 +17,11 @@ on:
   push:
     paths:
       - "course-projects/**"
+      - "module-library/**"
       - "scripts/course-project-build.ts"
       - "src/lib/project/**"
       - "src/lib/course/**"
+      - "src/lib/module-library/**"
       - "src/lib/export/**"
       - "src/lib/theme/**"
       - "package.json"
@@ -57,6 +61,8 @@ jobs:
             npx tsx scripts/course-project-build.ts validate \
               --project "$project_dir" \
               --all
+            npx tsx scripts/course-project-build.ts test \
+              --project "$project_dir"
             echo "::endgroup::"
 
             if [[ -f "${project_dir}/build/build-summary.md" ]]; then
@@ -79,6 +85,9 @@ jobs:
           name: course-project-validation-reports
           path: |
             course-projects/*/build/build-manifest.json
+            course-projects/*/build/dependency-graph.json
             course-projects/*/build/build-summary.md
             course-projects/*/build/ci-build-report.json
+            course-projects/*/build/tests/course-test-report.json
+            course-projects/*/build/tests/course-test-summary.md
           if-no-files-found: error

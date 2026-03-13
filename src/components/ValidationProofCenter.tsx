@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BRAND } from "@/lib/app/brand";
 import { ProofSummaryCard } from "@/components/ProofSummaryCard";
 import { ValidationStatusBadge } from "@/components/ValidationStatusBadge";
 import {
@@ -37,7 +38,7 @@ export function ValidationProofCenter({
     <main className="landing-shell proof-center-shell">
       <header className="landing-nav">
         <Link className="brand-link" href="/">
-          LDT Engine
+          {BRAND.productName}
         </Link>
         <nav className="landing-nav-links" aria-label="Primary">
           <Link href="/">Home</Link>
@@ -51,7 +52,7 @@ export function ValidationProofCenter({
 
       <section className="landing-hero proof-center-hero">
         <div className="hero-copy-block landing-hero-copy">
-          <p className="eyebrow">Validation</p>
+          <p className="eyebrow">{BRAND.productName} Validation</p>
           <h1>Proof center for SCORM interoperability and LMS validation status</h1>
           <p className="hero-subheadline">{catalog.summary}</p>
           <p className="hero-copy">{catalog.philosophy}</p>

@@ -10,19 +10,6 @@ templateData:
   reportingChannel: security@northwindhealth.example
   policyUrl: https://example.com/security/phishing
 blocks:
-  intro_block:
-    - id: intro
-      type: content
-      layout: image-right
-      title: "{{courseTitle}}"
-      body:
-        - "A suspicious message appears to come from leadership at {{companyName}}."
-        - "Use the structured flow to inspect, question, and report it."
-      media:
-        type: image
-        src: https://placehold.co/720x420/png?text=Phishing+Inbox
-        alt: Suspicious inbox example
-      next: inspect-email
   result_block:
     - id: passed
       type: result
@@ -41,7 +28,9 @@ blocks:
         - "Review the reporting path in {{policyUrl}} and try again."
         - "Final score: {{score}} / {{maxScore}}"
 nodes:
-  - include: intro_block
+  - include:
+      module: phishing_intro
+      version: 1.0.0
   - id: inspect-email
     type: branch
     layout: callout
@@ -68,7 +57,7 @@ nodes:
     multiple: true
     correctScore: 10
     incorrectScore: 0
-    passNext: report
+    passNext: password-hygiene-reminder
     failNext: failed
     options:
       - id: urgent
@@ -80,6 +69,9 @@ nodes:
       - id: logo
         label: The email includes the company logo
         correct: false
+  - include:
+      module: password_hygiene_reminder
+      version: 1.0.0
   - id: report
     type: choice
     layout: quote

@@ -2,7 +2,7 @@ id: security-awareness
 title: Security Awareness Project
 description: Multi-variant phishing awareness project with reusable source, variable sets, and branded themes.
 version: 0.1.0
-author: LDT Engine
+author: Sapio Forge
 createdAt: 2026-03-12
 updatedAt: 2026-03-12
 defaultTemplateId: phishing-awareness
@@ -14,6 +14,7 @@ readme: README.md
 gitignore: .gitignore
 buildDirectory: build
 assetsDirectory: assets
+testsDirectory: tests
 templates:
   - id: phishing-awareness
     title: Phishing awareness

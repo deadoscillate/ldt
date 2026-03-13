@@ -1,9 +1,12 @@
 import type { ScormExportMode } from "@/lib/export/scorm-export";
+import { BRAND } from "@/lib/app/brand";
 import type { CourseProjectBuildCommand } from "@/lib/project/automation";
 
+export type CourseProjectCliCommand = CourseProjectBuildCommand | "affected" | "test";
+
 export interface ParsedCourseProjectCliArgs {
-  command: CourseProjectBuildCommand;
-  projectPath: string;
+  command: CourseProjectCliCommand;
+  projectPath: string | null;
   outputPath: string | null;
   jsonReportPath: string | null;
   exportMode: ScormExportMode;
@@ -14,15 +17,21 @@ export interface ParsedCourseProjectCliArgs {
     themeId?: string;
   } | null;
   all: boolean;
+  allProjects: boolean;
+  runTests: boolean;
+  changedInputs: string[];
+  moduleIds: string[];
 }
 
-const VALID_COMMANDS: readonly CourseProjectBuildCommand[] = [
+const VALID_COMMANDS: readonly CourseProjectCliCommand[] = [
   "validate",
   "compile",
   "export",
   "export-all",
   "manifest",
   "clean",
+  "affected",
+  "test",
 ] as const;
 
 function parseTargetSelection(value: string): {
@@ -59,8 +68,10 @@ function readOptionValue(args: string[], index: number, flag: string): string {
 
 export function buildCourseProjectCliUsage(): string {
   return [
+    `${BRAND.buildName}`,
+    "",
     "Usage:",
-    "  tsx scripts/course-project-build.ts <command> --project <path> [options]",
+    "  tsx scripts/course-project-build.ts <command> [options]",
     "",
     "Commands:",
     "  validate     Validate project structure and source compilation",
@@ -69,6 +80,8 @@ export function buildCourseProjectCliUsage(): string {
     "  export-all   Generate all valid variant/theme SCORM builds",
     "  manifest     Generate build manifest data without writing a SCORM zip",
     "  clean        Remove generated build outputs",
+    "  affected     Rebuild only targets affected by changed shared modules or source files",
+    "  test         Run declarative learner-path logic tests for a course project",
     "",
     "Options:",
     "  --project <path>       Project directory to load",
@@ -79,7 +92,12 @@ export function buildCourseProjectCliUsage(): string {
     "  --template <id>        Template id for a single-target build",
     "  --variant <id>         Variant id for a single-target build",
     "  --theme <id>           Theme id for a single-target build",
+    "  --module <id>          Shared module id for affected rebuild detection",
+    "  --changed <path>       Changed source path for affected rebuild detection",
+    "  --changed-source <path> Alias for --changed",
+    "  --run-tests            When rebuilding affected targets, also run logic tests for the impacted targets",
     "  --all                  Validate or build all targets",
+    "  --all-projects         Run the command across all local course projects (supported for test)",
     "  --fail-on-warning      Exit non-zero when warnings are present",
   ].join("\n");
 }
@@ -89,7 +107,7 @@ export function parseCourseProjectCliArgs(
 ): ParsedCourseProjectCliArgs {
   const [rawCommand, ...args] = argv;
 
-  if (!rawCommand || !VALID_COMMANDS.includes(rawCommand as CourseProjectBuildCommand)) {
+  if (!rawCommand || !VALID_COMMANDS.includes(rawCommand as CourseProjectCliCommand)) {
     throw new Error(
       `Unknown or missing command. Expected one of: ${VALID_COMMANDS.join(", ")}.`
     );
@@ -101,6 +119,10 @@ export function parseCourseProjectCliArgs(
   let exportMode: ScormExportMode = "standard";
   let failOnWarning = false;
   let all = false;
+  let allProjects = false;
+  let runTests = false;
+  const changedInputs: string[] = [];
+  const moduleIds: string[] = [];
   let targetSelection:
     | {
         templateId: string;
@@ -155,8 +177,23 @@ export function parseCourseProjectCliArgs(
         themeId = readOptionValue(args, index, arg);
         index += 1;
         break;
+      case "--module":
+        moduleIds.push(readOptionValue(args, index, arg));
+        index += 1;
+        break;
+      case "--changed":
+      case "--changed-source":
+        changedInputs.push(readOptionValue(args, index, arg));
+        index += 1;
+        break;
       case "--all":
         all = true;
+        break;
+      case "--all-projects":
+        allProjects = true;
+        break;
+      case "--run-tests":
+        runTests = true;
         break;
       case "--fail-on-warning":
         failOnWarning = true;
@@ -164,10 +201,6 @@ export function parseCourseProjectCliArgs(
       default:
         throw new Error(`Unknown argument "${arg}".`);
     }
-  }
-
-  if (!projectPath) {
-    throw new Error("Missing required --project <path> argument.");
   }
 
   if (targetSelection) {
@@ -194,8 +227,32 @@ export function parseCourseProjectCliArgs(
     themeId = targetSelection.themeId;
   }
 
+  if (rawCommand !== "affected" && rawCommand !== "test" && !projectPath) {
+    throw new Error("Missing required --project <path> argument.");
+  }
+
+  if (rawCommand === "test" && !projectPath && !allProjects) {
+    throw new Error(
+      'Logic test runs require "--project <path>" or "--all-projects".'
+    );
+  }
+
+  if (rawCommand !== "affected" && runTests) {
+    throw new Error('"--run-tests" is only valid with the "affected" command.');
+  }
+
+  if (rawCommand !== "test" && allProjects) {
+    throw new Error('"--all-projects" is only valid with the "test" command.');
+  }
+
+  if (rawCommand === "affected" && moduleIds.length === 0 && changedInputs.length === 0) {
+    throw new Error(
+      'Affected rebuilds require at least one "--module <id>" or "--changed <path>" value.'
+    );
+  }
+
   return {
-    command: rawCommand as CourseProjectBuildCommand,
+    command: rawCommand as CourseProjectCliCommand,
     projectPath,
     outputPath,
     jsonReportPath,
@@ -210,5 +267,9 @@ export function parseCourseProjectCliArgs(
           }
         : null,
     all,
+    allProjects,
+    runTests,
+    changedInputs,
+    moduleIds,
   };
 }

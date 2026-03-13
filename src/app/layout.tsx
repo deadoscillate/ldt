@@ -1,22 +1,26 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
+import { BRAND, buildBrandTitle } from "@/lib/app/brand";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ldt-opccbpr6c-deadoscillates-projects.vercel.app"),
-  applicationName: "LDT Engine",
+  metadataBase: new URL(BRAND.siteUrl),
+  applicationName: BRAND.productName,
   title: {
-    default: "LDT Engine",
-    template: "%s | LDT Engine",
+    default: BRAND.metaTitle,
+    template: `%s | ${BRAND.productName}`,
   },
-  description:
-    "LDT Engine is a web-native SCORM course engine for YAML authoring, browser preview, reusable templates, and SCORM 1.2 export.",
+  description: BRAND.metaDescription,
   openGraph: {
-    title: "LDT Engine",
-    description:
-      "Write branching training modules in YAML, preview them in the browser, and export SCORM 1.2 packages.",
-    siteName: "LDT Engine",
+    title: buildBrandTitle(BRAND.tagline),
+    description: BRAND.metaDescription,
+    siteName: BRAND.productName,
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: buildBrandTitle(BRAND.tagline),
+    description: BRAND.metaDescription,
   },
   icons: {
     icon: "/icon.svg",

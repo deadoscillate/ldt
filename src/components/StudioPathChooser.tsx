@@ -1,5 +1,6 @@
 "use client";
 
+import { BRAND } from "@/lib/app/brand";
 import type { StudioPathDefinition, StudioStartingPath } from "@/lib/studio/onboarding";
 
 interface StudioPathChooserProps {
@@ -29,10 +30,11 @@ export function StudioPathChooser({
       />
       <div className="studio-path-chooser">
         <p className="eyebrow">First-run onboarding</p>
-        <h2>Choose your starting path</h2>
+        <h2>Welcome to {BRAND.studioName}</h2>
         <p className="panel-copy">
-          Pick the workflow that matches how you want to start. You can switch
-          between Builder, Source, and Project views at any time.
+          Pick the workflow that matches how you want to start. Source view defines
+          structured training modules directly. Builder view helps you work through
+          that same source with guided fields and faster preview.
         </p>
         <div className="studio-path-grid">
           {paths.map((path) => (

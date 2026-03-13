@@ -1,0 +1,28 @@
+id: shared-module-course
+title: Shared module test examples
+description: Example test shape for courses that expand shared modules at compile time.
+target:
+  templateId: phishing-awareness
+  variantId: k12-district
+  themeId: default
+tests:
+  - id: shared-module-happy-path
+    name: Shared intro and reminder modules compile into the pass path
+    actions:
+      - step: intro
+        advance: true
+      - step: inspect-email
+        select: inspect
+      - step: red-flags
+        select:
+          - urgent
+          - sender
+      - step: password-hygiene-reminder
+        advance: true
+      - step: report
+        select: approved
+    expect:
+      terminalStep: passed
+      score: 10
+      completionStatus: completed
+      successStatus: passed

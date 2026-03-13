@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BRAND } from "@/lib/app/brand";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { DemoLaunchTracker } from "@/components/DemoLaunchTracker";
 import { LandingViewTracker } from "@/components/LandingViewTracker";
@@ -27,45 +28,65 @@ interface LandingPageProps {
 
 const featureCards = [
   {
-    title: "Structured course authoring",
-    description: "Define branching scenarios using simple YAML.",
+    title: "Structured course definitions",
+    description: "Define courses as readable source instead of fragile exports.",
   },
   {
-    title: "Instant browser preview",
-    description: "Test training modules directly in the browser.",
+    title: "Reusable module libraries",
+    description: "Reuse scenarios, lessons, and checks across course families.",
   },
   {
-    title: "Standards-compliant SCORM export",
-    description: "Generate SCORM 1.2 packages compatible with LMS platforms.",
+    title: "SCORM compilation",
+    description: "Compile validated source into deployable SCORM 1.2 packages.",
   },
   {
-    title: "Template library",
+    title: "Version-controlled training systems",
     description:
-      "Start with common training scenarios like phishing awareness and harassment reporting.",
+      "Keep source, tests, themes, and builds organized like software projects.",
   },
 ];
+
+const conceptCards = [
+  {
+    title: "Structured Authoring",
+    description: "Define training content as structured source instead of slide decks.",
+  },
+  {
+    title: "Reusable Modules",
+    description: "Build libraries of knowledge checks, scenarios, and lessons.",
+  },
+  {
+    title: "Reproducible Builds",
+    description: "Compile consistent SCORM packages every time.",
+  },
+] as const;
 
 const audienceCards = [
   "Instructional designers building branching scenario training.",
   "Training consultants producing repeatable SCORM content.",
-  "Technical L&D teams who want structured authoring instead of manual slide assembly.",
+  "Technical L&D teams who want structured authoring instead of manual branching assembly.",
 ];
 
 const comparisonRows = [
   {
     label: "Authoring model",
-    thisTool: "YAML-based structured authoring",
-    traditional: "Manual slide duplication and trigger setup",
+    thisTool: "Structured source",
+    traditional: "Slide-based authoring",
   },
   {
-    label: "Preview loop",
-    thisTool: "Instant browser preview",
-    traditional: "Trigger-heavy branching setup before each export",
+    label: "Reuse",
+    thisTool: "Reusable modules",
+    traditional: "Manual duplication",
   },
   {
-    label: "Repeatability",
-    thisTool: "Template-driven branching scenarios",
-    traditional: "Rebuild and re-export similar modules repeatedly",
+    label: "Builds",
+    thisTool: "Reproducible builds",
+    traditional: "Fragile exports",
+  },
+  {
+    label: "Maintenance",
+    thisTool: "Version-controlled training systems",
+    traditional: "Difficult to maintain at scale",
   },
 ];
 
@@ -109,8 +130,8 @@ export function LandingPage({
     <main className="landing-shell">
       <LandingViewTracker />
       <header className="landing-nav">
-        <Link className="brand-link" href="/">
-          LDT Engine
+          <Link className="brand-link" href="/">
+          {BRAND.productName}
         </Link>
         <nav className="landing-nav-links" aria-label="Primary">
           <a href="#product">Product</a>
@@ -135,15 +156,9 @@ export function LandingPage({
 
       <section className="landing-hero">
         <div className="hero-copy-block landing-hero-copy">
-          <p className="eyebrow">Structured YAML to SCORM</p>
-          <h1>
-            Write branching training modules in YAML and export them as SCORM
-            packages.
-          </h1>
-          <p className="hero-subheadline">
-            Build branching training scenarios in minutes and export
-            standards-compliant SCORM for any LMS.
-          </p>
+          <p className="eyebrow">{BRAND.productName}</p>
+          <h1>{BRAND.tagline}</h1>
+          <p className="hero-subheadline">{BRAND.heroSubheadline}</p>
           <div className="hero-actions">
             <TrackedLink
               className="primary-button button-link"
@@ -158,8 +173,7 @@ export function LandingPage({
             </a>
           </div>
           <p className="landing-hero-note">
-            Try the studio now, or join the list for beta updates and broader LMS
-            validation results.
+            {BRAND.positioningStatement}
           </p>
           <WorkflowSteps steps={["YAML", "Preview", "SCORM", "LMS"]} />
         </div>
@@ -203,6 +217,23 @@ export function LandingPage({
       </section>
 
       <section className="landing-section">
+        <div className="section-heading">
+          <p className="eyebrow">Core Concepts</p>
+          <h2>What Sapio Forge is built to do</h2>
+          <p className="panel-copy">{BRAND.longDescription}</p>
+        </div>
+
+        <div className="feature-grid">
+          {conceptCards.map((card) => (
+            <article className="panel feature-card" key={card.title}>
+              <h3>{card.title}</h3>
+              <p className="panel-copy">{card.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="landing-section">
         <ProofSummaryCard catalog={validationCatalog} />
       </section>
 
@@ -228,30 +259,26 @@ export function LandingPage({
       <section className="landing-section" id="product">
         <div className="section-heading">
           <p className="eyebrow">Product</p>
-          <h2>Built for teams that need a faster path to branching SCORM content</h2>
-          <p className="panel-copy">
-            Instructional designers often build branching scenarios manually using
-            complex tools. This tool lets users define training flows in
-            structured YAML and export SCORM packages instantly.
-          </p>
+          <h2>Sapio Forge is structured authoring for modern training systems</h2>
+          <p className="panel-copy">{BRAND.positioningStatement}</p>
         </div>
 
         <div className="problem-solution-grid">
           <article className="panel landing-copy-card">
             <p className="eyebrow">Problem</p>
-            <h3>Branching training is still too manual</h3>
+            <h3>Training logic is still too manual in traditional builders</h3>
             <p className="panel-copy">
-              Instructional designers often build branching scenarios manually
-              using complex tools and repetitive export workflows.
+              Many teams still manage branching logic through duplicated screens,
+              repeated manual edits, and exports that are hard to review or rebuild.
             </p>
           </article>
           <article className="panel landing-copy-card">
             <p className="eyebrow">Solution</p>
-            <h3>Author once in YAML, then preview and export</h3>
+            <h3>Define source once, then compile preview and SCORM output</h3>
             <p className="panel-copy">
-              Define the flow in structured YAML, validate it in the browser, and
-              export a SCORM 1.2 package without rebuilding the same scenario in
-              multiple tools.
+              Sapio Forge keeps course source readable, reusable, and versionable,
+              then compiles that same definition into browser preview and SCORM
+              build artifacts.
             </p>
           </article>
         </div>
@@ -259,13 +286,12 @@ export function LandingPage({
 
       <section className="landing-section" id="structured">
         <div className="section-heading">
-          <p className="eyebrow">Structured Authoring</p>
-          <h2>Readable source files, compiled preview, repeatable SCORM output</h2>
+          <p className="eyebrow">Course-as-Code</p>
+          <h2>Training modules defined as source, then compiled into output</h2>
           <p className="panel-copy">
-            LDT Engine is built around a source-and-build workflow. Branching logic,
-            templates, variable sets, and reusable theme packs stay in source files.
-            Preview and SCORM export are compiled outputs, not separate authoring
-            systems.
+            Instead of building courses as slide decks, Sapio Forge treats training
+            modules as structured source. This allows teams to version, reuse, test,
+            and compile learning systems the same way developers build software.
           </p>
         </div>
 
@@ -413,8 +439,8 @@ export function LandingPage({
 
       <section className="landing-section">
         <div className="section-heading">
-          <p className="eyebrow">Features</p>
-          <h2>What early testers can do today</h2>
+          <p className="eyebrow">Core Capabilities</p>
+          <h2>What the platform already supports</h2>
         </div>
 
         <div className="feature-grid">
@@ -429,11 +455,12 @@ export function LandingPage({
 
       <section className="landing-section comparison-section">
         <div className="section-heading">
-          <p className="eyebrow">Workflow Difference</p>
-          <h2>Why teams may prefer this over traditional slide-based branching tools</h2>
+          <p className="eyebrow">Why Sapio Forge Exists</p>
+          <h2>Learning infrastructure instead of fragile course assembly</h2>
           <p className="panel-copy">
-            This is a workflow difference, not a claim that one tool replaces every other
-            authoring stack.
+            Sapio Forge is not a Storyline clone or a presentation builder. It is for
+            teams that want training systems to be maintainable, reusable, and
+            buildable from source.
           </p>
         </div>
 
@@ -443,7 +470,7 @@ export function LandingPage({
               Area
             </span>
             <span className="comparison-cell comparison-cell-strong" role="columnheader">
-              This tool
+              {BRAND.productName}
             </span>
             <span className="comparison-cell" role="columnheader">
               Traditional tools
@@ -521,14 +548,11 @@ export function LandingPage({
 
       <footer className="landing-footer">
         <div className="footer-meta">
-          <strong>LDT Engine</strong>
-          <p className="panel-copy">
-            Structured YAML authoring for branching training modules and SCORM
-            export.
-          </p>
+          <strong>{BRAND.productName}</strong>
+          <p className="panel-copy">{BRAND.longDescription}</p>
         </div>
         <div className="footer-links">
-          <a href="mailto:contact@ldtengine.app">contact@ldtengine.app</a>
+          <a href={`mailto:${BRAND.contactEmail}`}>{BRAND.contactEmail}</a>
           <Link href="/validation">Validation</Link>
           <TrackedLink
             eventMetadata={{ placement: "footer" }}
@@ -537,7 +561,7 @@ export function LandingPage({
           >
             Open Studio
           </TrackedLink>
-          <a href="https://github.com/deadoscillate/ldt">GitHub</a>
+          <a href={BRAND.githubUrl}>GitHub</a>
         </div>
       </footer>
     </main>

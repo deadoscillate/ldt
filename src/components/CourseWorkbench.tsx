@@ -1,5 +1,6 @@
 "use client";
 
+import yaml from "js-yaml";
 import Link from "next/link";
 import {
   useEffect,
@@ -15,11 +16,13 @@ import { HelpHint } from "@/components/HelpHint";
 import { LmsValidationPanel } from "@/components/LmsValidationPanel";
 import { LmsValidationWorkspace } from "@/components/LmsValidationWorkspace";
 import { RuntimePlayer } from "@/components/RuntimePlayer";
+import { StudioFeedbackPanel } from "@/components/StudioFeedbackPanel";
 import { StudioPathChooser } from "@/components/StudioPathChooser";
 import { TemplateDataEditor } from "@/components/TemplateDataEditor";
 import { ValidationIssueList } from "@/components/ValidationIssueList";
 import { WorkflowSteps } from "@/components/WorkflowSteps";
 import { YamlEditor } from "@/components/YamlEditor";
+import { BRAND } from "@/lib/app/brand";
 import {
   builderCourseToYaml,
   compiledCourseToBuilderCourse,
@@ -31,7 +34,10 @@ import {
   runCoursePipeline,
   type CoursePipelineSnapshot,
 } from "@/lib/course/pipeline";
-import { trackClientEvent } from "@/lib/events/client";
+import {
+  getClientTelemetryIdentity,
+  trackClientEvent,
+} from "@/lib/events/client";
 import {
   inspectTemplateFieldsWithOverrides,
 } from "@/lib/course/parse";
@@ -56,11 +62,16 @@ import {
   buildCourseProjectBuildContext,
   exportCourseProjectBuildMatrix,
 } from "@/lib/project/build";
+import type { ModuleUsageIndex } from "@/lib/project/affected";
 import {
   exportCourseProjectSourceArchive,
   importCourseProjectSourceArchive,
 } from "@/lib/project/source-package";
 import type { CourseProject } from "@/lib/project/schema";
+import {
+  runCourseProjectLogicTests,
+  type CourseProjectLogicTestRun,
+} from "@/lib/project/testing";
 import {
   buildScormExportPreview,
   exportCourseAsScormZip,
@@ -78,6 +89,7 @@ import {
   buildThemeTokenSummary,
 } from "@/lib/theme/apply";
 import type { ThemePack } from "@/lib/theme/schema";
+import type { SharedModuleLibrary } from "@/lib/module-library/schema";
 import {
   buildEditingSurfaceSummary,
   buildFirstExportFeedback,
@@ -94,8 +106,13 @@ import {
   STARTER_EXAMPLES,
   STUDIO_STARTING_PATHS,
   type StudioOnboardingState,
+  type StudioAuthoringSurface,
   type StudioStartingPath,
 } from "@/lib/studio/onboarding";
+import {
+  buildBrowserInfo,
+  buildStudioFeedbackContext,
+} from "@/lib/studio/feedback";
 import type { LmsValidationCatalog } from "@/lib/validation/schema";
 
 interface CourseWorkbenchProps {
@@ -103,6 +120,8 @@ interface CourseWorkbenchProps {
   templatePacks: TemplatePack[];
   themePacks: ThemePack[];
   validationCatalog: LmsValidationCatalog;
+  moduleLibrary: SharedModuleLibrary | null;
+  moduleUsageIndex: ModuleUsageIndex;
 }
 
 interface FeedbackState {
@@ -219,11 +238,13 @@ function inspectTemplateDraft(
 function buildPipelineSnapshot(
   source: string,
   templateData: Record<string, TemplateScalarValue>,
-  variableSchema: TemplateVariableSchema | null = null
+  variableSchema: TemplateVariableSchema | null = null,
+  moduleLibrary: SharedModuleLibrary | null = null
 ): CoursePipelineSnapshot {
   return runCoursePipeline(source, {
     templateDataOverrides: templateData,
     variableSchema,
+    moduleLibrary,
   });
 }
 
@@ -249,6 +270,38 @@ function downloadTextFile(fileName: string, contents: string): void {
   window.URL.revokeObjectURL(objectUrl);
 }
 
+function insertSharedModuleIntoYaml(
+  source: string,
+  moduleId: string,
+  version: string
+): string {
+  const parsed = yaml.load(source);
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("Source definition must be valid YAML before inserting a shared module.");
+  }
+
+  const document = parsed as {
+    nodes?: unknown[];
+  };
+
+  if (!Array.isArray(document.nodes)) {
+    throw new Error('Source definition must include a top-level "nodes" array.');
+  }
+
+  document.nodes.push({
+    include: {
+      module: moduleId,
+      version,
+    },
+  });
+
+  return yaml.dump(document, {
+    lineWidth: 100,
+    noRefs: true,
+  });
+}
+
 function formatBuildTimestamp(value: string): string {
   const date = new Date(value);
 
@@ -267,6 +320,8 @@ export function CourseWorkbench({
   templatePacks,
   themePacks,
   validationCatalog,
+  moduleLibrary,
+  moduleUsageIndex,
 }: CourseWorkbenchProps) {
   const initialProjects = courseProjects;
   const initialProjectPacks =
@@ -294,7 +349,8 @@ export function CourseWorkbench({
   const defaultPipelineSnapshot = buildPipelineSnapshot(
     defaultTemplate.yaml,
     defaultTemplateData,
-    defaultTemplate.variableSchema
+    defaultTemplate.variableSchema,
+    moduleLibrary
   );
   const defaultTemplateDraft = inspectTemplateDraft(
     defaultTemplate.yaml,
@@ -314,9 +370,11 @@ export function CourseWorkbench({
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const authoringGuideRef = useRef<HTMLDetailsElement>(null);
   const firstModuleGuideRef = useRef<HTMLDetailsElement>(null);
+  const studioRootRef = useRef<HTMLElement>(null);
   const exportObjectUrlRef = useRef<string | null>(null);
   const batchExportObjectUrlRef = useRef<string | null>(null);
   const buildHistoryUrlsRef = useRef<string[]>([]);
+  const builderEditTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [availableProjects, setAvailableProjects] = useState<CourseProject[]>(
     initialProjects
@@ -351,6 +409,9 @@ export function CourseWorkbench({
       : `Template pack variant: ${defaultVariant.title}`
   );
   const [authoringMode, setAuthoringMode] = useState<AuthoringMode>("builder");
+  const [activeStudioSurface, setActiveStudioSurface] = useState<
+    StudioAuthoringSurface | "studio"
+  >("builder");
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [onboardingState, setOnboardingState] = useState<StudioOnboardingState>(
     readStudioOnboardingState(null)
@@ -370,6 +431,15 @@ export function CourseWorkbench({
   const [isBatchExporting, setIsBatchExporting] = useState(false);
   const [buildHistory, setBuildHistory] = useState<BuildHistoryEntry[]>([]);
   const [exportMode, setExportMode] = useState<ScormExportMode>("standard");
+  const [logicTestRun, setLogicTestRun] = useState<CourseProjectLogicTestRun | null>(
+    null
+  );
+  const [isRunningLogicTests, setIsRunningLogicTests] = useState(false);
+  const [requirePassingTestsBeforeExport, setRequirePassingTestsBeforeExport] =
+    useState(false);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(
+    moduleLibrary?.modules[0]?.id ?? null
+  );
   const [selectedValidationTargetId, setSelectedValidationTargetId] = useState(
     validationCatalog.platforms.find((platform) => platform.id !== "scorm-cloud")?.id ??
       validationCatalog.platforms[0]?.id ??
@@ -388,6 +458,7 @@ export function CourseWorkbench({
     availableProjects.length > 0
       ? availableProjects.map(courseProjectToTemplatePack)
       : templatePacks;
+  const availableSharedModules = moduleLibrary?.modules ?? [];
   const selectedProject =
     availableProjects.find((project) => project.id === activeProjectId) ?? null;
   const selectedPack =
@@ -411,6 +482,10 @@ export function CourseWorkbench({
     validationCatalog.platforms.find(
       (platform) => platform.id === selectedValidationTargetId
     ) ?? validationCatalog.platforms[0];
+  const selectedSharedModule =
+    availableSharedModules.find((module) => module.id === selectedModuleId) ??
+    availableSharedModules[0] ??
+    null;
   const selectedStartingPath = onboardingState.selectedPath
     ? getStudioStartingPath(onboardingState.selectedPath)
     : null;
@@ -418,6 +493,34 @@ export function CourseWorkbench({
     draftYaml !== compiledSnapshot.source ||
     serializeTemplateData(templateDataValues) !== compiledSnapshot.templateDataFingerprint;
   const activeSnapshot = hasUncompiledChanges ? draftSnapshot : compiledSnapshot;
+  const activeModuleDependencies =
+    activeSnapshot.dependencyGraph?.moduleDependencies ?? [];
+  const selectedModuleUsageTargets =
+    moduleUsageIndex[selectedSharedModule?.id ?? ""] ?? [];
+  const selectedProjectAffectedTargets = selectedProject
+    ? selectedModuleUsageTargets.filter(
+        (target) => target.projectId === selectedProject.id
+      )
+    : [];
+  const activeProjectBuildSelection =
+    selectedProject && selectedTemplate && selectedThemePack && activeVariantId
+      ? {
+          templateId: selectedTemplate.id,
+          variantId: activeVariantId,
+          themeId: selectedThemePack.id,
+        }
+      : null;
+  const activeProjectLogicTests =
+    selectedProject?.logicTestSuites.flatMap((suite) =>
+      suite.tests.map((testCase) => ({
+        suiteId: suite.id,
+        suiteTitle: suite.title,
+        suiteSourcePath: suite.sourcePath,
+        testId: testCase.id,
+        name: testCase.name,
+        description: testCase.description,
+      }))
+    ) ?? [];
   const activePreviewCourse =
     activeSnapshot.previewModel && selectedThemePack
       ? applyThemePackToCourse(activeSnapshot.previewModel, selectedThemePack, {
@@ -440,6 +543,7 @@ export function CourseWorkbench({
               valuesYaml: serializeTemplateDataYaml(templateDataValues),
             },
           theme: selectedThemePack,
+          snapshot: compiledSnapshot,
         })
       : null;
   const displayedValidationErrors = activeSnapshot.errors;
@@ -497,9 +601,30 @@ export function CourseWorkbench({
     surface: "export",
     authoringMode,
   });
+  const telemetryIdentity = getClientTelemetryIdentity();
+  const studioFeedbackContext = buildStudioFeedbackContext({
+    currentScreen: activeStudioSurface,
+    pagePath: typeof window !== "undefined" ? window.location.pathname : "/studio",
+    projectId: selectedProject?.id ?? null,
+    projectTitle: selectedProject?.title ?? null,
+    templateId: selectedTemplate?.id ?? null,
+    templateTitle: selectedTemplate?.title ?? null,
+    variantId: activeVariantId ?? variantDraftId,
+    variantTitle: selectedVariant?.title ?? variantDraftTitle,
+    themeId: selectedThemePack?.id ?? null,
+    themeName: selectedThemePack?.name ?? null,
+    clientId: telemetryIdentity?.clientId ?? null,
+    sessionId: telemetryIdentity?.sessionId ?? null,
+    browser:
+      typeof window !== "undefined" ? buildBrowserInfo(window.navigator) : undefined,
+  });
 
   useEffect(() => {
     return () => {
+      if (builderEditTimeoutRef.current) {
+        clearTimeout(builderEditTimeoutRef.current);
+      }
+
       if (exportObjectUrlRef.current) {
         window.URL.revokeObjectURL(exportObjectUrlRef.current);
       }
@@ -515,6 +640,10 @@ export function CourseWorkbench({
   }, []);
 
   useEffect(() => {
+    setLogicTestRun(null);
+  }, [activeProjectId, activeTemplateId, activeVariantId, activeThemeId]);
+
+  useEffect(() => {
     const storage = getBrowserStorage();
     const storedState = readStudioOnboardingState(storage);
 
@@ -524,13 +653,9 @@ export function CourseWorkbench({
       if (!storedState.started) {
         const startedState = markStudioOnboardingStarted(storage, storedState);
         setOnboardingState(startedState);
-        trackClientEvent(
-          "onboarding_started",
-          {
-            surface: "studio",
-          },
-          "studio"
-        );
+        trackStudioEvent("onboarding_started", {
+          surface: "studio",
+        });
       }
 
       setIsPathChooserOpen(true);
@@ -632,7 +757,8 @@ export function CourseWorkbench({
     const nextSnapshot = buildPipelineSnapshot(
       source,
       nextTemplateData,
-      variableSchema
+      variableSchema,
+      moduleLibrary
     );
 
     startTransition(() => {
@@ -660,7 +786,8 @@ export function CourseWorkbench({
     const nextSnapshot = buildPipelineSnapshot(
       nextSource,
       nextTemplateData,
-      variableSchema
+      variableSchema,
+      moduleLibrary
     );
 
     setBuilderDraft(nextBuilderCourse);
@@ -668,11 +795,14 @@ export function CourseWorkbench({
     clearLastExportedPackage();
     clearLastBatchExport();
     setActiveVariantId(null);
+    setActiveStudioSurface("builder");
     setSourceLabel(`Builder-generated variant: ${variantDraftTitle}`);
 
     startTransition(() => {
       setDraftSnapshot(nextSnapshot);
     });
+
+    scheduleBuilderEditEvent(nextBuilderCourse, nextSnapshot.errors.length);
 
     if (nextFeedback !== undefined) {
       setFeedback(nextFeedback);
@@ -695,6 +825,40 @@ export function CourseWorkbench({
     });
   }
 
+  function trackStudioEvent(
+    eventName: string,
+    metadata: Record<string, string | number | boolean | null> = {}
+  ): void {
+    trackClientEvent(
+      eventName,
+      {
+        currentScreen: activeStudioSurface,
+        projectId: selectedProject?.id ?? null,
+        templateId: selectedTemplate?.id ?? null,
+        variantId: activeVariantId ?? variantDraftId,
+        themeId: selectedThemePack?.id ?? null,
+        ...metadata,
+      },
+      "studio"
+    );
+  }
+
+  function scheduleBuilderEditEvent(
+    nextBuilderCourse: BuilderCourse,
+    issueCount: number
+  ): void {
+    if (builderEditTimeoutRef.current) {
+      clearTimeout(builderEditTimeoutRef.current);
+    }
+
+    builderEditTimeoutRef.current = setTimeout(() => {
+      trackStudioEvent("builder_edit_made", {
+        nodeCount: nextBuilderCourse.nodes.length,
+        validationIssueCount: issueCount,
+      });
+    }, 1000);
+  }
+
   function markFirstPreviewOpened(courseId: string): void {
     if (onboardingState.firstPreviewOpened) {
       return;
@@ -706,13 +870,9 @@ export function CourseWorkbench({
     );
 
     setOnboardingState(nextOnboardingState);
-    trackClientEvent(
-      "first_preview_opened",
-      {
-        courseId,
-      },
-      "studio"
-    );
+    trackStudioEvent("first_preview_opened", {
+      courseId,
+    });
   }
 
   function activateStarterSelection(input: {
@@ -754,6 +914,7 @@ export function CourseWorkbench({
 
     loadTemplateVariant(pack, template, variant, input.feedbackState, project);
     setAuthoringMode(input.authoringMode);
+    setActiveStudioSurface(input.authoringMode);
     markFirstPreviewOpened(template.id);
   }
 
@@ -785,13 +946,9 @@ export function CourseWorkbench({
         message: path.description,
       },
     });
-    trackClientEvent(
-      "onboarding_completed",
-      {
-        pathId,
-      },
-      "studio"
-    );
+    trackStudioEvent("onboarding_completed", {
+      pathId,
+    });
   }
 
   function handleDismissStartHerePanel(): void {
@@ -821,16 +978,12 @@ export function CourseWorkbench({
         message: example.description,
       },
     });
-    trackClientEvent(
-      "starter_template_selected",
-      {
-        exampleId: example.id,
-        projectId: example.projectId,
-        templateId: example.templateId,
-        variantId: example.variantId,
-      },
-      "studio"
-    );
+    trackStudioEvent("starter_template_selected", {
+      exampleId: example.id,
+      projectId: example.projectId,
+      templateId: example.templateId,
+      variantId: example.variantId,
+    });
   }
 
   function handleResetBuilderToTemplateDefaults(): void {
@@ -857,6 +1010,7 @@ export function CourseWorkbench({
       selectedProject
     );
     setAuthoringMode("builder");
+    setActiveStudioSurface("builder");
   }
 
   function handleResetVariablesToDefaults(): void {
@@ -877,6 +1031,7 @@ export function CourseWorkbench({
     );
 
     setTemplateDataValues(resetVariant.values);
+    setActiveStudioSurface("variables");
 
     if (nextTemplateDraft) {
       setTemplateFields(nextTemplateDraft.fields);
@@ -922,6 +1077,7 @@ export function CourseWorkbench({
     setCompiledBuild(nextSnapshot);
     clearLastExportedPackage();
     clearLastBatchExport();
+    setActiveStudioSurface("preview");
 
     setFeedback(
       nextSnapshot.previewModel
@@ -940,7 +1096,16 @@ export function CourseWorkbench({
     );
 
     if (nextSnapshot.previewModel) {
+      trackStudioEvent("preview_opened", {
+        courseId: nextSnapshot.previewModel.id,
+        reason: "manual_compile",
+      });
       markFirstPreviewOpened(nextSnapshot.previewModel.id);
+    } else if (nextSnapshot.errors.length > 0) {
+      trackStudioEvent("validation_issues_detected", {
+        issueCount: nextSnapshot.errors.length,
+        authoringMode,
+      });
     }
   }
 
@@ -953,13 +1118,32 @@ export function CourseWorkbench({
       selectedVariableSchema
     );
     setCompiledBuild(nextSnapshot);
+    setActiveStudioSurface("export");
 
     const nextExportPlan = nextSnapshot.exportModel
       ? buildScormExportPreview(nextSnapshot.exportModel, {
           mode: exportMode,
           validationCatalog,
           themePack: selectedThemePack,
-          buildContext: activeBuildContext,
+          buildContext:
+            selectedProject && selectedTemplate && selectedThemePack
+              ? buildCourseProjectBuildContext({
+                  project: selectedProject,
+                  template: selectedTemplate,
+                  variant:
+                    selectedVariant ?? {
+                      id: activeVariantId ?? variantDraftId,
+                      templateId: selectedTemplate.id,
+                      title: variantDraftTitle,
+                      description: "",
+                      notes: "",
+                      values: templateDataValues,
+                      valuesYaml: serializeTemplateDataYaml(templateDataValues),
+                    },
+                  theme: selectedThemePack,
+                  snapshot: nextSnapshot,
+                })
+              : activeBuildContext,
         })
       : null;
     const isProjectReady =
@@ -998,6 +1182,14 @@ export function CourseWorkbench({
               "Project validation found issues in source, references, or SCORM preflight.",
           }
     );
+
+    if (!isProjectReady) {
+      trackStudioEvent("validation_issues_detected", {
+        issueCount: nextSnapshot.errors.length,
+        authoringMode,
+        exportMode,
+      });
+    }
   }
 
   function loadTemplateVariant(
@@ -1047,6 +1239,13 @@ export function CourseWorkbench({
       template.variableSchema
     );
     setCompiledBuild(nextSnapshot);
+
+    if (nextSnapshot.previewModel) {
+      trackStudioEvent("preview_opened", {
+        courseId: nextSnapshot.previewModel.id,
+        reason: "template_variant_loaded",
+      });
+    }
   }
 
   function handleSelectPack(pack: TemplatePack): void {
@@ -1070,6 +1269,7 @@ export function CourseWorkbench({
       );
     }
 
+    setActiveStudioSurface("project");
     loadTemplateVariant(pack, nextTemplate, nextVariant, {
       tone: "info",
       title: matchingProject ? "Source project loaded" : "Template pack loaded",
@@ -1077,16 +1277,12 @@ export function CourseWorkbench({
         ? `${matchingProject.title} is ready. Choose a template, variable set, and theme to generate a reproducible project build.`
         : `${pack.title} is ready. Choose a template and variable set to generate a repeatable course variant.`,
     }, matchingProject);
-    trackClientEvent(
-      "starter_template_selected",
-      {
-        packId: pack.id,
-        templateId: nextTemplate.id,
-        variantId: nextVariant.id,
-        sourceType: matchingProject ? "project" : "template-pack",
-      },
-      "studio"
-    );
+    trackStudioEvent("template_selected", {
+      packId: pack.id,
+      templateId: nextTemplate.id,
+      variantId: nextVariant.id,
+      sourceType: matchingProject ? "project" : "template-pack",
+    });
   }
 
   function handleSelectTemplate(template: TemplatePackTemplate): void {
@@ -1100,6 +1296,7 @@ export function CourseWorkbench({
       return;
     }
 
+    setActiveStudioSurface("project");
     loadTemplateVariant(selectedPack, template, nextVariant, {
       tone: "info",
       title: selectedProject ? "Project template loaded" : "Template loaded",
@@ -1107,6 +1304,11 @@ export function CourseWorkbench({
         ? `${template.title} is now the active shared source inside ${selectedProject.title}.`
         : `${template.title} is now the active shared source for this course family.`,
     }, selectedProject);
+    trackStudioEvent("template_selected", {
+      templateId: template.id,
+      variantId: nextVariant.id,
+      sourceType: selectedProject ? "project" : "template-pack",
+    });
   }
 
   function handleSelectVariant(variant: TemplatePackVariant): void {
@@ -1114,6 +1316,7 @@ export function CourseWorkbench({
       return;
     }
 
+    setActiveStudioSurface("variables");
     loadTemplateVariant(selectedPack, selectedTemplate, variant, {
       tone: "info",
       title: "Variable set applied",
@@ -1121,10 +1324,15 @@ export function CourseWorkbench({
         selectedProject ? ` for ${selectedProject.title}` : ""
       }.`,
     }, selectedProject);
+    trackStudioEvent("variant_selected", {
+      variantId: variant.id,
+      templateId: selectedTemplate.id,
+    });
   }
 
   function handleSelectThemePack(themePack: ThemePack): void {
     setActiveThemeId(themePack.id);
+    setActiveStudioSurface("theme");
     clearLastExportedPackage();
     clearLastBatchExport();
     setFeedback({
@@ -1139,6 +1347,7 @@ export function CourseWorkbench({
       return;
     }
 
+    setActiveStudioSurface("variables");
     loadTemplateVariant(selectedPack, selectedTemplate, selectedVariant, {
       tone: "info",
       title: "Variant reset",
@@ -1158,6 +1367,7 @@ export function CourseWorkbench({
     setVariantDraftId(defaultVariant.id);
     setVariantDraftTitle(defaultVariant.title);
     setDraftYaml(defaultTemplate.yaml);
+    setActiveStudioSurface("builder");
     setSourceLabel(
       defaultProject
         ? `Source project variant: ${defaultVariant.title}`
@@ -1213,6 +1423,7 @@ export function CourseWorkbench({
 
   function handleYamlChange(source: string): void {
     setDraftYaml(source);
+    setActiveStudioSurface("source");
     clearLastExportedPackage();
     clearLastBatchExport();
     setActiveVariantId(null);
@@ -1226,6 +1437,7 @@ export function CourseWorkbench({
     key: string,
     value: TemplateScalarValue
   ): void {
+    setActiveStudioSurface("variables");
     const nextTemplateData = {
       ...templateDataValues,
       [key]: value,
@@ -1284,6 +1496,7 @@ export function CourseWorkbench({
       clearLastExportedPackage();
       clearLastBatchExport();
       setAuthoringMode("source");
+      setActiveStudioSurface("source");
 
       if (nextTemplateDraft) {
         setTemplateFields(nextTemplateDraft.fields);
@@ -1344,6 +1557,7 @@ export function CourseWorkbench({
       );
 
       setTemplateDataValues(uploadedTemplateData);
+      setActiveStudioSurface("variables");
       clearLastBatchExport();
 
       if (nextTemplateDraft) {
@@ -1399,6 +1613,7 @@ export function CourseWorkbench({
     }
 
     setAuthoringMode("builder");
+    setActiveStudioSurface("builder");
     setFeedback({
       tone: "success",
       title: "Builder synced",
@@ -1491,19 +1706,20 @@ export function CourseWorkbench({
       return;
     }
 
+    setActiveStudioSurface("project");
     const archive = await exportCourseProjectSourceArchive(selectedProject);
     const objectUrl = window.URL.createObjectURL(archive.blob);
 
     downloadPackage(archive.fileName, objectUrl);
     window.URL.revokeObjectURL(objectUrl);
-    trackClientEvent(
-      "starter_repo_downloaded",
-      {
-        projectId: selectedProject.id,
-        archiveFileName: archive.fileName,
-      },
-      "studio"
-    );
+    trackStudioEvent("project_exported", {
+      projectId: selectedProject.id,
+      archiveFileName: archive.fileName,
+    });
+    trackStudioEvent("starter_repo_downloaded", {
+      projectId: selectedProject.id,
+      archiveFileName: archive.fileName,
+    });
     setFeedback({
       tone: "success",
       title: "Project source exported",
@@ -1553,6 +1769,7 @@ export function CourseWorkbench({
       setActiveProjectId(importedProject.id);
       setActivePackId(importedPack.id);
       setActiveThemeId(importedThemeId);
+      setActiveStudioSurface("project");
 
       loadTemplateVariant(importedPack, importedTemplate, importedVariant, {
         tone: "success",
@@ -1560,6 +1777,11 @@ export function CourseWorkbench({
         message:
           "The project archive was validated, loaded into the canonical model, and is ready for preview or export.",
       }, importedProject);
+      trackStudioEvent("project_imported", {
+        projectId: importedProject.id,
+        templateId: importedTemplate.id,
+        variantId: importedVariant.id,
+      });
     } catch (error) {
       setFeedback({
         tone: "error",
@@ -1585,6 +1807,7 @@ export function CourseWorkbench({
     setVariantDraftId(duplicatedVariant.variantId);
     setVariantDraftTitle(duplicatedVariant.title);
     setSourceLabel(duplicatedVariant.sourceLabel);
+    setActiveStudioSurface("variables");
     clearLastExportedPackage();
     clearLastBatchExport();
     setAuthoringMode("builder");
@@ -1618,24 +1841,223 @@ export function CourseWorkbench({
     }
   }
 
+  function handleInsertSharedModule(): void {
+    if (!selectedSharedModule) {
+      return;
+    }
+
+    try {
+      const nextSource = insertSharedModuleIntoYaml(
+        draftYaml,
+        selectedSharedModule.id,
+        selectedSharedModule.version
+      );
+      setAuthoringMode("source");
+      setActiveStudioSurface("source");
+      setDraftYaml(nextSource);
+      clearLastExportedPackage();
+      clearLastBatchExport();
+      setSourceLabel(`Source definition updated with ${selectedSharedModule.id}`);
+      updateDraftPipeline(
+        nextSource,
+        templateDataValues,
+        {
+          tone: "success",
+          title: "Shared module inserted",
+          message:
+            "The module include was appended to the source definition. Wire the next-step references in source mode so the new shared step participates in the course flow.",
+        },
+        false,
+        selectedVariableSchema
+      );
+      trackStudioEvent("shared_module_included", {
+        moduleId: selectedSharedModule.id,
+        moduleVersion: selectedSharedModule.version,
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        title: "Shared module insert failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The shared module could not be inserted into the current source definition.",
+      });
+    }
+  }
+
+  async function handleBuildAffectedModuleTargets(): Promise<void> {
+    if (!selectedProject || selectedProjectAffectedTargets.length === 0) {
+      return;
+    }
+
+    setIsBatchExporting(true);
+    setActiveStudioSurface("export");
+
+    try {
+      const selections = selectedProjectAffectedTargets.map((target) => {
+        const [templateId, variantId, themeId] = target.targetKey.split("/");
+
+        return {
+          templateId,
+          variantId,
+          themeId,
+        };
+      });
+      const bundle = await exportCourseProjectBuildMatrix(selectedProject, {
+        selections,
+        mode: exportMode,
+        validationCatalog,
+        moduleLibrary,
+      });
+      const objectUrl = window.URL.createObjectURL(bundle.blob);
+      const historyObjectUrl = window.URL.createObjectURL(bundle.blob);
+
+      clearLastBatchExport();
+      batchExportObjectUrlRef.current = objectUrl;
+      setLastBatchExport({
+        fileName: bundle.fileName,
+        objectUrl,
+        summary: bundle.summary,
+      });
+      appendBuildHistory({
+        id: `${Date.now()}-${bundle.fileName}`,
+        timestamp: new Date().toISOString(),
+        label: "Affected rebuild",
+        success: true,
+        target: `${selectedProject.id} / ${selections.length} affected build${selections.length === 1 ? "" : "s"}`,
+        themeName: null,
+        fileName: bundle.fileName,
+        objectUrl: historyObjectUrl,
+        manifestAvailable: true,
+      });
+      downloadPackage(bundle.fileName, objectUrl);
+      setFeedback({
+        tone: "success",
+        title: "Affected builds generated",
+        message:
+          "Only the current project's targets that depend on the selected shared module were rebuilt.",
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        title: "Affected rebuild failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The affected builds could not be generated.",
+      });
+    } finally {
+      setIsBatchExporting(false);
+    }
+  }
+
+  function downloadLogicTestReport(
+    kind: "json" | "markdown",
+    run: CourseProjectLogicTestRun
+  ): void {
+    const baseName = `${run.report.projectId}-course-tests`;
+
+    if (kind === "json") {
+      downloadTextFile(`${baseName}.json`, JSON.stringify(run.report, null, 2));
+      return;
+    }
+
+    downloadTextFile(`${baseName}.md`, run.summaryMarkdown);
+  }
+
+  async function handleRunLogicTests(): Promise<void> {
+    if (!selectedProject) {
+      return;
+    }
+
+    setIsRunningLogicTests(true);
+    setActiveStudioSurface("export");
+
+    try {
+      const run = runCourseProjectLogicTests(selectedProject, {
+        selection: activeProjectBuildSelection ?? undefined,
+        moduleLibrary,
+      });
+
+      setLogicTestRun(run);
+      trackStudioEvent("logic_tests_run", {
+        projectId: selectedProject.id,
+        totalTests: run.report.totalTests,
+        failedTests: run.report.failedTests,
+        filteredToActiveTarget: Boolean(activeProjectBuildSelection),
+      });
+      setFeedback(
+        run.report.success
+          ? {
+              tone: "success",
+              title: "Course logic tests passed",
+              message:
+                run.report.totalTests > 0
+                  ? "Branching, score, completion, and pass/fail checks passed for the current project scope."
+                  : "No matching course logic tests were found for the current project scope.",
+            }
+          : {
+              tone: "error",
+              title: "Course logic tests failed",
+              message:
+                "One or more learner-path expectations failed. Review the failing tests before exporting a new build.",
+            }
+      );
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        title: "Logic test run failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "The project logic tests could not be executed.",
+      });
+    } finally {
+      setIsRunningLogicTests(false);
+    }
+  }
+
   async function handleExport(): Promise<void> {
     if (!compiledSnapshot.exportModel) {
       return;
     }
 
     setIsExporting(true);
-    trackClientEvent(
-      "export_attempted",
-      {
-        courseId: compiledSnapshot.exportModel.id,
-        courseTitle: compiledSnapshot.exportModel.title,
-        exportMode,
-        themeId: selectedThemePack?.id ?? "none",
-      },
-      "studio"
-    );
+    setActiveStudioSurface("export");
+    trackStudioEvent("export_attempted", {
+      courseId: compiledSnapshot.exportModel.id,
+      courseTitle: compiledSnapshot.exportModel.title,
+      exportMode,
+      themeId: selectedThemePack?.id ?? "none",
+    });
 
     try {
+      if (selectedProject && requirePassingTestsBeforeExport) {
+        const testRun = runCourseProjectLogicTests(selectedProject, {
+          selection: activeProjectBuildSelection ?? undefined,
+          moduleLibrary,
+        });
+
+        setLogicTestRun(testRun);
+        trackStudioEvent("logic_tests_run", {
+          projectId: selectedProject.id,
+          totalTests: testRun.report.totalTests,
+          failedTests: testRun.report.failedTests,
+          trigger: "pre-export-guard",
+        });
+
+        if (!testRun.report.success) {
+          setFeedback({
+            tone: "error",
+            title: "Export blocked by failing logic tests",
+            message:
+              "Enable export only after the current project logic tests pass, or disable the pre-export test guard.",
+          });
+          return;
+        }
+      }
+
       const bundle = await exportCourseAsScormZip(compiledSnapshot.exportModel, {
         mode: exportMode,
         validationCatalog,
@@ -1682,15 +2104,11 @@ export function CourseWorkbench({
       setIsPackageViewerOpen(isFirstExport);
 
       if (isFirstExport) {
-        trackClientEvent(
-          "first_export_completed",
-          {
-            courseId: bundle.metadata.courseId,
-            exportMode: bundle.metadata.exportMode,
-            themeId: bundle.metadata.themeId ?? "none",
-          },
-          "studio"
-        );
+        trackStudioEvent("first_export_completed", {
+          courseId: bundle.metadata.courseId,
+          exportMode: bundle.metadata.exportMode,
+          themeId: bundle.metadata.themeId ?? "none",
+        });
       }
 
       const exportFeedback = buildFirstExportFeedback({
@@ -1702,6 +2120,11 @@ export function CourseWorkbench({
         tone: "success",
         title: exportFeedback.title,
         message: exportFeedback.message,
+      });
+      trackStudioEvent("export_succeeded", {
+        courseId: bundle.metadata.courseId,
+        exportMode: bundle.metadata.exportMode,
+        themeId: bundle.metadata.themeId ?? "none",
       });
     } catch (error) {
       clearLastExportedPackage();
@@ -1726,6 +2149,11 @@ export function CourseWorkbench({
             ? error.message
             : "The SCORM package could not be generated.",
       });
+      trackStudioEvent("export_failed", {
+        templateId: selectedTemplate?.id ?? "custom-source",
+        variantId: variantDraftId,
+        themeId: selectedThemePack?.id ?? "theme",
+      });
     } finally {
       setIsExporting(false);
     }
@@ -1737,6 +2165,12 @@ export function CourseWorkbench({
     }
 
     setIsBatchExporting(true);
+    setActiveStudioSurface("export");
+    trackStudioEvent("export_attempted", {
+      buildType: "batch-family",
+      variantCount: selectedBatchVariantIds.length,
+      exportMode,
+    });
 
     try {
       const builds = selectedTemplate.variants
@@ -1745,7 +2179,8 @@ export function CourseWorkbench({
           const snapshot = buildPipelineSnapshot(
             selectedTemplate.yaml,
             variant.values,
-            selectedTemplate.variableSchema
+            selectedTemplate.variableSchema,
+            moduleLibrary
           );
 
           if (!snapshot.exportModel) {
@@ -1773,6 +2208,7 @@ export function CourseWorkbench({
                     template: selectedTemplate,
                     variant,
                     theme: selectedThemePack,
+                    snapshot,
                   })
                 : null,
           };
@@ -1813,6 +2249,11 @@ export function CourseWorkbench({
         message:
           "The selected variants were exported as a reproducible batch build. Use the summary below to track each generated package.",
       });
+      trackStudioEvent("export_succeeded", {
+        buildType: "batch-family",
+        variantCount: selectedBatchVariantIds.length,
+        themeId: selectedThemePack?.id ?? "none",
+      });
     } catch (error) {
       clearLastBatchExport();
       appendBuildHistory({
@@ -1836,6 +2277,11 @@ export function CourseWorkbench({
             ? error.message
             : "The selected course family variants could not be exported.",
       });
+      trackStudioEvent("export_failed", {
+        buildType: "batch-family",
+        variantCount: selectedBatchVariantIds.length,
+        themeId: selectedThemePack?.id ?? "none",
+      });
     } finally {
       setIsBatchExporting(false);
     }
@@ -1847,11 +2293,18 @@ export function CourseWorkbench({
     }
 
     setIsBatchExporting(true);
+    setActiveStudioSurface("export");
+    trackStudioEvent("export_attempted", {
+      buildType: "project-matrix",
+      projectId: selectedProject.id,
+      exportMode,
+    });
 
     try {
       const bundle = await exportCourseProjectBuildMatrix(selectedProject, {
         mode: exportMode,
         validationCatalog,
+        moduleLibrary,
       });
       const objectUrl = window.URL.createObjectURL(bundle.blob);
       const historyObjectUrl = window.URL.createObjectURL(bundle.blob);
@@ -1882,6 +2335,11 @@ export function CourseWorkbench({
         message:
           "All valid template, variant, and theme combinations in the selected source project were built into a reproducible batch export.",
       });
+      trackStudioEvent("export_succeeded", {
+        buildType: "project-matrix",
+        buildCount: bundle.summary.length,
+        projectId: selectedProject.id,
+      });
     } catch (error) {
       clearLastBatchExport();
       appendBuildHistory({
@@ -1902,6 +2360,10 @@ export function CourseWorkbench({
           error instanceof Error
             ? error.message
             : "The selected source project could not be built across all variants and themes.",
+      });
+      trackStudioEvent("export_failed", {
+        buildType: "project-matrix",
+        projectId: selectedProject.id,
       });
     } finally {
       setIsBatchExporting(false);
@@ -1938,23 +2400,16 @@ export function CourseWorkbench({
   ];
 
   return (
-    <main className="page-shell">
+    <main className="page-shell" ref={studioRootRef}>
       <section className="hero">
         <div className="hero-copy-block">
-          <p className="eyebrow">Structured Training Authoring</p>
-          <h1>
-            Build repeatable course families from shared source, compile a preview,
-            and export SCORM from the same definition.
-          </h1>
-          <p className="hero-subheadline">
-            Choose a source project, apply a variable set, compile a specific course
-            variant, and keep the shared definition under version control.
-          </p>
+          <p className="eyebrow">{BRAND.studioName}</p>
+          <h1>Structured authoring, compiled preview, reproducible SCORM output.</h1>
+          <p className="hero-subheadline">{BRAND.positioningStatement}</p>
           <WorkflowSteps steps={["Project", "Template", "Variant", "Theme", "SCORM"]} />
           <p className="hero-copy">
-            Choose a source project, edit source files or guided builder fields,
-            validate the structure, preview the compiled runtime, and export
-            reproducible SCORM builds from structured source.
+            Welcome to {BRAND.studioName}. Define course source, compile it into a
+            learner-ready preview, and generate SCORM as a build artifact.
           </p>
         </div>
         <div className="hero-summary">
@@ -1973,15 +2428,33 @@ export function CourseWorkbench({
         </div>
       </section>
 
+      <section className="panel beta-notice-panel">
+        <div>
+          <p className="eyebrow">Beta Feedback</p>
+          <h2>Help improve the first-run workflow.</h2>
+          <p className="panel-copy">
+            {BRAND.productName} is currently in beta. Feedback helps improve the
+            system.
+          </p>
+        </div>
+        <p className="panel-copy">
+          Use the feedback button in the corner to report bugs, confusion, or
+          workflow issues with the current project, template, variant, and theme
+          attached automatically.
+        </p>
+      </section>
+
       {!onboardingState.startHereDismissed ? (
         <section className="panel onboarding-panel">
           <div className="section-heading-row">
             <div>
               <p className="eyebrow">Start Here</p>
-              <h2>Build your first module in about 10 minutes</h2>
+              <h2>Welcome to Sapio Forge Studio</h2>
               <p className="panel-copy">
-                1. Choose a starter template. 2. Edit content in Builder or Source
-                mode. 3. Preview the compiled course. 4. Export a SCORM package.
+                Use Source view to define structured training modules. Use Builder
+                view to work through guided fields and preview the compiled course.
+                Sapio Forge separates course source from course output so training
+                systems stay reusable, testable, and version-controlled.
               </p>
               {selectedStartingPath ? (
                 <p className="panel-copy">
@@ -2103,8 +2576,8 @@ export function CourseWorkbench({
               <div>
                 <p className="eyebrow">First-module checklist</p>
                 <p className="panel-copy section-copy">
-                  Use this as the fastest path to a first successful preview and SCORM
-                  export.
+                  Use this as the fastest path to a first successful compiled preview
+                  and SCORM export.
                 </p>
               </div>
               <div className="button-row">
@@ -2991,6 +3464,17 @@ nodes:
             </div>
           ) : null}
 
+          {activeSnapshot.warnings.length > 0 ? (
+            <div className="error-panel">
+              <h3>Build warnings to review</h3>
+              <p className="panel-copy">
+                These warnings do not block compile, but they do affect
+                reproducibility and shared-source hygiene.
+              </p>
+              <ValidationIssueList issues={activeSnapshot.warnings} />
+            </div>
+          ) : null}
+
           <div className="export-bar">
             <div>
               <p className="eyebrow">Export Build</p>
@@ -3053,6 +3537,18 @@ nodes:
                     : "Standard SCORM 1.2 package with diagnostics disabled"}
                 </strong>
               </p>
+              {selectedProject ? (
+                <label className="studio-toggle-row">
+                  <input
+                    checked={requirePassingTestsBeforeExport}
+                    onChange={(event) =>
+                      setRequirePassingTestsBeforeExport(event.currentTarget.checked)
+                    }
+                    type="checkbox"
+                  />
+                  <span>Run logic tests before export</span>
+                </label>
+              ) : null}
               {selectedProject ? (
                 <p className="panel-copy">
                   Source project <strong>{selectedProject.id}</strong> stays editable in
@@ -3467,6 +3963,281 @@ nodes:
             </section>
           ) : null}
 
+          {selectedProject ? (
+            <section className="panel notes-panel">
+              <p className="eyebrow">Course Logic Tests</p>
+              <h2>Testable learning logic</h2>
+              <p className="panel-copy">
+                Course projects can define declarative learner-path tests for
+                branching, score, completion, and pass/fail behavior. Run them
+                before export or in CI to catch regressions in shared source.
+              </p>
+              <div className="validation-state-grid">
+                <span className="status-pill">
+                  Suites: {selectedProject.logicTestSuites.length}
+                </span>
+                <span className="status-pill">
+                  Tests: {activeProjectLogicTests.length}
+                </span>
+                <span className="status-pill">
+                  Scope:{" "}
+                  {activeProjectBuildSelection
+                    ? `${activeProjectBuildSelection.templateId}/${activeProjectBuildSelection.variantId}/${activeProjectBuildSelection.themeId}`
+                    : "project defaults"}
+                </span>
+              </div>
+              {selectedProject.logicTestLoadIssues.length > 0 ? (
+                <div className="error-panel">
+                  <h3>Logic test source issues</h3>
+                  <ValidationIssueList issues={selectedProject.logicTestLoadIssues} />
+                </div>
+              ) : null}
+              <div className="button-row">
+                <button
+                  className="primary-button"
+                  disabled={isRunningLogicTests}
+                  onClick={() => void handleRunLogicTests()}
+                  type="button"
+                >
+                  {isRunningLogicTests ? "Running tests..." : "Run logic tests"}
+                </button>
+                {logicTestRun ? (
+                  <>
+                    <button
+                      className="ghost-button"
+                      onClick={() => downloadLogicTestReport("json", logicTestRun)}
+                      type="button"
+                    >
+                      Download JSON report
+                    </button>
+                    <button
+                      className="ghost-button"
+                      onClick={() => downloadLogicTestReport("markdown", logicTestRun)}
+                      type="button"
+                    >
+                      Download test summary
+                    </button>
+                  </>
+                ) : null}
+              </div>
+              <div className="preflight-check-grid">
+                {activeProjectLogicTests.map((testCase) => (
+                  <article
+                    className="runtime-status-card"
+                    key={`${testCase.suiteId}-${testCase.testId}`}
+                  >
+                    <span className="runtime-status-label">
+                      {testCase.suiteTitle}
+                    </span>
+                    <strong>{testCase.name}</strong>
+                    <p className="panel-copy">{testCase.description}</p>
+                    <p className="panel-copy">{testCase.suiteSourcePath}</p>
+                  </article>
+                ))}
+              </div>
+              {logicTestRun ? (
+                <div className="panel-subsection">
+                  <div className="runtime-status-grid inspector-grid">
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Last run</span>
+                      <strong>{formatBuildTimestamp(logicTestRun.report.generatedAt)}</strong>
+                    </div>
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Passed</span>
+                      <strong>{logicTestRun.report.passedTests}</strong>
+                    </div>
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Failed</span>
+                      <strong>{logicTestRun.report.failedTests}</strong>
+                    </div>
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Coverage targets</span>
+                      <strong>{logicTestRun.report.coverage.length}</strong>
+                    </div>
+                  </div>
+                  {logicTestRun.report.failedTests > 0 ? (
+                    <div className="error-panel">
+                      <h3>Failing logic tests</h3>
+                      <div className="preflight-check-grid">
+                        {logicTestRun.report.results
+                          .filter((result) => !result.success)
+                          .map((result) => (
+                            <article
+                              className="runtime-status-card"
+                              key={`${result.suiteId}-${result.testId}-failure`}
+                            >
+                              <span className="runtime-status-label">
+                                {result.targetKey}
+                              </span>
+                              <strong>
+                                {result.suiteId}/{result.testId}
+                              </strong>
+                              <p className="panel-copy">
+                                Expected terminal <code>{result.expected.terminalStep ?? "any"}</code>,
+                                actual <code>{result.actual.terminalStep}</code>. Score{" "}
+                                {result.actual.score}. Path: {result.actual.pathTaken.join(" -> ")}
+                              </p>
+                              <ValidationIssueList
+                                issues={result.errors.map((error) => error.message)}
+                              />
+                            </article>
+                          ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="preflight-check-grid">
+                    {logicTestRun.report.coverage.map((coverage) => (
+                      <article className="runtime-status-card" key={coverage.targetKey}>
+                        <span className="runtime-status-label">{coverage.targetKey}</span>
+                        <strong>{coverage.courseTitle}</strong>
+                        <p className="panel-copy">
+                          Visited steps: {coverage.visitedSteps.join(", ")}
+                        </p>
+                        <p className="panel-copy">
+                          Untested interactive steps:{" "}
+                          {coverage.untestedInteractiveSteps.length > 0
+                            ? coverage.untestedInteractiveSteps.join(", ")
+                            : "none"}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {availableSharedModules.length > 0 ? (
+            <section className="panel notes-panel">
+              <p className="eyebrow">Shared Module Library</p>
+              <h2>Reusable source modules</h2>
+              <p className="panel-copy">
+                Shared modules are source assets expanded during compile. They stay in
+                the source system of record, show up in dependency graphs, and drive
+                affected rebuilds when reused content changes.
+              </p>
+              <div className="validation-state-grid">
+                {activeModuleDependencies.length > 0 ? (
+                  activeModuleDependencies.map((dependency) => (
+                    <span className="status-pill" key={`${dependency.moduleId}-${dependency.version}`}>
+                      Using: {dependency.moduleId}@{dependency.version}
+                    </span>
+                  ))
+                ) : (
+                  <span className="status-pill">No shared modules in the active source</span>
+                )}
+              </div>
+              <div className="preflight-check-grid">
+                {availableSharedModules.map((module) => {
+                  const isActive = selectedSharedModule?.id === module.id;
+                  const usageCount = moduleUsageIndex[module.id]?.length ?? 0;
+
+                  return (
+                    <article className="runtime-status-card" key={`${module.id}-${module.version}`}>
+                      <span className="runtime-status-label">{module.category}</span>
+                      <strong>{module.title}</strong>
+                      <p className="panel-copy">
+                        {module.id}@{module.version} | Used by {usageCount} build
+                        {usageCount === 1 ? "" : "s"}
+                      </p>
+                      <p className="panel-copy">{module.description}</p>
+                      <div className="button-row">
+                        <button
+                          className={isActive ? "primary-button" : "ghost-button"}
+                          onClick={() => setSelectedModuleId(module.id)}
+                          type="button"
+                        >
+                          {isActive ? "Selected" : "Inspect"}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              {selectedSharedModule ? (
+                <div className="panel-subsection">
+                  <div className="section-heading-row">
+                    <div>
+                      <p className="eyebrow">Selected module</p>
+                      <p className="panel-copy section-copy">
+                        Inspect metadata, include the module in source mode, or rebuild
+                        the currently selected project's affected targets only.
+                      </p>
+                    </div>
+                    <div className="button-row">
+                      <button
+                        className="ghost-button"
+                        onClick={handleInsertSharedModule}
+                        type="button"
+                      >
+                        Include In Source
+                      </button>
+                      {selectedProjectAffectedTargets.length > 0 ? (
+                        <button
+                          className="ghost-button"
+                          onClick={() => void handleBuildAffectedModuleTargets()}
+                          type="button"
+                        >
+                          Build Affected In Project
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="runtime-status-grid inspector-grid">
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Module id</span>
+                      <strong>{selectedSharedModule.id}</strong>
+                    </div>
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Version</span>
+                      <strong>{selectedSharedModule.version}</strong>
+                    </div>
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Category</span>
+                      <strong>{selectedSharedModule.category}</strong>
+                    </div>
+                    <div className="runtime-status-card">
+                      <span className="runtime-status-label">Source file</span>
+                      <strong>{selectedSharedModule.sourcePath}</strong>
+                    </div>
+                  </div>
+                  <p className="panel-copy">
+                    Tags: {selectedSharedModule.tags.join(", ")} | Last updated:{" "}
+                    {selectedSharedModule.lastUpdated}
+                  </p>
+                  <div className="preflight-check-grid">
+                    <article className="runtime-status-card">
+                      <span className="runtime-status-label">Used by</span>
+                      <strong>{selectedModuleUsageTargets.length} build target{selectedModuleUsageTargets.length === 1 ? "" : "s"}</strong>
+                      <p className="panel-copy">
+                        {selectedModuleUsageTargets.length > 0
+                          ? selectedModuleUsageTargets
+                              .slice(0, 5)
+                              .map((target) => `${target.projectId}/${target.targetKey}`)
+                              .join(", ")
+                          : "No current starter project depends on this module yet."}
+                      </p>
+                    </article>
+                    <article className="runtime-status-card">
+                      <span className="runtime-status-label">Current source</span>
+                      <strong>
+                        {activeModuleDependencies.some(
+                          (dependency) => dependency.moduleId === selectedSharedModule.id
+                        )
+                          ? "In use"
+                          : "Not in active source"}
+                      </strong>
+                      <p className="panel-copy">
+                        Insert shared modules into source mode, then wire next-step
+                        references explicitly so the compile graph stays reviewable.
+                      </p>
+                    </article>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
           {buildHistory.length > 0 ? (
             <section className="panel notes-panel">
               <p className="eyebrow">Build History</p>
@@ -3671,6 +4442,10 @@ nodes:
         onDismiss={handleDismissPathChooser}
         open={isPathChooserOpen}
         paths={STUDIO_STARTING_PATHS}
+      />
+      <StudioFeedbackPanel
+        captureTargetRef={studioRootRef}
+        context={studioFeedbackContext}
       />
     </main>
   );

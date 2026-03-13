@@ -1,8 +1,10 @@
 # Repository Philosophy
 
-This starter repository is built around one idea:
+The Sapio Forge starter repository is built around one idea:
 
 interactive training modules can be managed like software projects.
+
+Sapio Forge treats training modules as structured source, not presentation files. That makes the build pipeline reviewable, repeatable, and easier to maintain across course families.
 
 ## Principles
 

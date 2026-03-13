@@ -2,7 +2,7 @@ id: workplace-conduct
 title: Workplace Conduct Project
 description: Repeatable conduct and reporting course family with multiple industry-specific variable sets.
 version: 0.1.0
-author: LDT Engine
+author: Sapio Forge
 createdAt: 2026-03-12
 updatedAt: 2026-03-12
 defaultTemplateId: conduct-reporting
@@ -14,6 +14,7 @@ readme: README.md
 gitignore: .gitignore
 buildDirectory: build
 assetsDirectory: assets
+testsDirectory: tests
 templates:
   - id: conduct-reporting
     title: Workplace conduct reporting

@@ -5,11 +5,12 @@ import {
   isAdminAccessAvailable,
   isAdminTokenValid,
 } from "@/lib/intake/admin-auth";
+import { buildFrictionSignals } from "@/lib/intake/telemetry";
 import type { EventEntry, FeedbackEntry, WaitlistEntry } from "@/lib/intake/store";
 import { listIntakeEntries } from "@/lib/intake/store";
 
 export const metadata: Metadata = {
-  title: "Beta Intake Admin",
+  title: "Sapio Forge Beta Intake Admin",
   robots: {
     index: false,
     follow: false,
@@ -77,6 +78,18 @@ function buildOnboardingSummary(entries: EventEntry[]): Array<{ label: string; c
   }));
 }
 
+function buildFeedbackContextSummary(entry: FeedbackEntry): string {
+  const parts = [
+    entry.context?.currentScreen ? `screen: ${entry.context.currentScreen}` : null,
+    entry.context?.projectId ? `project: ${entry.context.projectId}` : null,
+    entry.context?.templateId ? `template: ${entry.context.templateId}` : null,
+    entry.context?.variantId ? `variant: ${entry.context.variantId}` : null,
+    entry.context?.themeId ? `theme: ${entry.context.themeId}` : null,
+  ].filter((value): value is string => Boolean(value));
+
+  return parts.join(" | ");
+}
+
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const params = await searchParams;
   const token = getAdminTokenFromSearchParam(params.token);
@@ -118,6 +131,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     ]);
     const eventCounts = buildEventCounts(eventsResult.entries);
     const onboardingSummary = buildOnboardingSummary(eventsResult.entries);
+    const frictionSignals = buildFrictionSignals(eventsResult.entries);
 
     return (
       <main className="page-shell admin-shell">
@@ -129,19 +143,26 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Review waitlist submissions, feedback notes, and lightweight funnel events.
             </p>
           </div>
-          <div className="admin-summary-grid">
-            <article className="summary-card">
-              <strong>Waitlist</strong>
-              <span>{waitlistResult.entries.length} captured leads</span>
-            </article>
-            <article className="summary-card">
-              <strong>Feedback</strong>
-              <span>{feedbackResult.entries.length} responses collected</span>
-            </article>
-            <article className="summary-card">
-              <strong>Events</strong>
-              <span>{eventsResult.entries.length} tracked actions</span>
-            </article>
+          <div>
+            <div className="admin-summary-grid">
+              <article className="summary-card">
+                <strong>Waitlist</strong>
+                <span>{waitlistResult.entries.length} captured leads</span>
+              </article>
+              <article className="summary-card">
+                <strong>Feedback</strong>
+                <span>{feedbackResult.entries.length} responses collected</span>
+              </article>
+              <article className="summary-card">
+                <strong>Events</strong>
+                <span>{eventsResult.entries.length} tracked actions</span>
+              </article>
+            </div>
+            <div className="button-row admin-export-row">
+              <a className="ghost-button button-link" href={`/admin/feedback?token=${token ?? ""}`}>
+                Open feedback review
+              </a>
+            </div>
           </div>
         </section>
 
@@ -220,11 +241,38 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               {feedbackResult.entries.map((entry) => (
                 <article className="admin-feedback-item" key={entry.id}>
                   <div className="admin-feedback-meta">
+                    <span>{entry.feedbackType}</span>
+                    <span>{entry.status}</span>
                     <span>{formatTimestamp(entry.submittedAt)}</span>
                     <span>{entry.email ?? "anonymous"}</span>
                     <span>{entry.sourcePage ?? entry.source}</span>
                   </div>
+                  <div className="admin-feedback-tags">
+                    <span className="validation-chip">{entry.context?.currentScreen ?? "studio"}</span>
+                    {entry.context?.projectId ? (
+                      <span className="validation-chip">{entry.context.projectId}</span>
+                    ) : null}
+                    {entry.context?.templateId ? (
+                      <span className="validation-chip">{entry.context.templateId}</span>
+                    ) : null}
+                    {entry.context?.themeId ? (
+                      <span className="validation-chip">{entry.context.themeId}</span>
+                    ) : null}
+                    {entry.screenshot ? (
+                      <span className="validation-chip">screenshot attached</span>
+                    ) : null}
+                  </div>
                   <p>{entry.message}</p>
+                  {buildFeedbackContextSummary(entry) ? (
+                    <p className="panel-copy">{buildFeedbackContextSummary(entry)}</p>
+                  ) : null}
+                  {entry.screenshot ? (
+                    <img
+                      alt={`Feedback attachment for ${entry.id}`}
+                      className="admin-feedback-image"
+                      src={entry.screenshot.dataUrl}
+                    />
+                  ) : null}
                 </article>
               ))}
             </div>
@@ -236,6 +284,29 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </section>
 
         <section className="admin-grid">
+          <article className="panel admin-card">
+            <div className="section-heading-row">
+              <div>
+                <p className="eyebrow">Friction signals</p>
+                <h2>Where beta users are getting stuck</h2>
+                <p className="panel-copy">
+                  Derived from lightweight event telemetry. These counts are directional,
+                  not user-level analytics.
+                </p>
+              </div>
+            </div>
+
+            <div className="admin-event-grid">
+              {frictionSignals.map((signal) => (
+                <article className="summary-card" key={signal.id}>
+                  <strong>{signal.label}</strong>
+                  <span>{signal.count} sessions</span>
+                  <p className="panel-copy">{signal.description}</p>
+                </article>
+              ))}
+            </div>
+          </article>
+
           <article className="panel admin-card">
             <div className="section-heading-row">
               <div>

@@ -3,6 +3,10 @@ import {
   type TemplatePackTemplate,
   type TemplatePackVariant,
 } from "@/lib/course/template-pack";
+import {
+  parseCourseLogicTestSuiteYaml,
+  type CourseLogicTestSuite,
+} from "@/lib/course-tests/schema";
 import { parseTemplateVariableSchemaYaml } from "@/lib/course/template-variables";
 import {
   THEME_ASSET_BUNDLE_ROOT,
@@ -236,6 +240,37 @@ export async function buildCourseProjectFromFileEntries(input: {
     })
   );
 
+  const logicTestSuites: CourseLogicTestSuite[] = [];
+  const logicTestLoadIssues: string[] = [];
+  const normalizedTestsDirectory = normalizeProjectPath(config.testsDirectory);
+
+  input.sourceFiles
+    .filter((file) => {
+      const normalizedPath = normalizeProjectPath(file.path);
+
+      return (
+        normalizedPath.startsWith(`${normalizedTestsDirectory}/`) &&
+        (normalizedPath.endsWith(".yaml") || normalizedPath.endsWith(".yml"))
+      );
+    })
+    .sort((leftFile, rightFile) => leftFile.path.localeCompare(rightFile.path))
+    .forEach((file) => {
+      try {
+        logicTestSuites.push(
+          parseCourseLogicTestSuiteYaml({
+            source: file.contents,
+            sourcePath: normalizeProjectPath(file.path),
+          })
+        );
+      } catch (error) {
+        logicTestLoadIssues.push(
+          error instanceof Error
+            ? error.message
+            : `Logic test suite "${file.path}" could not be parsed.`
+        );
+      }
+    });
+
   const project: CourseProject = {
     id: config.id,
     title: config.title,
@@ -250,10 +285,13 @@ export async function buildCourseProjectFromFileEntries(input: {
     buildTargets: config.buildTargets,
     buildDirectory: config.buildDirectory,
     assetsDirectory: config.assetsDirectory,
+    testsDirectory: config.testsDirectory,
     readme,
     gitignore,
     templates,
     themes,
+    logicTestSuites,
+    logicTestLoadIssues,
     validation: {
       ready: false,
       checks: [],

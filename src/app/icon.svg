@@ -1,6 +1,6 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Sapio Forge</title>
   <rect width="64" height="64" rx="16" fill="#161411"/>
   <rect x="8" y="8" width="48" height="48" rx="12" fill="#A4481D"/>
-  <path d="M20 19H27V39H44V45H20V19Z" fill="#FFF8EF"/>
-  <path d="M32 19H39V29L45 19H52L44 31L52 45H44.5L39 34.5V45H32V19Z" fill="#FFF8EF"/>
+  <text x="32" y="39" text-anchor="middle" fill="#FFF8EF" font-family="Aptos, Segoe UI, sans-serif" font-size="20" font-weight="700" letter-spacing="1">SF</text>
 </svg>

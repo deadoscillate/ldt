@@ -1,0 +1,56 @@
+id: conduct-reporting
+title: Workplace conduct logic tests
+description: Protect the reporting workflow with deterministic branching and score assertions.
+target:
+  templateId: conduct-reporting
+  themeId: default
+tests:
+  - id: documented-reporting-passes
+    name: Documented reporting path passes
+    description: A learner who documents the issue, answers correctly, and follows the approved channel should pass.
+    tags:
+      - scored
+      - pass
+      - compliance
+    target:
+      variantId: corporate
+    actions:
+      - step: intro
+        advance: true
+      - step: first-response
+        select: document
+      - step: report-essentials
+        select:
+          - facts
+          - preserve
+      - step: reporting-procedure
+        advance: true
+      - step: follow-through
+        select: channel
+    expect:
+      terminalStep: passed
+      score: 10
+      completionStatus: completed
+      successStatus: passed
+      pathLength: 6
+      variables:
+        companyName: Fabrikam Services
+  - id: public-post-path-fails
+    name: Public post path fails
+    description: Public escalation without documentation should fail immediately.
+    tags:
+      - fail
+      - branch
+    target:
+      variantId: hospital
+    actions:
+      - step: intro
+        advance: true
+      - step: first-response
+        select: post
+    expect:
+      terminalStep: failed
+      score: 0
+      completionStatus: completed
+      successStatus: failed
+      pathLength: 3

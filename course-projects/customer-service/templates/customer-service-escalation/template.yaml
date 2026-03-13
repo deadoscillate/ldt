@@ -10,19 +10,6 @@ templateData:
   escalationDesk: Escalations Desk
   escalationEmail: escalations@alpineretail.example
 blocks:
-  intro_block:
-    - id: intro
-      type: content
-      layout: two-column
-      title: "{{courseTitle}}"
-      body: Use a repeatable escalation workflow instead of improvising each handoff.
-      left:
-        title: Situation
-        text: A customer has received the wrong order and is already frustrated.
-      right:
-        title: Goal
-        text: De-escalate, confirm the facts, and route the issue to {{escalationDesk}}.
-      next: first-response
   result_block:
     - id: passed
       type: result
@@ -41,7 +28,9 @@ blocks:
         - "Strong service escalation lowers tension and creates a clean handoff."
         - "Final score: {{score}} / {{maxScore}}"
 nodes:
-  - include: intro_block
+  - include:
+      module: escalation_policy
+      version: 1.0.0
   - id: first-response
     type: branch
     layout: text

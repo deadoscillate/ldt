@@ -1,6 +1,6 @@
 # Architecture
 
-LDT Engine is a structured authoring and compilation system.
+Sapio Forge is a structured learning platform built around structured authoring, compilation, and reproducible SCORM output.
 
 Core direction:
 

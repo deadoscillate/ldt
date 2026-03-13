@@ -144,7 +144,7 @@ export function buildProofSummaryCardData(
 
   return {
     valueProp:
-      "Structured YAML authoring with compiled preview and SCORM 1.2 export.",
+      "Structured authoring, reusable modules, and reproducible SCORM builds.",
     scormCloudStatus: scormCloudPlatform
       ? getPlatformValidationStatus(scormCloudPlatform)
       : "pending",

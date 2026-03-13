@@ -1,0 +1,48 @@
+id: customer-service-escalation
+title: Customer service escalation logic tests
+description: Minimal course tests for the starter project flow.
+target:
+  templateId: customer-service-escalation
+  variantId: retail-support
+  themeId: default
+tests:
+  - id: structured-escalation-passes
+    name: Structured escalation path passes
+    description: The starter project happy path should end with a passed result and the quiz score.
+    tags:
+      - starter
+      - pass
+    actions:
+      - step: intro
+        advance: true
+      - step: first-response
+        select: acknowledge
+      - step: escalation-question
+        select: best
+      - step: wrap-up
+        select: complete
+    expect:
+      terminalStep: passed
+      score: 10
+      completionStatus: completed
+      successStatus: passed
+      pathLength: 5
+      variables:
+        companyName: Alpine Retail
+  - id: policy-first-path-fails
+    name: Policy-first path fails
+    description: Starting with a rigid policy answer should fail the escalation scenario.
+    tags:
+      - starter
+      - fail
+    actions:
+      - step: intro
+        advance: true
+      - step: first-response
+        select: policy
+    expect:
+      terminalStep: failed
+      score: 0
+      completionStatus: completed
+      successStatus: failed
+      pathLength: 3

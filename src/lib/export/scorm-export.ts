@@ -19,6 +19,7 @@ import {
 import type { ThemePack } from "@/lib/theme/schema";
 import { buildValidationNotesText } from "@/lib/validation/checklist";
 import type { LmsValidationCatalog } from "@/lib/validation/schema";
+import type { ModuleDependencyRecord } from "@/lib/module-library/dependency";
 
 export type ScormExportMode = "standard" | "validation";
 
@@ -33,6 +34,7 @@ export interface ScormBuildContext {
   themeId?: string | null;
   themeName?: string | null;
   sourceFiles?: readonly string[];
+  moduleDependencies?: readonly ModuleDependencyRecord[];
 }
 
 export interface ScormExportOptions {
@@ -70,6 +72,7 @@ export interface ScormPackageMetadata {
   outputFileName: string;
   launchPath: string;
   packageContents: readonly string[];
+  moduleDependencies: readonly ModuleDependencyRecord[];
   preflight: ScormPreflightResult;
 }
 
@@ -91,6 +94,7 @@ export interface ScormBuildManifest {
   outputFileName: string;
   launchPath: string;
   sourceFiles: readonly string[];
+  moduleDependencies: readonly ModuleDependencyRecord[];
   packageContents: readonly string[];
   buildFingerprint: string;
   validationReady: boolean;
@@ -208,6 +212,7 @@ export function buildScormBuildManifest(input: {
     outputFileName: input.outputFileName,
     launchPath: input.launchPath ?? "index.html",
     sourceFiles: buildContext?.sourceFiles ?? [],
+    moduleDependencies: buildContext?.moduleDependencies ?? [],
     packageContents: input.packageContents,
     buildFingerprint,
     validationReady: input.preflight.ready,
@@ -247,6 +252,7 @@ export function buildScormPackageMetadata(input: {
     outputFileName: input.outputFileName,
     launchPath: input.launchPath ?? "index.html",
     packageContents: input.packageContents,
+    moduleDependencies: buildManifest.moduleDependencies,
     preflight: input.preflight,
   };
 }

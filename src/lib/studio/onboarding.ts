@@ -71,7 +71,7 @@ export const STUDIO_STARTING_PATHS: readonly StudioPathDefinition[] = [
     label: "Beginner",
     title: "Build your first course",
     description:
-      "Start in Builder mode with a simple starter project, change a few fields, preview it, and export your first SCORM package.",
+      "Start from structured source through Builder view, change a few fields, compile the preview, and export your first SCORM package.",
     actionLabel: "Open Builder path",
     recommendedProjectId: "customer-service",
     recommendedTemplateId: "customer-service-escalation",
@@ -85,7 +85,7 @@ export const STUDIO_STARTING_PATHS: readonly StudioPathDefinition[] = [
     label: "Intermediate",
     title: "Start from a template pack",
     description:
-      "Use a reusable template and variable set, then compile and preview a specific course variant without rewriting shared source.",
+      "Use a reusable template, variable set, and theme to generate a specific course variant without rewriting shared source.",
     actionLabel: "Open template path",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
@@ -345,7 +345,7 @@ export function buildEditingSurfaceSummary(input: {
       return {
         label: "You are editing builder fields",
         description:
-          "Use guided forms to update the structured source without working directly in YAML.",
+          "Use guided forms to update structured source, then compile the current course into preview and export output.",
       };
     case "source":
       return {
@@ -357,7 +357,7 @@ export function buildEditingSurfaceSummary(input: {
       return {
         label: "You are editing project selection",
         description:
-          "Choose which source project, template, variant, and theme define the current build target.",
+          "Choose which source project, template, variant, and theme define the current course source and build target.",
       };
     case "variables":
       return {

@@ -1,17 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { loadModuleLibrary } from "@/lib/module-library/load";
 import { runCourseProjectAutomation } from "@/lib/project/automation";
 import { loadCourseProjects } from "@/lib/project/load-course-projects";
 
 test("project automation validates and reports a default target without packaging", async () => {
   const projects = await loadCourseProjects();
+  const moduleLibrary = await loadModuleLibrary();
   const project = projects.find((candidate) => candidate.id === "customer-service");
 
   assert.ok(project);
 
   const run = await runCourseProjectAutomation(project, "validate", {
     generatedAt: "2026-03-12T20:00:00.000Z",
+    moduleLibrary,
   });
 
   assert.equal(run.report.success, true);
@@ -25,6 +28,7 @@ test("project automation validates and reports a default target without packagin
 
 test("project automation exports deterministic project build artifacts and reports", async () => {
   const projects = await loadCourseProjects();
+  const moduleLibrary = await loadModuleLibrary();
   const project = projects.find((candidate) => candidate.id === "security-awareness");
 
   assert.ok(project);
@@ -36,11 +40,15 @@ test("project automation exports deterministic project build artifacts and repor
       variantId: "k12-district",
       themeId: "default",
     },
+    moduleLibrary,
   });
 
   assert.equal(run.report.success, true);
   assert.equal(run.report.buildsGenerated, 1);
   assert.equal(run.report.manifestsGenerated, 1);
+  assert.ok(
+    run.artifacts.some((artifact) => artifact.path === "build/dependency-graph.json")
+  );
   assert.ok(
     run.artifacts.some(
       (artifact) =>
@@ -63,6 +71,7 @@ test("project automation exports deterministic project build artifacts and repor
 
 test("project automation export-all builds every valid variant theme combination", async () => {
   const projects = await loadCourseProjects();
+  const moduleLibrary = await loadModuleLibrary();
   const project = projects.find((candidate) => candidate.id === "security-awareness");
 
   assert.ok(project);
@@ -70,6 +79,7 @@ test("project automation export-all builds every valid variant theme combination
   const run = await runCourseProjectAutomation(project, "export-all", {
     generatedAt: "2026-03-12T20:00:00.000Z",
     exportMode: "validation",
+    moduleLibrary,
   });
 
   assert.equal(run.report.totalTargets, 6);
@@ -84,6 +94,7 @@ test("project automation export-all builds every valid variant theme combination
 
 test("project automation can skip invalid build selections and continue", async () => {
   const projects = await loadCourseProjects();
+  const moduleLibrary = await loadModuleLibrary();
   const project = projects.find((candidate) => candidate.id === "security-awareness");
 
   assert.ok(project);
@@ -102,6 +113,7 @@ test("project automation can skip invalid build selections and continue", async 
         themeId: "default",
       },
     ],
+    moduleLibrary,
   });
 
   assert.equal(run.report.totalTargets, 2);
@@ -119,6 +131,7 @@ test("project automation can skip invalid build selections and continue", async 
 
 test("fail-on-warning turns non-fatal project warnings into a failing report", async () => {
   const projects = await loadCourseProjects();
+  const moduleLibrary = await loadModuleLibrary();
   const project = projects.find((candidate) => candidate.id === "customer-service");
 
   assert.ok(project);
@@ -130,6 +143,7 @@ test("fail-on-warning turns non-fatal project warnings into a failing report", a
   const run = await runCourseProjectAutomation(warnedProject, "validate", {
     generatedAt: "2026-03-12T20:00:00.000Z",
     failOnWarning: true,
+    moduleLibrary,
   });
 
   assert.equal(run.report.warningCount > 0, true);

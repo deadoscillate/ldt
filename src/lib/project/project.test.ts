@@ -7,6 +7,7 @@ import {
   exportCourseProjectBuild,
   exportCourseProjectBuildMatrix,
 } from "@/lib/project/build";
+import { loadModuleLibrary } from "@/lib/module-library/load";
 import { loadCourseProjects } from "@/lib/project/load-course-projects";
 import {
   exportCourseProjectSourceArchive,
@@ -26,6 +27,9 @@ test("course projects load from disk with valid project metadata and checks", as
     projects.every((project) =>
       project.sourceFiles.some((file) => file.path === "project.yaml")
     )
+  );
+  assert.ok(
+    projects.every((project) => project.logicTestSuites.length > 0)
   );
 });
 
@@ -53,6 +57,7 @@ test("course project source archives round-trip through import and preserve sour
 
 test("project SCORM exports include deterministic file names and build manifests", async () => {
   const projects = await loadCourseProjects();
+  const moduleLibrary = await loadModuleLibrary();
   const project = projects.find((candidate) => candidate.id === "security-awareness");
 
   assert.ok(project);
@@ -67,6 +72,7 @@ test("project SCORM exports include deterministic file names and build manifests
     {
       mode: "standard",
       builtAt: "2026-03-12T18:00:00.000Z",
+      moduleLibrary,
     }
   );
 
@@ -78,6 +84,7 @@ test("project SCORM exports include deterministic file names and build manifests
   assert.equal(exported.metadata.templateId, "phishing-awareness");
   assert.equal(exported.metadata.variantId, "k12-district");
   assert.equal(exported.metadata.themeId, "default");
+  assert.ok(exported.buildManifest.moduleDependencies.length > 0);
   assert.ok(
     exported.artifacts.some((artifact) => artifact.path === "build-manifest.json")
   );
@@ -87,12 +94,14 @@ test("project SCORM exports include deterministic file names and build manifests
 
 test("project batch builds generate all variant and theme combinations", async () => {
   const projects = await loadCourseProjects();
+  const moduleLibrary = await loadModuleLibrary();
   const project = projects.find((candidate) => candidate.id === "security-awareness");
 
   assert.ok(project);
 
   const bundle = await exportCourseProjectBuildMatrix(project, {
     mode: "validation",
+    moduleLibrary,
   });
 
   assert.equal(bundle.summary.length, 6);

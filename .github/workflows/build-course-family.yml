@@ -57,11 +57,17 @@ jobs:
             --project "$project_path"
             --mode "$export_mode"
           )
+          test_command=(
+            npx tsx scripts/course-project-build.ts test
+            --project "$project_path"
+          )
 
           if [[ "$fail_on_warning" == "true" ]]; then
             command+=(--fail-on-warning)
+            test_command+=(--fail-on-warning)
           fi
 
+          "${test_command[@]}"
           "${command[@]}"
 
           if [[ -f "${project_path}/build/build-summary.md" ]]; then
@@ -76,6 +82,9 @@ jobs:
             course-projects/*/build/scorm12/*.zip
             course-projects/*/build/scorm12/*.build-manifest.json
             course-projects/*/build/build-manifest.json
+            course-projects/*/build/dependency-graph.json
             course-projects/*/build/build-summary.md
             course-projects/*/build/ci-build-report.json
+            course-projects/*/build/tests/course-test-report.json
+            course-projects/*/build/tests/course-test-summary.md
           if-no-files-found: error

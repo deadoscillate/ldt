@@ -1,0 +1,24 @@
+id: escalation_policy
+title: Escalation policy introduction
+description: Shared introduction for customer service escalation modules.
+version: 1.0.0
+category: customer-service
+tags:
+  - customer-service
+  - escalation
+  - intro
+lastUpdated: 2026-03-12
+deprecated: false
+nodes:
+  - id: intro
+    type: content
+    layout: two-column
+    title: "{{courseTitle}}"
+    body: Use a repeatable escalation workflow instead of improvising each handoff.
+    left:
+      title: Situation
+      text: A customer has received the wrong order and is already frustrated.
+    right:
+      title: Goal
+      text: De-escalate, confirm the facts, and route the issue to {{escalationDesk}}.
+    next: first-response

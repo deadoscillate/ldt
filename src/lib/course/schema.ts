@@ -16,6 +16,16 @@ export interface BlockIncludeDocument {
   include: string;
 }
 
+export interface ModuleIncludeReferenceDocument {
+  module: string;
+  version?: string;
+  with?: Record<string, TemplateScalarValue>;
+}
+
+export interface ModuleIncludeDocument {
+  include: ModuleIncludeReferenceDocument;
+}
+
 export interface MediaDocument {
   type: "image" | "video";
   src: string;
@@ -232,7 +242,8 @@ export type CourseTemplateNodeDocument =
 
 export type CourseTemplateEntryDocument =
   | CourseTemplateNodeDocument
-  | BlockIncludeDocument;
+  | BlockIncludeDocument
+  | ModuleIncludeDocument;
 
 export interface CourseTemplateDocument {
   id: string;
@@ -597,13 +608,32 @@ const blockIncludeSchema = z
   })
   .strict();
 
+const moduleIncludeReferenceSchema = z
+  .object({
+    module: identifierSchema,
+    version: z.string().trim().min(1).optional(),
+    with: z
+      .record(identifierSchema, z.union([z.string(), z.number(), z.boolean()]))
+      .optional()
+      .default({}),
+  })
+  .strict();
+
+const moduleIncludeSchema = z
+  .object({
+    include: moduleIncludeReferenceSchema,
+  })
+  .strict();
+
 const templateDataSchema = z.record(
   identifierSchema,
   z.union([z.string(), z.number(), z.boolean()])
 );
 
 export const courseTemplateEntrySchema: z.ZodType<CourseTemplateEntryDocument> =
-  z.lazy(() => z.union([courseTemplateNodeSchema, blockIncludeSchema]));
+  z.lazy(() =>
+    z.union([courseTemplateNodeSchema, blockIncludeSchema, moduleIncludeSchema])
+  );
 
 export const courseTemplateDocumentSchema: z.ZodType<CourseTemplateDocument> = z
   .object({
@@ -628,3 +658,15 @@ export const courseTemplateDocumentSchema: z.ZodType<CourseTemplateDocument> = z
       .min(1, "At least one node or block include is required."),
   })
   .strict();
+
+export function isBlockIncludeEntry(
+  entry: CourseTemplateEntryDocument
+): entry is BlockIncludeDocument {
+  return "include" in entry && typeof entry.include === "string";
+}
+
+export function isModuleIncludeEntry(
+  entry: CourseTemplateEntryDocument
+): entry is ModuleIncludeDocument {
+  return "include" in entry && typeof entry.include === "object" && entry.include !== null;
+}

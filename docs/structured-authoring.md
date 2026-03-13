@@ -1,8 +1,10 @@
 # Structured Authoring
 
-LDT Engine is built around a simple rule:
+Sapio Forge is built around a simple rule:
 
 Source files are the asset. Preview and SCORM packages are compiled output.
+
+Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, and reproducible builds for training content.
 
 ## What that means
 

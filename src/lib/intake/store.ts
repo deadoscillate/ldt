@@ -4,7 +4,13 @@ import path from "node:path";
 
 import { get, list, put } from "@vercel/blob";
 
-import type { LeadType } from "@/lib/intake/schema";
+import type {
+  FeedbackContext,
+  FeedbackScreenshot,
+  FeedbackStatus,
+  FeedbackType,
+  LeadType,
+} from "@/lib/intake/schema";
 
 export const INTAKE_KINDS = ["waitlist", "feedback", "events"] as const;
 
@@ -28,9 +34,13 @@ export interface WaitlistEntry extends IntakeEntryBase {
 
 export interface FeedbackEntry extends IntakeEntryBase {
   kind: "feedback";
+  feedbackType: FeedbackType;
+  status: FeedbackStatus;
   message: string;
   email: string | null;
   sourcePage: string | null;
+  context: FeedbackContext | null;
+  screenshot: FeedbackScreenshot | null;
 }
 
 export interface EventEntry extends IntakeEntryBase {
@@ -203,10 +213,13 @@ export function createWaitlistEntry(input: {
 }
 
 export function createFeedbackEntry(input: {
+  feedbackType?: FeedbackType;
   message: string;
   email?: string;
   source?: string;
   sourcePage?: string;
+  context?: FeedbackContext;
+  screenshot?: FeedbackScreenshot;
 }): FeedbackEntry {
   const normalizedEmail = input.email?.trim();
   const normalizedSourcePage = input.sourcePage?.trim();
@@ -214,9 +227,13 @@ export function createFeedbackEntry(input: {
   return {
     id: randomUUID(),
     kind: "feedback",
+    feedbackType: input.feedbackType ?? "suggestion",
+    status: "new",
     message: input.message.trim(),
     email: normalizedEmail ? normalizedEmail.toLowerCase() : null,
     sourcePage: normalizedSourcePage ? normalizedSourcePage : null,
+    context: input.context ?? null,
+    screenshot: input.screenshot ?? null,
     source: input.source ?? "landing-page",
     submittedAt: new Date().toISOString(),
   };

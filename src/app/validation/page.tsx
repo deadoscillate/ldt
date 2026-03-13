@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
 
 import { ValidationProofCenter } from "@/components/ValidationProofCenter";
+import { BRAND, buildBrandTitle } from "@/lib/app/brand";
 import { loadLmsValidationCatalog } from "@/lib/validation/load";
 
 export const metadata: Metadata = {
-  title: "Validation",
+  title: "Validation Proof Center",
   description:
-    "Structured proof center for SCORM Cloud baseline validation and broader LMS interoperability tracking across Moodle, Canvas LMS, and TalentLMS.",
+    "Sapio Forge proof center for SCORM Cloud baseline validation and broader LMS interoperability tracking across Moodle, Canvas LMS, and TalentLMS.",
   openGraph: {
-    title: "LDT Engine | Validation Proof Center",
+    title: buildBrandTitle("Validation Proof Center"),
     description:
-      "See current SCORM validation status, tested behaviors, and platform-specific LMS proof records for LDT Engine.",
+      "See current SCORM validation status, tested behaviors, and platform-specific LMS proof records for Sapio Forge.",
     type: "website",
-    siteName: "LDT Engine",
+    siteName: BRAND.productName,
   },
 };
 

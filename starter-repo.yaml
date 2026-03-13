@@ -1,15 +1,16 @@
-id: ldt-engine-starter
-title: LDT Engine Starter Repository
+id: sapio-forge-starter
+title: Sapio Forge Starter Repository
 description: >
   GitHub-ready starter repository template for managing structured SCORM course
   projects, reusable template packs, and reusable theme packs as source-controlled assets.
 version: 1.0.0
 product:
-  name: LDT Engine
+  name: Sapio Forge
   studioPath: /studio
   validationPath: /validation
 structure:
   courseProjectsDir: course-projects
+  moduleLibraryDir: module-library
   templatePacksDir: template-packs
   themesDir: themes
   assetsDir: assets
@@ -60,11 +61,16 @@ docs:
   - docs/build-pipeline.md
   - docs/build-artifacts.md
   - docs/github-actions.md
+  - docs/shared-modules.md
+  - docs/testing-course-logic.md
+  - docs/why-testable-learning-logic-matters.md
   - docs/repository-philosophy.md
   - docs/ci-cd-for-learning-modules.md
+  - docs/rebrand-checklist.md
 quickStart:
   - npm install
   - npm run dev
   - npm run validate:project
+  - npm run test:course
   - npm run build:project
   - npm run build:all

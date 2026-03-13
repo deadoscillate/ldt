@@ -22,6 +22,7 @@ import {
   type ResolveCourseTemplateOptions,
 } from "@/lib/course/template";
 import type { CanonicalCourse } from "@/lib/course/types";
+import type { CourseSourceDependencyGraph } from "@/lib/module-library/dependency";
 
 export type CoursePipelineStageId =
   | "parse-source"
@@ -49,11 +50,13 @@ export interface CoursePipelineSnapshot {
   previewModel: CanonicalCourse | null;
   exportModel: CanonicalCourse | null;
   errors: string[];
+  warnings: string[];
   failedStageId: CoursePipelineStageId | null;
   stages: CoursePipelineStage[];
   expandedCourseJson: string;
   compiledJson: string;
   templateDataFingerprint: string;
+  dependencyGraph: CourseSourceDependencyGraph | null;
 }
 
 function serializeTemplateData(
@@ -178,6 +181,7 @@ export function runCoursePipeline(
   let resolvedTemplate: ResolvedCourseTemplate | null = null;
   let canonicalCourse: CanonicalCourse | null = null;
   let errors: string[] = [];
+  let warnings: string[] = [];
   let failedStageId: CoursePipelineStageId | null = null;
 
   try {
@@ -215,6 +219,7 @@ export function runCoursePipeline(
   if (!failedStageId && templateDocument) {
     try {
       resolvedTemplate = resolveCourseTemplate(templateDocument, options);
+      warnings = resolvedTemplate.warnings;
       stages[2] = {
         ...stages[2],
         status: "success",
@@ -290,6 +295,7 @@ export function runCoursePipeline(
     previewModel,
     exportModel,
     errors,
+    warnings,
     failedStageId,
     stages: finalizeStages(
       stages,
@@ -300,5 +306,6 @@ export function runCoursePipeline(
     expandedCourseJson,
     compiledJson,
     templateDataFingerprint: serializeTemplateData(templateDataOverrides),
+    dependencyGraph: resolvedTemplate?.dependencyGraph ?? null,
   };
 }

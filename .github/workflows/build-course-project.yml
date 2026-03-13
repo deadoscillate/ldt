@@ -31,9 +31,11 @@ on:
       - main
     paths:
       - "course-projects/**"
+      - "module-library/**"
       - "scripts/course-project-build.ts"
       - "src/lib/project/**"
       - "src/lib/course/**"
+      - "src/lib/module-library/**"
       - "src/lib/export/**"
       - "src/lib/theme/**"
       - "src/lib/scorm/**"
@@ -81,17 +83,54 @@ jobs:
               --target "$target"
               --mode "$export_mode"
             )
+            test_command=(
+              npx tsx scripts/course-project-build.ts test
+              --project "$project_path"
+              --target "$target"
+            )
 
             if [[ "$fail_on_warning" == "true" ]]; then
               command+=(--fail-on-warning)
+              test_command+=(--fail-on-warning)
             fi
 
             echo "::group::Build ${project_path} (${target})"
+            "${test_command[@]}"
             "${command[@]}"
             echo "::endgroup::"
 
             if [[ -f "${project_path}/build/build-summary.md" ]]; then
               cat "${project_path}/build/build-summary.md" >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            exit 0
+          fi
+
+          changed_module_paths=()
+
+          if [[ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
+            while IFS= read -r changed_path; do
+              [[ -n "$changed_path" ]] && changed_module_paths+=("$changed_path")
+            done < <(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" -- module-library)
+          fi
+
+          if [[ "${#changed_module_paths[@]}" -gt 0 ]]; then
+            command=(
+              npx tsx scripts/course-project-build.ts affected
+              --mode standard
+              --run-tests
+            )
+
+            for changed_path in "${changed_module_paths[@]}"; do
+              command+=(--changed "$changed_path")
+            done
+
+            echo "::group::Build affected targets from shared module changes"
+            "${command[@]}"
+            echo "::endgroup::"
+
+            if [[ -f "build/affected/affected-summary.md" ]]; then
+              cat "build/affected/affected-summary.md" >> "$GITHUB_STEP_SUMMARY"
             fi
 
             exit 0
@@ -104,6 +143,7 @@ jobs:
             project_dir="$(dirname "$project_file")"
 
             echo "::group::Build default target for ${project_dir}"
+            npx tsx scripts/course-project-build.ts test --project "$project_dir"
             npx tsx scripts/course-project-build.ts export --project "$project_dir"
             echo "::endgroup::"
 
@@ -129,6 +169,16 @@ jobs:
             course-projects/*/build/scorm12/*.zip
             course-projects/*/build/scorm12/*.build-manifest.json
             course-projects/*/build/build-manifest.json
+            course-projects/*/build/dependency-graph.json
             course-projects/*/build/build-summary.md
             course-projects/*/build/ci-build-report.json
+            course-projects/*/build/tests/course-test-report.json
+            course-projects/*/build/tests/course-test-summary.md
+            build/affected/affected-rebuild-manifest.json
+            build/affected/affected-summary.md
+            build/affected/affected-report.json
+            build/affected/tests/affected-course-test-report.json
+            build/affected/tests/affected-course-test-summary.md
+            build/affected/tests/**/*.json
+            build/affected/tests/**/*.md
           if-no-files-found: error

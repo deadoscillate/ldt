@@ -34,12 +34,36 @@ function buildWaitlistCsv(entries: WaitlistEntry[]): string {
 
 function buildFeedbackCsv(entries: FeedbackEntry[]): string {
   return [
-    "message,email,sourcePage,submittedAt,source",
+    [
+      "feedbackType",
+      "status",
+      "message",
+      "email",
+      "sourcePage",
+      "currentScreen",
+      "projectId",
+      "templateId",
+      "variantId",
+      "themeId",
+      "appVersion",
+      "screenshotAttached",
+      "submittedAt",
+      "source",
+    ].join(","),
     ...entries.map((entry) =>
       [
+        escapeCsvCell(entry.feedbackType),
+        escapeCsvCell(entry.status),
         escapeCsvCell(entry.message),
         escapeCsvCell(entry.email ?? ""),
         escapeCsvCell(entry.sourcePage ?? ""),
+        escapeCsvCell(entry.context?.currentScreen ?? ""),
+        escapeCsvCell(entry.context?.projectId ?? ""),
+        escapeCsvCell(entry.context?.templateId ?? ""),
+        escapeCsvCell(entry.context?.variantId ?? ""),
+        escapeCsvCell(entry.context?.themeId ?? ""),
+        escapeCsvCell(entry.context?.appVersion ?? ""),
+        escapeCsvCell(entry.screenshot ? "yes" : "no"),
         escapeCsvCell(entry.submittedAt),
         escapeCsvCell(entry.source),
       ].join(",")

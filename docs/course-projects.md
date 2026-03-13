@@ -1,6 +1,6 @@
 # Course Projects
 
-Course projects make structured authoring behave like a small software project.
+Sapio Forge course projects make structured authoring behave like a small software project.
 
 The starter repository already ships with three example projects under `course-projects/`:
 
@@ -13,7 +13,9 @@ The source of truth is the project source:
 - `project.yaml`
 - template YAML
 - variable-set YAML
+- shared module references
 - theme pack files
+- declarative learner-path tests under `tests/*.yaml`
 - project assets and README files
 
 SCORM packages are generated build artifacts.
@@ -43,6 +45,10 @@ Example:
         /assets
     /assets
     /build
+    /tests
+/module-library
+  registry.yaml
+  /modules
 ```
 
 ## What `project.yaml` does
@@ -94,6 +100,7 @@ Project archives include:
 - variable-set files
 - theme metadata and token files
 - bundled theme assets
+- logic test definitions
 
 ## Git guidance
 
@@ -119,6 +126,28 @@ Project-mode SCORM exports now carry project-aware metadata:
 
 This makes the source-to-build path inspectable and auditable.
 
+## Course logic tests
+
+Each project can include declarative logic test suites under `tests/*.yaml`.
+
+These suites define:
+
+- target template, variant, and theme
+- learner actions such as `advance` and `select`
+- expected outcomes such as terminal step, score, completion, and pass/fail
+
+Run them locally with:
+
+```bash
+tsx scripts/course-project-build.ts test --project course-projects/security-awareness
+```
+
+Filter to one target when needed:
+
+```bash
+tsx scripts/course-project-build.ts test --project course-projects/security-awareness --target phishing-awareness/k12-district/default
+```
+
 ## Using course projects in a build pipeline
 
 Course projects can now be validated and built from the command line.
@@ -127,6 +156,7 @@ Examples:
 
 ```bash
 tsx scripts/course-project-build.ts validate --project course-projects/security-awareness --all
+tsx scripts/course-project-build.ts test --project course-projects/security-awareness
 tsx scripts/course-project-build.ts compile --project course-projects/security-awareness --target phishing-awareness/healthcare/corporate-blue
 tsx scripts/course-project-build.ts export --project course-projects/security-awareness --target phishing-awareness/k12-district/default
 tsx scripts/course-project-build.ts export-all --project course-projects/security-awareness --mode validation
@@ -139,8 +169,19 @@ Outputs are deterministic and land under the project build directory by default:
 - `build/preview/*.course.json`
 - `build/scorm12/*.zip`
 - `build/scorm12/*.build-manifest.json`
+- `build/dependency-graph.json`
 - `build/build-manifest.json`
 - `build/ci-build-report.json`
 - `build/build-summary.md`
+- `build/tests/course-test-report.json`
+- `build/tests/course-test-summary.md`
 
 Warnings stay non-fatal unless you pass `--fail-on-warning`.
+
+For shared-source maintenance:
+
+```bash
+tsx scripts/course-project-build.ts affected --changed module-library/modules/phishing_intro.yaml --run-tests
+```
+
+That command detects impacted targets from the dependency graph and rebuilds only the affected outputs.

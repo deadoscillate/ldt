@@ -1,3 +1,4 @@
+import { BRAND } from "@/lib/app/brand";
 import type { LmsValidationCatalog } from "@/lib/validation/schema";
 
 export const DEFAULT_LMS_VALIDATION_TARGETS = [
@@ -45,7 +46,7 @@ export function buildValidationNotesText(input: {
   const targets = getValidationTargets(input.catalog);
 
   return [
-    "LDT Engine LMS Validation Notes",
+    `${BRAND.productName} LMS Validation Notes`,
     "",
     `Course id: ${input.courseId}`,
     `Course title: ${input.courseTitle}`,

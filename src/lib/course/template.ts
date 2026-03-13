@@ -10,7 +10,9 @@ import {
 } from "@/lib/course/template-variables";
 import {
   courseDocumentSchema,
-  type BlockIncludeDocument,
+  courseTemplateNodeSchema,
+  isBlockIncludeEntry,
+  isModuleIncludeEntry,
   type CalloutBlockDocument,
   type CourseDocument,
   type CourseTemplateDocument,
@@ -27,6 +29,14 @@ import {
   type TemplateTextValue,
   type ThemeDocument,
 } from "@/lib/course/schema";
+import type {
+  CourseSourceDependencyGraph,
+  DependencyGraphEdge,
+  ModuleDependencyRecord,
+} from "@/lib/module-library/dependency";
+import { resolveSharedModule } from "@/lib/module-library/resolve";
+import type { SharedModuleLibrary } from "@/lib/module-library/schema";
+
 export type {
   TemplateFieldDefinition,
   TemplateFieldInputType,
@@ -36,12 +46,28 @@ export type {
 export interface ResolveCourseTemplateOptions {
   templateDataOverrides?: Record<string, TemplateScalarValue>;
   variableSchema?: TemplateVariableSchema | null;
+  moduleLibrary?: SharedModuleLibrary | null;
 }
 
 export interface ResolvedCourseTemplate {
   document: CourseDocument;
   templateData: Record<string, TemplateScalarValue>;
   templateFields: TemplateFieldDefinition[];
+  warnings: string[];
+  dependencyGraph: CourseSourceDependencyGraph;
+}
+
+interface ExpandEntriesContext {
+  blocks: Record<string, CourseTemplateEntryDocument[]>;
+  templateData: Record<string, TemplateScalarValue>;
+  issues: string[];
+  warnings: string[];
+  moduleLibrary: SharedModuleLibrary | null;
+  dependencyMap: Map<string, ModuleDependencyRecord>;
+  dependencyEdges: DependencyGraphEdge[];
+  blockStack: string[];
+  moduleStack: string[];
+  currentDependencyNode: string;
 }
 
 const placeholderPattern = /{{\s*([A-Za-z0-9_-]+)\s*}}/g;
@@ -52,12 +78,6 @@ const runtimePlaceholderKeys = new Set([
   "percent",
   "courseTitle",
 ]);
-
-function isBlockIncludeEntry(
-  entry: CourseTemplateEntryDocument
-): entry is BlockIncludeDocument {
-  return "include" in entry;
-}
 
 function formatIssuePath(path: string): string {
   return path.length > 0 ? path : "course";
@@ -117,6 +137,19 @@ function interpolateValue(
   issues: string[]
 ): string | number | undefined {
   if (value === undefined || typeof value === "number") {
+    return value;
+  }
+
+  return interpolateString(value, templateData, path, issues);
+}
+
+function interpolateScalarValue(
+  value: TemplateScalarValue,
+  templateData: Record<string, TemplateScalarValue>,
+  path: string,
+  issues: string[]
+): TemplateScalarValue {
+  if (typeof value !== "string") {
     return value;
   }
 
@@ -253,51 +286,213 @@ function interpolateTheme(
   };
 }
 
+function addDependencyEdge(
+  dependencyEdges: DependencyGraphEdge[],
+  edge: DependencyGraphEdge
+): void {
+  if (
+    dependencyEdges.some(
+      (candidate) =>
+        candidate.from === edge.from &&
+        candidate.to === edge.to &&
+        candidate.type === edge.type
+    )
+  ) {
+    return;
+  }
+
+  dependencyEdges.push(edge);
+}
+
+function registerModuleDependency(
+  context: ExpandEntriesContext,
+  dependency: ModuleDependencyRecord
+): void {
+  const moduleKey = `${dependency.moduleId}@${dependency.version}`;
+
+  if (!context.dependencyMap.has(moduleKey)) {
+    context.dependencyMap.set(moduleKey, dependency);
+  }
+
+  addDependencyEdge(context.dependencyEdges, {
+    from: context.currentDependencyNode,
+    to: `module:${moduleKey}`,
+    type:
+      context.currentDependencyNode === "course"
+        ? "course-uses-module"
+        : "module-includes-module",
+  });
+}
+
 function expandEntries(
   entries: CourseTemplateEntryDocument[],
-  blocks: Record<string, CourseTemplateEntryDocument[]>,
-  issues: string[],
-  path: string,
-  includeStack: string[]
+  context: ExpandEntriesContext,
+  path: string
 ): CourseTemplateNodeDocument[] {
   const expandedNodes: CourseTemplateNodeDocument[] = [];
 
   entries.forEach((entry, index) => {
     const entryPath = `${path}[${index}]`;
 
-    if (!isBlockIncludeEntry(entry)) {
+    if (!("include" in entry)) {
       expandedNodes.push(entry);
       return;
     }
 
-    const blockEntries = blocks[entry.include];
+    if (isBlockIncludeEntry(entry)) {
+      const blockEntries = context.blocks[entry.include];
 
-    if (!blockEntries) {
-      issues.push(
-        `${formatIssuePath(entryPath)} references missing block "${entry.include}".`
+      if (!blockEntries) {
+        context.issues.push(
+          `${formatIssuePath(entryPath)} references missing block "${entry.include}".`
+        );
+        return;
+      }
+
+      if (context.blockStack.includes(entry.include)) {
+        context.issues.push(
+          `${formatIssuePath(entryPath)} creates a circular block include: ${[
+            ...context.blockStack,
+            entry.include,
+          ].join(" -> ")}.`
+        );
+        return;
+      }
+
+      expandedNodes.push(
+        ...expandEntries(
+          blockEntries,
+          {
+            ...context,
+            blockStack: [...context.blockStack, entry.include],
+          },
+          `blocks.${entry.include}`
+        )
       );
       return;
     }
 
-    if (includeStack.includes(entry.include)) {
-      issues.push(
-        `${formatIssuePath(entryPath)} creates a circular block include: ${[
-          ...includeStack,
-          entry.include,
+    if (!context.moduleLibrary) {
+      context.issues.push(
+        `${formatIssuePath(entryPath)} references shared module "${entry.include.module}" but no module library is loaded.`
+      );
+      return;
+    }
+
+    const resolvedModule = resolveSharedModule(
+      context.moduleLibrary,
+      entry.include.module,
+      entry.include.version ?? null
+    );
+
+    if (!resolvedModule.module) {
+      if (resolvedModule.latest && resolvedModule.requestedVersion) {
+        context.issues.push(
+          `${formatIssuePath(entryPath)} pins shared module "${entry.include.module}" version "${resolvedModule.requestedVersion}", but only version "${resolvedModule.latest.version}" is currently available.`
+        );
+      } else {
+        context.issues.push(
+          `${formatIssuePath(entryPath)} references missing shared module "${entry.include.module}".`
+        );
+      }
+      return;
+    }
+
+    const module = resolvedModule.module;
+    const moduleKey = `${module.id}@${module.version}`;
+
+    if (context.moduleStack.includes(moduleKey)) {
+      context.issues.push(
+        `${formatIssuePath(entryPath)} creates a circular module include: ${[
+          ...context.moduleStack,
+          moduleKey,
         ].join(" -> ")}.`
       );
       return;
     }
 
-    expandedNodes.push(
-      ...expandEntries(
-        blockEntries,
-        blocks,
-        issues,
-        `blocks.${entry.include}`,
-        [...includeStack, entry.include]
-      )
+    if (!resolvedModule.requestedVersion) {
+      context.warnings.push(
+        `${formatIssuePath(entryPath)} resolves shared module "${module.id}" to the latest available version "${module.version}". Pin the version for fully reproducible source.`
+      );
+    } else if (
+      resolvedModule.latest &&
+      resolvedModule.latest.version !== module.version
+    ) {
+      context.warnings.push(
+        `${formatIssuePath(entryPath)} pins shared module "${module.id}" at "${module.version}" while a newer version "${resolvedModule.latest.version}" exists.`
+      );
+    }
+
+    if (module.deprecated) {
+      context.warnings.push(
+        `${formatIssuePath(entryPath)} uses deprecated shared module "${module.id}" version "${module.version}".`
+      );
+    }
+
+    registerModuleDependency(context, {
+      moduleId: module.id,
+      title: module.title,
+      version: module.version,
+      sourcePath: module.sourcePath,
+      category: module.category,
+      tags: module.tags,
+      deprecated: module.deprecated,
+      requestedVersion: resolvedModule.requestedVersion,
+      resolution: resolvedModule.requestedVersion ? "pinned" : "latest",
+      includedFrom: formatIssuePath(entryPath),
+    });
+
+    const includeOverrides = Object.fromEntries(
+      Object.entries(entry.include.with ?? {}).map(([key, value]) => [
+        key,
+        interpolateScalarValue(
+          value,
+          context.templateData,
+          `${entryPath}.include.with.${key}`,
+          context.issues
+        ),
+      ])
     );
+    const moduleTemplateData = {
+      ...context.templateData,
+      ...(module.templateData ?? {}),
+      ...includeOverrides,
+    };
+
+    const moduleNodes = expandEntries(
+        module.nodes,
+        {
+          ...context,
+          blocks: module.blocks,
+          templateData: moduleTemplateData,
+          blockStack: [],
+          moduleStack: [...context.moduleStack, moduleKey],
+          currentDependencyNode: `module:${moduleKey}`,
+        },
+        `modules.${module.id}@${module.version}.nodes`
+      );
+    moduleNodes.forEach((moduleNode, moduleIndex) => {
+      try {
+        expandedNodes.push(
+          courseTemplateNodeSchema.parse(
+            interpolateNode(
+              moduleNode,
+              moduleTemplateData,
+              `modules.${module.id}@${module.version}.nodes[${moduleIndex}]`,
+              context.issues
+            )
+          )
+        );
+      } catch (error) {
+        if (error instanceof ZodError) {
+          context.issues.push(...formatZodIssues(error));
+          return;
+        }
+
+        throw error;
+      }
+    });
   });
 
   return expandedNodes;
@@ -306,10 +501,10 @@ function expandEntries(
 function interpolateNode(
   node: CourseTemplateNodeDocument,
   templateData: Record<string, TemplateScalarValue>,
-  index: number,
+  path: string,
   issues: string[]
 ): Record<string, unknown> {
-  const basePath = `nodes[${index}]`;
+  const basePath = path;
   const interpolatedBase = {
     id: interpolateString(node.id, templateData, `${basePath}.id`, issues),
     title: interpolateString(node.title, templateData, `${basePath}.title`, issues),
@@ -523,13 +718,26 @@ export function resolveCourseTemplate(
     options.variableSchema ?? null
   );
   const issues: string[] = [];
+  const warnings: string[] = [];
+  const dependencyMap = new Map<string, ModuleDependencyRecord>();
+  const dependencyEdges: DependencyGraphEdge[] = [];
+
   issues.push(...templateValidation.issues);
   const expandedNodes = expandEntries(
     sourceDocument.nodes,
-    sourceDocument.blocks ?? {},
-    issues,
-    "nodes",
-    []
+    {
+      blocks: sourceDocument.blocks ?? {},
+      templateData,
+      issues,
+      warnings,
+      moduleLibrary: options.moduleLibrary ?? null,
+      dependencyMap,
+      dependencyEdges,
+      blockStack: [],
+      moduleStack: [],
+      currentDependencyNode: "course",
+    },
+    "nodes"
   );
 
   const candidateDocument = {
@@ -562,7 +770,7 @@ export function resolveCourseTemplate(
       issues
     ),
     nodes: expandedNodes.map((node, index) =>
-      interpolateNode(node, templateData, index, issues)
+      interpolateNode(node, templateData, `nodes[${index}]`, issues)
     ),
   };
 
@@ -571,10 +779,31 @@ export function resolveCourseTemplate(
   }
 
   try {
+    const document = courseDocumentSchema.parse(candidateDocument);
+    const dependencyGraph: CourseSourceDependencyGraph = {
+      sourceFiles:
+        dependencyMap.size > 0 && options.moduleLibrary
+          ? [
+              options.moduleLibrary.registryPath,
+              ...[...dependencyMap.values()].map(
+                (dependency) => dependency.sourcePath
+              ),
+            ].sort((leftPath, rightPath) => leftPath.localeCompare(rightPath))
+          : [],
+      moduleDependencies: [...dependencyMap.values()].sort((leftDependency, rightDependency) =>
+        `${leftDependency.moduleId}@${leftDependency.version}`.localeCompare(
+          `${rightDependency.moduleId}@${rightDependency.version}`
+        )
+      ),
+      edges: dependencyEdges,
+    };
+
     return {
-      document: courseDocumentSchema.parse(candidateDocument),
+      document,
       templateData,
       templateFields,
+      warnings: [...new Set(warnings)],
+      dependencyGraph,
     };
   } catch (error) {
     if (error instanceof ZodError) {

@@ -5,7 +5,12 @@ import {
   type CourseProjectBuildSelection,
 } from "@/lib/project/build";
 import type { CourseProject } from "@/lib/project/schema";
-import type { ScormBuildManifest, ScormExportMode } from "@/lib/export/scorm-export";
+import type {
+  ScormBuildManifest,
+  ScormExportMode,
+} from "@/lib/export/scorm-export";
+import type { ProjectBuildDependencyGraph } from "@/lib/module-library/dependency";
+import type { SharedModuleLibrary } from "@/lib/module-library/schema";
 
 export type CourseProjectBuildCommand =
   | "validate"
@@ -46,6 +51,7 @@ export interface CourseProjectBuildArtifactPlan {
     | "preview-model"
     | "scorm-package"
     | "build-manifest"
+    | "dependency-graph"
     | "aggregate-manifest"
     | "json-report"
     | "summary-markdown";
@@ -72,6 +78,7 @@ export interface CourseProjectBuildTargetRecord {
   buildManifest: ScormBuildManifest | null;
   previewModelPath: string | null;
   packageContents: readonly string[];
+  dependencyGraph: ProjectBuildDependencyGraph | null;
 }
 
 export interface CourseProjectBuildRunReport {
@@ -109,6 +116,7 @@ export interface CourseProjectAutomationOptions {
   exportMode?: ScormExportMode;
   generatedAt?: string;
   failOnWarning?: boolean;
+  moduleLibrary?: SharedModuleLibrary | null;
 }
 
 function normalizePath(value: string): string {
@@ -140,7 +148,7 @@ function createStages(): CourseProjectBuildStage[] {
     createStage("load-project", "Load project"),
     createStage("validate-project", "Validate project structure"),
     createStage("validate-source-schema", "Validate source schema"),
-    createStage("resolve-template-inputs", "Resolve template, variables, and theme"),
+    createStage("resolve-template-inputs", "Resolve template, variables, theme, and modules"),
     createStage("normalize-canonical", "Normalize canonical model"),
     createStage("validate-graph", "Validate graph and references"),
     createStage("generate-preview-model", "Generate preview model"),
@@ -195,6 +203,10 @@ function buildManifestPath(
   );
 }
 
+function buildDependencyGraphPath(project: CourseProject): string {
+  return normalizePath(`${project.buildDirectory}/dependency-graph.json`);
+}
+
 function buildAggregateManifestPath(project: CourseProject): string {
   return normalizePath(`${project.buildDirectory}/build-manifest.json`);
 }
@@ -232,6 +244,7 @@ function buildSkippedRecord(
     buildManifest: null,
     previewModelPath: null,
     packageContents: [],
+    dependencyGraph: null,
   };
 }
 
@@ -329,7 +342,8 @@ async function runBuildTarget(
   command: CourseProjectBuildCommand,
   selection: CourseProjectBuildSelection,
   generatedAt: string,
-  exportMode: ScormExportMode
+  exportMode: ScormExportMode,
+  moduleLibrary: SharedModuleLibrary | null
 ): Promise<{
   record: CourseProjectBuildTargetRecord;
   artifacts: CourseProjectBuildArtifactPlan[];
@@ -373,6 +387,7 @@ async function runBuildTarget(
         buildManifest: null,
         previewModelPath: null,
         packageContents: [],
+        dependencyGraph: null,
       },
       artifacts: [],
     };
@@ -388,7 +403,9 @@ async function runBuildTarget(
   let resolvedSelection;
 
   try {
-    resolvedSelection = resolveCourseProjectBuildSelection(project, selection);
+    resolvedSelection = resolveCourseProjectBuildSelection(project, selection, {
+      moduleLibrary,
+    });
   } catch (error) {
     setStage(
       stages,
@@ -414,14 +431,19 @@ async function runBuildTarget(
         severity: "warning",
         code: "invalid-build-selection",
         message:
-          error instanceof Error
-            ? error.message
-            : "Invalid build selection.",
+          error instanceof Error ? error.message : "Invalid build selection.",
         targetKey,
       }),
       artifacts: [],
     };
   }
+
+  const pipelineWarnings = resolvedSelection.snapshot.warnings.map((message) => ({
+    severity: "warning" as const,
+    code: "pipeline-warning",
+    message,
+    targetKey,
+  }));
 
   mapPipelineStagesToBuildStages(stages, {
     schema: resolvedSelection.snapshot.stages[1]?.status ?? "failed",
@@ -473,7 +495,7 @@ async function runBuildTarget(
         courseTitle: null,
         skipped: false,
         success: false,
-        warnings: [],
+        warnings: pipelineWarnings,
         errors: resolvedSelection.snapshot.errors.map((message) => ({
           severity: "error" as const,
           code: "pipeline-error",
@@ -486,6 +508,7 @@ async function runBuildTarget(
         buildManifest: null,
         previewModelPath: null,
         packageContents: [],
+        dependencyGraph: resolvedSelection.dependencyGraph,
       },
       artifacts: [],
     };
@@ -528,7 +551,7 @@ async function runBuildTarget(
         courseTitle: resolvedSelection.snapshot.exportModel.title,
         skipped: false,
         success: true,
-        warnings: [],
+        warnings: pipelineWarnings,
         errors: [],
         stages,
         outputFiles,
@@ -536,6 +559,7 @@ async function runBuildTarget(
         buildManifest: null,
         previewModelPath,
         packageContents: [],
+        dependencyGraph: resolvedSelection.dependencyGraph,
       },
       artifacts: targetArtifacts,
     };
@@ -568,7 +592,7 @@ async function runBuildTarget(
         courseTitle: resolvedSelection.snapshot.exportModel.title,
         skipped: false,
         success: true,
-        warnings: [],
+        warnings: pipelineWarnings,
         errors: [],
         stages,
         outputFiles,
@@ -576,6 +600,7 @@ async function runBuildTarget(
         buildManifest: null,
         previewModelPath: null,
         packageContents: [],
+        dependencyGraph: resolvedSelection.dependencyGraph,
       },
       artifacts: [],
     };
@@ -585,6 +610,7 @@ async function runBuildTarget(
     const exported = await exportCourseProjectBuild(project, selection, {
       mode: exportMode,
       builtAt: generatedAt,
+      moduleLibrary,
     });
 
     if (!exported.metadata.preflight.ready) {
@@ -617,7 +643,7 @@ async function runBuildTarget(
           courseTitle: resolvedSelection.snapshot.exportModel.title,
           skipped: false,
           success: false,
-          warnings: [],
+          warnings: pipelineWarnings,
           errors: exported.metadata.preflight.checks
             .filter((check) => !check.passed)
             .map((check) => ({
@@ -632,6 +658,7 @@ async function runBuildTarget(
           buildManifest: null,
           previewModelPath: null,
           packageContents: exported.metadata.packageContents,
+          dependencyGraph: resolvedSelection.dependencyGraph,
         },
         artifacts: [],
       };
@@ -690,7 +717,7 @@ async function runBuildTarget(
         courseTitle: resolvedSelection.snapshot.exportModel.title,
         skipped: false,
         success: true,
-        warnings: [],
+        warnings: pipelineWarnings,
         errors: [],
         stages,
         outputFiles,
@@ -698,6 +725,7 @@ async function runBuildTarget(
         buildManifest: exported.buildManifest,
         previewModelPath: null,
         packageContents: exported.metadata.packageContents,
+        dependencyGraph: resolvedSelection.dependencyGraph,
       },
       artifacts: targetArtifacts,
     };
@@ -728,15 +756,13 @@ async function runBuildTarget(
         courseTitle: resolvedSelection.snapshot.exportModel.title,
         skipped: false,
         success: false,
-        warnings: [],
+        warnings: pipelineWarnings,
         errors: [
           {
             severity: "error",
             code: "scorm-export-failed",
             message:
-              error instanceof Error
-                ? error.message
-                : "SCORM export failed.",
+              error instanceof Error ? error.message : "SCORM export failed.",
             targetKey,
           },
         ],
@@ -746,6 +772,7 @@ async function runBuildTarget(
         buildManifest: null,
         previewModelPath: null,
         packageContents: [],
+        dependencyGraph: resolvedSelection.dependencyGraph,
       },
       artifacts: [],
     };
@@ -907,10 +934,40 @@ export async function runCourseProjectAutomation(
 
   const targetResults = await Promise.all(
     selections.map((selection) =>
-      runBuildTarget(project, command, selection, generatedAt, exportMode)
+      runBuildTarget(
+        project,
+        command,
+        selection,
+        generatedAt,
+        exportMode,
+        options.moduleLibrary ?? null
+      )
     )
   );
   const targetRecords = targetResults.map((result) => result.record);
+  const dependencyGraph = {
+    projectId: project.id,
+    projectTitle: project.title,
+    projectVersion: project.version,
+    generatedAt,
+    targets: targetRecords
+      .filter((target) => target.dependencyGraph !== null)
+      .map((target) => ({
+        targetKey: target.targetKey,
+        courseId: target.courseId,
+        courseTitle: target.courseTitle,
+        sourceFiles: target.dependencyGraph?.sourceFiles ?? [],
+        moduleDependencies:
+          target.dependencyGraph?.moduleDependencies.map((dependency) => ({
+            moduleId: dependency.moduleId,
+            version: dependency.version,
+            sourcePath: dependency.sourcePath,
+            resolution: dependency.resolution,
+            deprecated: dependency.deprecated,
+          })) ?? [],
+        edges: target.dependencyGraph?.edges ?? [],
+      })),
+  };
   const aggregateManifest = {
     projectId: project.id,
     projectTitle: project.title,
@@ -933,6 +990,11 @@ export async function runCourseProjectAutomation(
   const artifactList = [
     ...targetResults.flatMap((result) => result.artifacts),
     {
+      path: buildDependencyGraphPath(project),
+      kind: "dependency-graph" as const,
+      contents: JSON.stringify(dependencyGraph, null, 2),
+    },
+    {
       path: buildAggregateManifestPath(project),
       kind: "aggregate-manifest" as const,
       contents: JSON.stringify(aggregateManifest, null, 2),
@@ -940,7 +1002,11 @@ export async function runCourseProjectAutomation(
   ];
   const summaryMarkdownPath = buildSummaryMarkdownPath(project);
   const jsonReportPath = buildJsonReportPath(project);
-  const outputPaths = [...artifactList.map((artifact) => artifact.path), jsonReportPath, summaryMarkdownPath];
+  const outputPaths = [
+    ...artifactList.map((artifact) => artifact.path),
+    jsonReportPath,
+    summaryMarkdownPath,
+  ];
   const report = buildRunReport({
     command,
     project,

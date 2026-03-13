@@ -1,6 +1,6 @@
 # Using Course Projects in a Build Pipeline
 
-Course projects are intended to behave like source-controlled build inputs.
+Sapio Forge course projects are intended to behave like source-controlled build inputs.
 
 ## Philosophy
 
@@ -17,9 +17,13 @@ Examples:
 
 ```bash
 tsx scripts/course-project-build.ts validate --project course-projects/security-awareness --all
+tsx scripts/course-project-build.ts test --project course-projects/security-awareness
+tsx scripts/course-project-build.ts test --project course-projects/security-awareness --target phishing-awareness/k12-district/default
+tsx scripts/course-project-build.ts test --all-projects
 tsx scripts/course-project-build.ts compile --project course-projects/security-awareness --template phishing-awareness --variant k12-district --theme default
 tsx scripts/course-project-build.ts export --project course-projects/security-awareness --template phishing-awareness --variant k12-district --theme default
 tsx scripts/course-project-build.ts export-all --project course-projects/security-awareness --mode validation
+tsx scripts/course-project-build.ts affected --changed module-library/modules/phishing_intro.yaml --run-tests
 tsx scripts/course-project-build.ts manifest --project course-projects/security-awareness --template phishing-awareness --variant healthcare --theme corporate-blue
 tsx scripts/course-project-build.ts clean --project course-projects/security-awareness
 ```
@@ -34,6 +38,8 @@ Supported flags:
 - `--template <id>`
 - `--variant <id>`
 - `--theme <id>`
+- `--module <id>`
+- `--changed <path>`
 - `--all`
 - `--fail-on-warning`
 
@@ -44,12 +50,13 @@ Each run reports these stages:
 1. load project
 2. validate project structure
 3. validate source schema
-4. resolve templates, variables, and theme
+4. resolve templates, variables, theme, and shared modules
 5. normalize into canonical model
 6. validate graph and references
 7. generate preview/runtime-ready model
-8. package SCORM build
-9. generate build manifest
+8. run declarative learner-path tests when requested
+9. package SCORM build
+10. generate build manifest
 
 ## Output files
 
@@ -62,9 +69,13 @@ Default output layout:
   /scorm12
     <template>__<variant>__<theme>__scorm12.zip
     <template>__<variant>__<theme>.build-manifest.json
+  dependency-graph.json
   build-manifest.json
   ci-build-report.json
   build-summary.md
+  /tests
+    course-test-report.json
+    course-test-summary.md
 ```
 
 ## Warning vs error behavior
@@ -78,14 +89,17 @@ Current warning examples:
 - missing project `.gitignore`
 - missing build README
 - unused project asset files
+- unpinned shared module version usage
+- deprecated shared module usage
 
 ## Why this helps in Git workflows
 
 This automation makes it easy to:
 
 - validate source on every change
+- regression-test branching and scoring logic before export
 - rebuild SCORM packages consistently
-- inspect build manifests and fingerprints
+- inspect build manifests, fingerprints, and dependency graphs
 - keep exported artifacts separate from source files
 - prepare for future CI systems without changing the source model
 

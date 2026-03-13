@@ -16,6 +16,11 @@ import {
   exportCourseFamilyBuildBundle,
   type CourseFamilyBuildBundle,
 } from "@/lib/export/template-family-export";
+import {
+  buildProjectBuildDependencyGraph,
+  type ProjectBuildDependencyGraph,
+} from "@/lib/module-library/dependency";
+import type { SharedModuleLibrary } from "@/lib/module-library/schema";
 import type { CourseProject } from "@/lib/project/schema";
 import type { ThemePack } from "@/lib/theme/schema";
 
@@ -32,6 +37,7 @@ export interface ResolvedCourseProjectBuildSelection {
   theme: ThemePack;
   snapshot: CoursePipelineSnapshot;
   buildContext: ScormBuildContext;
+  dependencyGraph: ProjectBuildDependencyGraph;
 }
 
 export function listCourseProjectBuildSelections(
@@ -53,7 +59,14 @@ export function buildCourseProjectBuildContext(input: {
   template: TemplatePackTemplate;
   variant: TemplatePackVariant;
   theme: ThemePack;
+  snapshot?: CoursePipelineSnapshot | null;
 }): ScormBuildContext {
+  const sourceFiles = new Set(input.project.sourceFiles.map((file) => file.path));
+
+  input.snapshot?.dependencyGraph?.sourceFiles.forEach((filePath) => {
+    sourceFiles.add(filePath);
+  });
+
   return {
     projectId: input.project.id,
     projectTitle: input.project.title,
@@ -64,13 +77,20 @@ export function buildCourseProjectBuildContext(input: {
     variantTitle: input.variant.title,
     themeId: input.theme.id,
     themeName: input.theme.name,
-    sourceFiles: input.project.sourceFiles.map((file) => file.path),
+    sourceFiles: [...sourceFiles].sort((leftPath, rightPath) =>
+      leftPath.localeCompare(rightPath)
+    ),
+    moduleDependencies:
+      input.snapshot?.dependencyGraph?.moduleDependencies ?? [],
   };
 }
 
 export function resolveCourseProjectBuildSelection(
   project: CourseProject,
-  selection: CourseProjectBuildSelection
+  selection: CourseProjectBuildSelection,
+  options: {
+    moduleLibrary?: SharedModuleLibrary | null;
+  } = {}
 ): ResolvedCourseProjectBuildSelection {
   const template =
     project.templates.find((candidate) => candidate.id === selection.templateId) ?? null;
@@ -102,6 +122,7 @@ export function resolveCourseProjectBuildSelection(
   const snapshot = runCoursePipeline(template.yaml, {
     templateDataOverrides: variant.values,
     variableSchema: template.variableSchema,
+    moduleLibrary: options.moduleLibrary ?? null,
   });
 
   if (!snapshot.exportModel) {
@@ -110,17 +131,40 @@ export function resolveCourseProjectBuildSelection(
     );
   }
 
+  const buildContext = buildCourseProjectBuildContext({
+    project,
+    template,
+    variant,
+    theme,
+    snapshot,
+  });
+
   return {
     project,
     template,
     variant,
     theme,
     snapshot,
-    buildContext: buildCourseProjectBuildContext({
-      project,
-      template,
-      variant,
-      theme,
+    buildContext,
+    dependencyGraph: buildProjectBuildDependencyGraph({
+      projectId: project.id,
+      projectTitle: project.title,
+      projectVersion: project.version,
+      templateId: template.id,
+      templateTitle: template.title,
+      variantId: variant.id,
+      variantTitle: variant.title,
+      themeId: theme.id,
+      themeName: theme.name,
+      courseId: snapshot.exportModel.id,
+      courseTitle: snapshot.exportModel.title,
+      selection,
+      projectSourceFiles: project.sourceFiles.map((file) => file.path),
+      moduleGraph: snapshot.dependencyGraph ?? {
+        sourceFiles: [],
+        moduleDependencies: [],
+        edges: [],
+      },
     }),
   };
 }
@@ -128,9 +172,13 @@ export function resolveCourseProjectBuildSelection(
 export async function exportCourseProjectBuild(
   project: CourseProject,
   selection: CourseProjectBuildSelection,
-  options: Omit<ScormExportOptions, "themePack" | "buildContext"> = {}
+  options: Omit<ScormExportOptions, "themePack" | "buildContext"> & {
+    moduleLibrary?: SharedModuleLibrary | null;
+  } = {}
 ): Promise<ScormExportBundle> {
-  const resolvedSelection = resolveCourseProjectBuildSelection(project, selection);
+  const resolvedSelection = resolveCourseProjectBuildSelection(project, selection, {
+    moduleLibrary: options.moduleLibrary,
+  });
 
   return exportCourseAsScormZip(resolvedSelection.snapshot.exportModel!, {
     ...options,
@@ -143,11 +191,14 @@ export async function exportCourseProjectBuildMatrix(
   project: CourseProject,
   options: Omit<ScormExportOptions, "themePack" | "buildContext"> & {
     selections?: readonly CourseProjectBuildSelection[];
+    moduleLibrary?: SharedModuleLibrary | null;
   } = {}
 ): Promise<CourseFamilyBuildBundle> {
   const selections = options.selections ?? listCourseProjectBuildSelections(project);
   const builds = selections.map((selection) => {
-    const resolvedSelection = resolveCourseProjectBuildSelection(project, selection);
+    const resolvedSelection = resolveCourseProjectBuildSelection(project, selection, {
+      moduleLibrary: options.moduleLibrary,
+    });
 
     return {
       projectId: project.id,

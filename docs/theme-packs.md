@@ -1,6 +1,6 @@
 # Theme Packs
 
-Theme packs provide reusable branding for compiled preview and SCORM export without changing course structure.
+Sapio Forge theme packs provide reusable branding for compiled preview and SCORM export without changing course structure.
 
 The starter repository includes these example themes:
 

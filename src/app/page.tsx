@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LandingPage } from "@/components/LandingPage";
+import { BRAND } from "@/lib/app/brand";
 import { loadCourseSamples } from "@/lib/course/load-samples";
 import { parseAndCompileCourse } from "@/lib/course/parse";
 import { applyThemePackToCourse } from "@/lib/theme/apply";
@@ -8,15 +9,12 @@ import { loadThemePacks } from "@/lib/theme/load-theme-packs";
 import { loadLmsValidationCatalog } from "@/lib/validation/load";
 
 export const metadata: Metadata = {
-  title: "LDT Engine | Structured SCORM Authoring",
-  description:
-    "LDT Engine is a structured authoring system for branching training modules with YAML source, browser preview, reusable templates, and SCORM 1.2 export.",
+  description: BRAND.metaDescription,
   openGraph: {
-    title: "LDT Engine | Structured SCORM Authoring",
-    description:
-      "Write branching training modules in YAML, preview them in the browser, and export validated SCORM 1.2 packages from structured source.",
+    title: BRAND.metaTitle,
+    description: BRAND.landingValueProp,
     type: "website",
-    siteName: "LDT Engine",
+    siteName: BRAND.productName,
   },
 };
 

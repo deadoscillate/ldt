@@ -21,15 +21,22 @@ test("GitHub Actions workflow templates invoke supported course-project CLI comm
   );
 
   assert.match(validateWorkflow, /scripts\/course-project-build\.ts validate/);
+  assert.match(validateWorkflow, /scripts\/course-project-build\.ts test/);
   assert.match(validateWorkflow, /actions\/upload-artifact@v4/);
   assert.match(validateWorkflow, /course-projects\/\*\/project\.yaml/);
+  assert.match(validateWorkflow, /module-library\/\*\*/);
 
   assert.match(buildWorkflow, /scripts\/course-project-build\.ts export/);
+  assert.match(buildWorkflow, /scripts\/course-project-build\.ts affected/);
+  assert.match(buildWorkflow, /scripts\/course-project-build\.ts test/);
+  assert.match(buildWorkflow, /--run-tests/);
   assert.match(buildWorkflow, /--target/);
   assert.match(buildWorkflow, /build-summary\.md/);
   assert.match(buildWorkflow, /ci-build-report\.json/);
+  assert.match(buildWorkflow, /affected-summary\.md/);
 
   assert.match(familyWorkflow, /scripts\/course-project-build\.ts export-all/);
+  assert.match(familyWorkflow, /scripts\/course-project-build\.ts test/);
   assert.match(familyWorkflow, /actions\/upload-artifact@v4/);
   assert.match(familyWorkflow, /workflow_dispatch/);
 });
@@ -40,6 +47,7 @@ test("GitHub Actions docs describe repo structure and build artifacts", async ()
 
   assert.match(githubActionsDoc, /course-projects\/security-awareness/);
   assert.match(githubActionsDoc, /build\/scorm12/);
+  assert.match(githubActionsDoc, /course-test-report\.json/);
   assert.match(githubActionsDoc, /validate-course-project\.yml/);
   assert.match(githubActionsDoc, /build-course-family\.yml/);
 

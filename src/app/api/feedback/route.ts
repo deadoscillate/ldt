@@ -31,10 +31,13 @@ export async function POST(request: Request) {
   try {
     const backend = await appendIntakeEntry(
       createFeedbackEntry({
+        feedbackType: parsed.data.feedbackType,
         message: parsed.data.message,
         email: parsed.data.email,
         sourcePage: parsed.data.sourcePage,
         source: parsed.data.source,
+        context: parsed.data.context,
+        screenshot: parsed.data.screenshot,
       })
     );
 

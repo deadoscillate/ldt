@@ -1,0 +1,27 @@
+id: phishing_intro
+title: Shared phishing introduction
+description: Standard introduction node for phishing scenario families.
+version: 1.0.0
+category: security-awareness
+tags:
+  - security
+  - phishing
+  - intro
+lastUpdated: 2026-03-12
+deprecated: false
+templateData:
+  introImageSrc: https://placehold.co/720x420/png?text=Phishing+Inbox
+  introImageAlt: Suspicious inbox example
+nodes:
+  - id: intro
+    type: content
+    layout: image-right
+    title: "{{courseTitle}}"
+    body:
+      - "A suspicious message appears to come from leadership at {{companyName}}."
+      - "Use the structured flow to inspect, question, and report it."
+    media:
+      type: image
+      src: "{{introImageSrc}}"
+      alt: "{{introImageAlt}}"
+    next: inspect-email

@@ -1,0 +1,58 @@
+id: phishing-awareness
+title: Phishing awareness logic tests
+description: Deterministic learner-path tests for the phishing awareness course family.
+target:
+  templateId: phishing-awareness
+  themeId: default
+tests:
+  - id: correct-answer-passes
+    name: Correct answer path passes
+    description: The fully correct reporting path should end on the passed result with the full score.
+    tags:
+      - scored
+      - pass
+      - shared-module
+    target:
+      variantId: k12-district
+    actions:
+      - step: intro
+        advance: true
+      - step: inspect-email
+        select: inspect
+      - step: red-flags
+        select:
+          - urgent
+          - sender
+      - step: password-hygiene-reminder
+        advance: true
+      - step: report
+        select: approved
+    expect:
+      terminalStep: passed
+      score: 10
+      completionStatus: completed
+      successStatus: passed
+      pathLength: 6
+      variables:
+        companyName: Lakeview School District
+  - id: click-path-fails
+    name: Immediate click path fails
+    description: Clicking the suspicious request should fail before the quiz path is reached.
+    tags:
+      - fail
+      - branch
+    target:
+      variantId: healthcare
+    actions:
+      - step: intro
+        advance: true
+      - step: inspect-email
+        select: click
+    expect:
+      terminalStep: failed
+      score: 0
+      completionStatus: completed
+      successStatus: failed
+      pathLength: 3
+      variables:
+        companyName: Northwind Health

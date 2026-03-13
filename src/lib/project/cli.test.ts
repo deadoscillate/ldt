@@ -60,11 +60,49 @@ test("CLI usage explains available commands", () => {
   const usage = buildCourseProjectCliUsage();
 
   assert.match(usage, /validate/);
+  assert.match(usage, /test/);
   assert.match(usage, /export-all/);
+  assert.match(usage, /affected/);
   assert.match(usage, /--project/);
   assert.match(usage, /--target/);
 });
 
 test("CLI parser rejects missing project argument", () => {
   assert.throws(() => parseCourseProjectCliArgs(["validate"]), /--project/);
+});
+
+test("CLI parser accepts affected rebuild flags without a project path", () => {
+  const parsed = parseCourseProjectCliArgs([
+    "affected",
+    "--module",
+    "phishing_intro",
+    "--changed",
+    "module-library/modules/phishing_intro.yaml",
+    "--mode",
+    "validation",
+    "--run-tests",
+  ]);
+
+  assert.equal(parsed.command, "affected");
+  assert.equal(parsed.projectPath, null);
+  assert.equal(parsed.exportMode, "validation");
+  assert.equal(parsed.runTests, true);
+  assert.deepEqual(parsed.moduleIds, ["phishing_intro"]);
+  assert.deepEqual(parsed.changedInputs, [
+    "module-library/modules/phishing_intro.yaml",
+  ]);
+});
+
+test("CLI parser accepts all-project logic test runs", () => {
+  const parsed = parseCourseProjectCliArgs([
+    "test",
+    "--all-projects",
+    "--json-report",
+    "tmp/course-tests.json",
+  ]);
+
+  assert.equal(parsed.command, "test");
+  assert.equal(parsed.allProjects, true);
+  assert.equal(parsed.projectPath, null);
+  assert.equal(parsed.jsonReportPath, "tmp/course-tests.json");
 });

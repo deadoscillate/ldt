@@ -27,7 +27,7 @@ Short version:
 
 Longer version:
 
-> LDT Engine is a structured authoring system for branching training modules. It generates SCORM 1.2 packages from validated source and tracks interoperability evidence in a public proof center.
+> Sapio Forge is a structured authoring system for branching training modules. It generates SCORM 1.2 packages from validated source and tracks interoperability evidence in a public proof center.
 
 ## Beta framing
 
