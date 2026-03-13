@@ -2,6 +2,7 @@
 
 import yaml from "js-yaml";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
   useRef,
@@ -177,8 +178,46 @@ interface BuildHistoryEntry {
 }
 
 type AuthoringMode = "builder" | "source";
+type StudioStep = "setup" | "edit" | "preview" | "export" | "advanced";
 
 const DEMO_WALKTHROUGH_STORAGE_KEY = "ldt:studio:walkthrough-dismissed";
+const STUDIO_STEP_COPY: ReadonlyArray<{
+  id: StudioStep;
+  step: number;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "setup",
+    step: 1,
+    label: "Setup",
+    description: "Choose the project, template, saved version, and theme.",
+  },
+  {
+    id: "edit",
+    step: 2,
+    label: "Edit",
+    description: "Update the course in Guided Editor or Source Editor.",
+  },
+  {
+    id: "preview",
+    step: 3,
+    label: "Preview",
+    description: "Run through the learner experience before export.",
+  },
+  {
+    id: "export",
+    step: 4,
+    label: "Export",
+    description: "Build SCORM and review LMS validation checks.",
+  },
+  {
+    id: "advanced",
+    step: 5,
+    label: "Advanced",
+    description: "Open tests, modules, project details, and deep source views.",
+  },
+] as const;
 
 function getBrowserStorage(): Storage | null {
   if (typeof window === "undefined") {
@@ -209,6 +248,36 @@ function scrollToElement(element: HTMLElement | null): void {
       });
     });
   });
+}
+
+function getStudioStepHref(step: StudioStep): string {
+  return `/studio/${step}`;
+}
+
+function getStudioStepFromPathname(pathname: string | null): StudioStep {
+  if (!pathname) {
+    return "setup";
+  }
+
+  const normalizedPath = pathname.replace(/\/+$/, "");
+
+  if (normalizedPath.endsWith("/edit")) {
+    return "edit";
+  }
+
+  if (normalizedPath.endsWith("/preview")) {
+    return "preview";
+  }
+
+  if (normalizedPath.endsWith("/export")) {
+    return "export";
+  }
+
+  if (normalizedPath.endsWith("/advanced")) {
+    return "advanced";
+  }
+
+  return "setup";
 }
 
 function courseProjectToTemplatePack(project: CourseProject): TemplatePack {
@@ -376,7 +445,13 @@ export function CourseWorkbench({
   const previewPanelRef = useRef<HTMLDivElement>(null);
   const exportSectionRef = useRef<HTMLDivElement>(null);
   const validationSectionRef = useRef<HTMLElement>(null);
+  const advancedSectionRef = useRef<HTMLDetailsElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
+  const setupStepButtonRef = useRef<HTMLButtonElement>(null);
+  const editStepButtonRef = useRef<HTMLButtonElement>(null);
+  const previewStepButtonRef = useRef<HTMLButtonElement>(null);
+  const exportStepButtonRef = useRef<HTMLButtonElement>(null);
+  const advancedStepButtonRef = useRef<HTMLButtonElement>(null);
   const authoringGuideRef = useRef<HTMLDetailsElement>(null);
   const firstModuleGuideRef = useRef<HTMLDetailsElement>(null);
   const studioRootRef = useRef<HTMLElement>(null);
@@ -476,6 +551,9 @@ export function CourseWorkbench({
       ? compiledCourseToBuilderCourse(defaultPipelineSnapshot.canonicalCourse)
       : createEmptyBuilderCourse()
   );
+  const pathname = usePathname();
+  const router = useRouter();
+  const activeStudioStep = getStudioStepFromPathname(pathname);
 
   const availablePacks =
     availableProjects.length > 0
@@ -963,14 +1041,28 @@ export function CourseWorkbench({
     }
   }
 
+  function navigateToStudioStep(step: StudioStep): void {
+    const href = getStudioStepHref(step);
+
+    if (pathname !== href) {
+      router.push(href);
+    }
+  }
+
   function openAuthoringGuide(): void {
     setIsAuthoringGuideOpen(true);
-    scrollToElement(authoringGuideRef.current);
+    navigateToStudioStep("edit");
+    window.setTimeout(() => {
+      scrollToElement(authoringGuideRef.current);
+    }, 120);
   }
 
   function openFirstModuleGuide(): void {
     setIsFirstModuleGuideOpen(true);
-    scrollToElement(firstModuleGuideRef.current);
+    navigateToStudioStep("edit");
+    window.setTimeout(() => {
+      scrollToElement(firstModuleGuideRef.current);
+    }, 120);
   }
 
   function trackStudioEvent(
@@ -2596,32 +2688,52 @@ export function CourseWorkbench({
 
   const walkthroughSteps = [
     {
-      targetRef: templateSelectorRef,
-      title: availableProjects.length > 0 ? "Start with a course project." : "Start with a template pack.",
+      targetRef: setupStepButtonRef,
+      title: "Start with setup.",
       description:
-        availableProjects.length > 0
-          ? "Choose a course project, then select the template, saved version, and theme you want to compile."
-          : "Choose a pack, then select a shared template and variable set for the course family you want to generate.",
+        "Choose a course project, then select the template, saved version, and theme you want to work on.",
     },
     {
-      targetRef: yamlEditorRef,
-      title: "Edit the course in Guided Editor or Source Editor.",
+      targetRef: editStepButtonRef,
+      title: "Edit in the right mode.",
       description:
         "Use Guided Editor for the easiest path, or switch to Source Editor when you want direct control of the course source.",
     },
     {
-      targetRef: previewPanelRef,
-      title: "Preview the compiled variant instantly.",
+      targetRef: previewStepButtonRef,
+      title: "Preview the learner experience.",
       description:
-        "Run the learner path in the browser and watch the current node, score, and completion status update as you click through it.",
+        "Run through the course in the browser and check the current step, score, and completion status before export.",
     },
     {
-      targetRef: exportButtonRef,
-      title: "Export a SCORM package for your LMS.",
+      targetRef: exportStepButtonRef,
+      title: "Export for delivery.",
       description:
-        "Generate a SCORM 1.2 zip, download it, and inspect the exact package contents used for LMS delivery.",
+        "Generate a SCORM 1.2 zip, inspect the package contents, and use validation tools when you need LMS troubleshooting.",
     },
   ];
+
+  useEffect(() => {
+    const targetByStep: Record<StudioStep, HTMLElement | null> = {
+      setup: onboardingState.startHereDismissed
+        ? templateSelectorRef.current
+        : startHerePanelRef.current,
+      edit: yamlEditorRef.current,
+      preview: previewPanelRef.current,
+      export: exportSectionRef.current,
+      advanced: advancedSectionRef.current,
+    };
+
+    const target = targetByStep[activeStudioStep];
+
+    if (!target) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      scrollToElement(target);
+    }, 60);
+  }, [activeStudioStep, onboardingState.startHereDismissed]);
 
   return (
     <main className="page-shell" ref={studioRootRef}>
@@ -2912,61 +3024,46 @@ export function CourseWorkbench({
         </section>
       ) : null}
 
-      <section className="panel studio-quick-nav-panel">
+      <section className="panel studio-step-nav-panel">
         <div>
-          <p className="eyebrow">Main Steps</p>
-          <h2>Move through the Studio in order</h2>
+          <p className="eyebrow">Studio Steps</p>
+          <h2>Open each step as its own page</h2>
           <p className="panel-copy">
-            If you are new, work left to right: choose a setup, edit the course,
-            preview it, then export. Advanced validation tools stay further down the
-            page when you need them.
+            Move through setup, editing, preview, export, and advanced tools as
+            separate Studio pages instead of jumping around one long screen.
           </p>
         </div>
-        <div className="button-row">
-          {!onboardingState.startHereDismissed ? (
-            <button
-              className="ghost-button"
-              onClick={() => scrollToElement(startHerePanelRef.current)}
-              type="button"
-            >
-              Start Here
-            </button>
-          ) : null}
-          <button
-            className="ghost-button"
-            onClick={() => scrollToElement(templateSelectorRef.current)}
-            type="button"
-          >
-            Project setup
-          </button>
-          <button
-            className="ghost-button"
-            onClick={() => scrollToElement(yamlEditorRef.current)}
-            type="button"
-          >
-            Editor
-          </button>
-          <button
-            className="ghost-button"
-            onClick={() => scrollToElement(previewPanelRef.current)}
-            type="button"
-          >
-            Preview
-          </button>
-          <button
-            className="ghost-button"
-            onClick={() => scrollToElement(exportSectionRef.current)}
-            type="button"
-          >
-            Export
-          </button>
-          <button
-            className="ghost-button"
-            onClick={() => scrollToElement(validationSectionRef.current)}
-            type="button"
-          >
-            Validation
-          </button>
+        <div className="studio-step-nav-grid">
+          {STUDIO_STEP_COPY.map((step) => {
+            const isActive = activeStudioStep === step.id;
+            const ref =
+              step.id === "setup"
+                ? setupStepButtonRef
+                : step.id === "edit"
+                  ? editStepButtonRef
+                  : step.id === "preview"
+                    ? previewStepButtonRef
+                    : step.id === "export"
+                      ? exportStepButtonRef
+                      : advancedStepButtonRef;
+
+            return (
+              <button
+                key={step.id}
+                aria-current={isActive ? "page" : undefined}
+                className={`studio-step-button ${isActive ? "studio-step-button-active" : ""}`}
+                onClick={() => navigateToStudioStep(step.id)}
+                ref={ref}
+                type="button"
+              >
+                <span className="studio-step-number">{step.step}</span>
+                <span className="studio-step-copy">
+                  <strong>{step.label}</strong>
+                  <span>{step.description}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -4180,24 +4277,24 @@ nodes:
             <div className="button-row">
               <button
                 className="ghost-button"
-                onClick={() => scrollToElement(yamlEditorRef.current)}
+                onClick={() => navigateToStudioStep("edit")}
                 type="button"
               >
-                Jump to editor
+                Open edit step
               </button>
               <button
                 className="primary-button export-button"
-                onClick={() => scrollToElement(exportSectionRef.current)}
+                onClick={() => navigateToStudioStep("export")}
                 type="button"
               >
-                Jump to export tools
+                Open export step
               </button>
               <button
                 className="ghost-button"
-                onClick={() => scrollToElement(validationSectionRef.current)}
+                onClick={() => navigateToStudioStep("advanced")}
                 type="button"
               >
-                Jump to validation
+                Open advanced step
               </button>
             </div>
           </section>
@@ -4270,7 +4367,7 @@ nodes:
             }
           />
 
-          <details className="details-panel studio-advanced-panel">
+          <details className="details-panel studio-advanced-panel" ref={advancedSectionRef}>
             <summary>Advanced tools for source, testing, and modules</summary>
             <div className="details-copy studio-advanced-stack">
 
