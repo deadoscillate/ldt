@@ -71,42 +71,42 @@ export const STUDIO_STARTING_PATHS: readonly StudioPathDefinition[] = [
     label: "Recommended",
     title: "Start in Guided Editor",
     description:
-      "Use guided fields to update a starter course, preview the learner experience, and export your first SCORM package.",
+      "Pick a starter scenario, make changes in guided forms, preview the learner experience, and export your first SCORM package.",
     actionLabel: "Start guided editing",
     recommendedProjectId: "customer-service",
     recommendedTemplateId: "customer-service-escalation",
     recommendedVariantId: "retail-support",
     recommendedThemeId: "default",
     authoringMode: "builder",
-    emphasis: "Best for most instructional designers and the fastest first export.",
+    emphasis: "Best for most instructional designers. Guided editing is the fastest first build, and YAML stays optional.",
   },
   {
     id: "intermediate",
     label: "Repeatable",
     title: "Start from a course template",
     description:
-      "Choose a reusable template, pick a saved version, and generate a course without starting from scratch.",
+      "Choose a ready-made training flow, pick the version that fits your audience, and adapt it without starting from scratch.",
     actionLabel: "Open template workflow",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
     recommendedVariantId: "k12-district",
     recommendedThemeId: "default",
     authoringMode: "builder",
-    emphasis: "Best for repeatable course families and quick client or department changes.",
+    emphasis: "Best when you reuse the same lesson across teams, clients, or departments.",
   },
   {
     id: "advanced",
     label: "Technical",
     title: "Open Source Editor and project files",
     description:
-      "Work directly in project files and YAML, validate the course, and build SCORM from source-controlled content.",
+      "Work directly in project files and YAML when you want deeper control, validation, and technical review.",
     actionLabel: "Open source workflow",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
     recommendedVariantId: "enterprise",
     recommendedThemeId: "corporate-blue",
     authoringMode: "source",
-    emphasis: "Best for technical instructional designers, Git workflows, and deeper control.",
+    emphasis: "Best for technical instructional designers, developers, and deeper control.",
   },
 ] as const;
 
@@ -324,25 +324,25 @@ export function buildFirstModuleChecklist(input: {
   return [
     {
       id: "template",
-      label: "Choose a starter template or project.",
+      label: "Pick a starter template.",
       complete: input.hasStarterSelection,
     },
     {
       id: "editing",
       label:
         input.authoringMode === "builder"
-          ? "Edit the course in Guided Editor."
-          : "Edit the structured source or project files.",
+          ? "Rename the lesson and company values."
+          : "Open Source Editor if you want direct YAML control.",
       complete: input.hasStarterSelection,
     },
     {
       id: "preview",
-      label: "Preview the compiled course.",
+      label: "Edit one decision point in Guided Editor.",
       complete: input.previewReady,
     },
     {
       id: "export",
-      label: "Export your first SCORM package.",
+      label: "Preview and export your first SCORM package.",
       complete: input.firstExportCompleted,
     },
   ];
@@ -367,15 +367,15 @@ export function buildEditingSurfaceSummary(input: {
       };
     case "project":
       return {
-        label: "You are choosing the active project",
+        label: "You are choosing a starter scenario",
         description:
-          "Choose which project, template, variant, and theme you want to work on.",
+          "Pick the lesson you want to build, then choose the version and theme that fit your audience.",
       };
     case "variables":
       return {
-        label: "You are editing template values",
+        label: "You are editing course details",
         description:
-          "These values personalize a shared template without changing the core flow.",
+          "These details personalize the lesson without changing the main training flow.",
       };
     case "theme":
       return {
@@ -387,13 +387,13 @@ export function buildEditingSurfaceSummary(input: {
       return {
         label: "You are viewing the learner preview",
         description:
-          "This is what learners will see after the current source is compiled.",
+          "This is the learner experience you are about to export as SCORM.",
       };
     case "export":
       return {
-        label: "You are exporting the course",
+        label: "You are exporting the lesson",
         description:
-          "The SCORM package is generated from the source. It is something you deliver, not something you edit.",
+          "The SCORM package is the file you deliver to SCORM Cloud or your LMS after the lesson looks right.",
       };
     default:
       return input.authoringMode === "builder"
@@ -433,3 +433,4 @@ export function buildFirstExportFeedback(input: {
         : "Download the package or review the generated files.",
   };
 }
+

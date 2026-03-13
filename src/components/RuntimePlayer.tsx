@@ -187,7 +187,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
     <section className="panel runtime-panel" style={themeStyle}>
       <div className="panel-header runtime-panel-header">
         <div className="runtime-title-block">
-          <p className="eyebrow">Compiled Preview</p>
+          <p className="eyebrow">Learner Preview</p>
           {course.theme.logo ? (
             <img
               alt={`${course.title} logo`}
@@ -208,11 +208,11 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       {/* Keep the preview summary compact so testers can scan state before stepping through the course. */}
       <div className="runtime-status-grid">
         <div className="runtime-status-card">
-          <span className="runtime-status-label">Current node</span>
+          <span className="runtime-status-label">Current step</span>
           <strong>{runtimeState.currentNodeId}</strong>
         </div>
         <div className="runtime-status-card">
-          <span className="runtime-status-label">Node type</span>
+          <span className="runtime-status-label">Step type</span>
           <strong>{currentNode.sourceType}</strong>
         </div>
         <div className="runtime-status-card">
@@ -232,7 +232,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
           <strong>{completionStatus}</strong>
         </div>
         <div className="runtime-status-card">
-          <span className="runtime-status-label">Scenario state</span>
+          <span className="runtime-status-label">Saved choices</span>
           <strong>
             {scenarioStateEntries.length > 0
               ? `${scenarioStateEntries.length} variable${scenarioStateEntries.length === 1 ? "" : "s"}`
@@ -242,8 +242,8 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       </div>
 
       <p className="runtime-tracking-note">
-        This preview is built from the current source and shows the same progress
-        and score the SCORM package will report.
+        This is the experience learners will see. The same progress, completion,
+        and score are what the SCORM package reports.
       </p>
       {course.theme.name ? (
         <p className="runtime-tracking-note">
@@ -254,7 +254,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       ) : null}
 
       <details className="details-panel">
-        <summary>Scene inspector</summary>
+        <summary>Preview details (optional)</summary>
         <div className="details-copy">
           <p className="panel-copy">
             Current scene type: <strong>{currentNode.scene.layout}</strong>. This
@@ -314,7 +314,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       <article className="node-card">
         <header className="node-header">
           <div>
-            <p className="eyebrow">Rendered Scene</p>
+            <p className="eyebrow">Current learner screen</p>
             <h3>{currentNode.id}</h3>
             <p className="panel-copy runtime-subcopy">
               Shell: <strong>{currentNode.scene.layout}</strong>
@@ -434,3 +434,5 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
     </section>
   );
 }
+
+

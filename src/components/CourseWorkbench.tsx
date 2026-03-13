@@ -2738,22 +2738,21 @@ export function CourseWorkbench({
       <section className="hero">
         <div className="hero-copy-block">
           <p className="eyebrow">{BRAND.studioName}</p>
-          <h1>Create interactive training, preview it, and export SCORM.</h1>
+          <h1>Build branching training without rebuilding slides.</h1>
           <p className="hero-subheadline">
-            Start with a template, make changes in guided forms or source, preview
-            the learner experience, and export a SCORM package when it looks right.
+            Choose a starter template, edit the scenario in guided forms, preview
+            the learner experience, and export SCORM when it is ready.
           </p>
           <WorkflowSteps steps={["Choose", "Edit", "Preview", "Export", "Test"]} />
           <p className="hero-copy">
-            Most instructional designers should start in Guided Editor. Source
-            Editor, project files, tests, and build tooling stay available when you
-            need a deeper workflow.
+            Guided Editor is the default path for most instructional designers.
+            Source Editor stays available when you want it, but YAML is optional.
           </p>
         </div>
         <div className="hero-summary">
           <div className="summary-card">
-            <strong>Course source</strong>
-            <span>Your course content, branching, and rules live here.</span>
+            <strong>Starter template</strong>
+            <span>Begin with a ready-made scenario instead of a blank canvas.</span>
           </div>
           <div className="summary-card">
             <strong>Learner preview</strong>
@@ -2801,15 +2800,16 @@ export function CourseWorkbench({
           <div className="section-heading-row">
             <div>
               <p className="eyebrow">Start Here</p>
-              <h2>Welcome to Sapio Forge Studio</h2>
+              <h2>What do you want to build?</h2>
               <p className="panel-copy">
-                Guided Editor is the easiest way to get started. Source Editor gives
-                you direct control over the YAML and project files. Both paths lead
-                to the same learner preview and SCORM export.
+                Start with a ready-made training scenario, make changes in Guided
+                Editor, preview the learner experience, and then export SCORM.
+                Source Editor is available any time, but most teams will not need it
+                to get started.
               </p>
               {selectedStartingPath ? (
                 <p className="panel-copy">
-                  Current path: <strong>{selectedStartingPath.title}</strong>.{" "}
+                  Recommended path: <strong>{selectedStartingPath.title}</strong>.{" "}
                   {selectedStartingPath.emphasis}
                 </p>
               ) : null}
@@ -2820,21 +2820,21 @@ export function CourseWorkbench({
                 onClick={() => handleChooseStartingPath("beginner")}
                 type="button"
               >
-                Start in Guided Editor
+                Start from a template
               </button>
               <button
                 className="ghost-button"
                 onClick={() => handleChooseStartingPath("intermediate")}
                 type="button"
               >
-                Use a starter template
+                Continue starter project
               </button>
               <button
                 className="ghost-button"
                 onClick={() => handleChooseStartingPath("advanced")}
                 type="button"
               >
-                Open Source Editor
+                Open Source Editor (optional)
               </button>
               <button
                 className="ghost-button"
@@ -2848,7 +2848,7 @@ export function CourseWorkbench({
                 onClick={openFirstModuleGuide}
                 type="button"
               >
-                Build your first module
+                Build your first scenario
               </button>
               {selectedProject ? (
                 <button
@@ -2871,20 +2871,20 @@ export function CourseWorkbench({
 
           <div className="validation-state-grid onboarding-concepts">
             <HelpHint
-              label="Course source"
-              description="The course content and logic you edit. Preview and export are built from this."
+              label="Scenario setup"
+              description="This is where you update the lesson title, steps, and choices before preview and export."
             />
             <HelpHint
               label="Guided Editor"
               description="A guided form that edits the course for you without making you write YAML."
             />
             <HelpHint
-              label="Course template"
+              label="Starter template"
               description="A reusable starting point you can adapt quickly."
             />
             <HelpHint
               label="Saved version"
-              description="One saved version of a course, such as a client, audience, or scenario type."
+              description="One saved version of the lesson for a client, audience, or team."
             />
             <HelpHint
               label="Theme"
@@ -2925,13 +2925,20 @@ export function CourseWorkbench({
           <div className="panel-subsection">
             <div className="section-heading-row">
               <div>
-                <p className="eyebrow">First-module checklist</p>
+                <p className="eyebrow">5-minute first build</p>
                 <p className="panel-copy section-copy">
-                  Use this as the fastest path to a first successful compiled preview
-                  and SCORM export.
+                  Build your first scenario in four short steps: pick a starter,
+                  rename the lesson, edit one decision point, then preview and export.
                 </p>
               </div>
               <div className="button-row">
+                <button
+                  className="primary-button"
+                  onClick={() => navigateToStudioStep("edit")}
+                  type="button"
+                >
+                  Open Guided Editor
+                </button>
                 <button
                   className="ghost-button"
                   onClick={handleResetBuilderToTemplateDefaults}
@@ -2964,6 +2971,44 @@ export function CourseWorkbench({
                   <strong>{item.label}</strong>
                 </article>
               ))}
+            </div>
+          </div>
+
+          <div className="panel-subsection">
+            <div className="section-heading-row">
+              <div>
+                <p className="eyebrow">Why this is easier than slide tools</p>
+                <p className="panel-copy section-copy">
+                  Sapio Forge keeps one training flow, one learner preview, and one
+                  export path instead of making you rebuild the same branching screens.
+                </p>
+              </div>
+            </div>
+            <div className="preflight-check-grid">
+              <article className="runtime-status-card">
+                <span className="runtime-status-label">One flow</span>
+                <strong>No duplicated slide branches</strong>
+                <p className="panel-copy">
+                  Update one training flow instead of copying the same decision tree
+                  across multiple slide versions.
+                </p>
+              </article>
+              <article className="runtime-status-card">
+                <span className="runtime-status-label">Preview first</span>
+                <strong>Check the learner experience before export</strong>
+                <p className="panel-copy">
+                  Preview and validation happen before packaging SCORM, so issues show
+                  up earlier.
+                </p>
+              </article>
+              <article className="runtime-status-card">
+                <span className="runtime-status-label">Reuse</span>
+                <strong>Update repeated content once</strong>
+                <p className="panel-copy">
+                  Shared modules let teams reuse notices, decisions, and supporting
+                  content instead of rebuilding screens by hand.
+                </p>
+              </article>
             </div>
           </div>
 
@@ -3039,10 +3084,10 @@ export function CourseWorkbench({
       <section className="panel studio-step-nav-panel">
         <div>
           <p className="eyebrow">Studio Steps</p>
-          <h2>Open each step as its own page</h2>
+          <h2>{"Template -> Edit -> Preview -> Export"}</h2>
           <p className="panel-copy">
-            Move through setup, editing, preview, export, and advanced tools as
-            separate Studio pages instead of jumping around one long screen.
+            Move through the same Studio step by step: choose a starter, edit the
+            scenario, preview the learner experience, and export when it is ready.
           </p>
         </div>
         <div className="studio-step-nav-grid">
@@ -3092,21 +3137,21 @@ export function CourseWorkbench({
             <div className="section-heading-row">
               <div>
                 <p className="eyebrow">
-                  {availableProjects.length > 0 ? "Course Projects" : "Template Packs"}
+                  {availableProjects.length > 0 ? "Starter templates" : "Template packs"}
                 </p>
                 <div className="help-inline-row">
                   <p className="panel-copy section-copy">
-                    {projectSurfaceSummary.label}
+                    Choose the kind of training you want to build first.
                   </p>
                   <HelpHint
-                    label="Course source"
-                    description="This source project drives the learner preview and SCORM export."
+                    label="Starter lesson"
+                    description="Choose a starter lesson here, then edit it, preview it, and export it."
                   />
                 </div>
                 <p className="panel-copy section-copy">
                   {availableProjects.length > 0
-                    ? "Choose a course project, then select the template, saved version, and theme that will drive the learner preview and SCORM export. The starter examples in this studio load directly from course-projects/."
-                    : "Choose a pack, select a shared template, then swap variable sets to generate repeatable course variants from one source."}
+                    ? "Choose a ready-made training scenario, then pick the saved version and theme that fit your audience. Every starter opens directly in Guided Editor."
+                    : "Choose a starter template, then adjust the saved details that personalize the lesson."}
                 </p>
               </div>
               <div className="button-row">
@@ -3155,18 +3200,10 @@ export function CourseWorkbench({
                 >
                   <div className="template-card-header">
                     <span className="template-pill">
-                      {activePackId === pack.id
-                        ? availableProjects.length > 0
-                          ? "Selected project"
-                          : "Selected pack"
-                        : availableProjects.length > 0
-                          ? "Source project"
-                          : "Template pack"}
+                      {activePackId === pack.id ? "Selected starter" : "Starter template"}
                     </span>
                     <span className="scenario-pill">
-                      {selectedProject?.id === pack.id
-                        ? selectedProject.version
-                        : pack.category}
+                      {selectedProject?.id === pack.id ? "Ready to edit" : "Use case"}
                     </span>
                   </div>
                   <strong>{pack.title}</strong>
@@ -3180,6 +3217,7 @@ export function CourseWorkbench({
                     )}{" "}
                     variants
                   </span>
+                  <span className="template-card-cta">Start with this template</span>
                 </button>
               ))}
             </div>
@@ -3256,8 +3294,8 @@ export function CourseWorkbench({
                       </p>
                       <p className="panel-copy section-copy">
                         {selectedProject
-                          ? "Templates define the reusable source structure inside this project."
-                          : "Shared template source stays stable while variable sets generate course families quickly."}
+                          ? "Each starter template creates a real training scenario you can edit right away."
+                          : "Each template creates a reusable lesson you can adapt quickly for a new audience."}
                       </p>
                     </div>
                   </div>
@@ -3277,8 +3315,8 @@ export function CourseWorkbench({
                         <div className="template-card-header">
                           <span className="template-pill">
                             {activeTemplateId === template.id
-                              ? "Active template"
-                              : "Shared source"}
+                              ? "Selected scenario"
+                              : "Starter scenario"}
                           </span>
                           <span className="scenario-pill">
                             {template.variants.length} variants
@@ -3289,6 +3327,7 @@ export function CourseWorkbench({
                         <span className="template-card-meta">
                           {template.recommendedUseCase}
                         </span>
+                        <span className="template-card-cta">Start with this template</span>
                       </button>
                     ))}
                   </div>
@@ -3298,10 +3337,10 @@ export function CourseWorkbench({
                   <div className="panel-subsection">
                     <div className="section-heading-row">
                       <div>
-                        <p className="eyebrow">Variable Sets</p>
+                        <p className="eyebrow">Course details</p>
                         <p className="panel-copy section-copy">
-                          Variable sets are plain-text source files that generate
-                          specific variants from the same template and source project.
+                          Pick the saved version that best matches the audience or
+                          client you are building for.
                         </p>
                       </div>
                     </div>
@@ -3341,17 +3380,17 @@ export function CourseWorkbench({
           </div>
 
           <div className="panel-section" hidden={activeStudioStep !== "setup"}>
-            <p className="eyebrow">Template Variables</p>
+            <p className="eyebrow">Course details</p>
             <div className="help-inline-row">
-              <h2>Schema-guided variable sets</h2>
+              <h2>Rename the lesson and company values</h2>
               <HelpHint
                 label="Variant"
                 description="A variant is one saved set of template values that generates a specific course version."
               />
             </div>
             <p className="panel-copy section-copy">
-              Variable schemas keep course-family generation predictable. These
-              values are applied at compile time before preview and export.
+              Update the lesson title, company, and other details here. Guided
+              fields personalize the scenario without changing the main flow.
             </p>
             <p className="editing-surface-note">{variableSurfaceSummary.description}</p>
             {selectedTemplate ? (
@@ -3412,24 +3451,23 @@ export function CourseWorkbench({
           </div>
 
           <div className="panel-section" hidden={activeStudioStep !== "setup"}>
-            <p className="eyebrow">Theme Packs</p>
+            <p className="eyebrow">Visual theme</p>
             <div className="help-inline-row">
-              <h2>Reusable branded presentation</h2>
+              <h2>Choose how the lesson looks</h2>
               <HelpHint
                 label="Theme"
                 description="A theme pack changes presentation tokens like color, typography, and logo without changing course structure."
               />
             </div>
             <p className="panel-copy section-copy">
-              Theme packs style the compiled preview and exported SCORM package
-              without changing the structured source definition. Keep course families
-              reusable, then swap branding as a separate build concern.
+              Choose the colors, logo, and visual style for the lesson. This changes
+              the look of the course, not the training flow.
             </p>
             <p className="editing-surface-note">{themeSurfaceSummary.description}</p>
             <div className="validation-state-grid">
-              <span className="status-pill">Source remains structural</span>
-              <span className="status-pill">Theme pack selected at build time</span>
-              <span className="status-pill">SCORM zip remains a build artifact</span>
+              <span className="status-pill">Lesson flow stays the same</span>
+              <span className="status-pill">Theme changes the look</span>
+              <span className="status-pill">SCORM export uses this theme</span>
             </div>
             <div className="template-grid">
               {themePacks.map((themePack) => (
@@ -3541,17 +3579,17 @@ export function CourseWorkbench({
                 <h2>
                   {authoringMode === "builder"
                     ? "Guided Editor"
-                    : "Course source"}
+                    : "Source Editor"}
                 </h2>
                 <HelpHint
-                  label={authoringMode === "builder" ? "Guided Editor" : "Course source"}
+                  label={authoringMode === "builder" ? "Guided Editor" : "Source Editor"}
                   description={authoringSurfaceSummary.description}
                 />
               </div>
               <p className="panel-copy">
                 {authoringMode === "builder"
-                  ? "Use guided fields to update the current course. When you want deeper control, switch to Source Editor to inspect or edit the YAML directly."
-                  : "Keep YAML as the source of truth. Validation checks the course structure, variables, layouts, branching, and the derived scene/component model before export."}
+                  ? "Use guided fields to update the current lesson. Guided and Source editing both lead to the same learner preview and SCORM export."
+                  : "Use Source Editor when you want direct YAML control. It is optional, and it leads to the same learner preview and SCORM export as Guided Editor."}
               </p>
               <p className="editing-surface-note">{authoringSurfaceSummary.label}</p>
               <button
@@ -3585,7 +3623,7 @@ export function CourseWorkbench({
                 type="file"
               />
               <button
-                className={`ghost-button ${authoringMode === "builder" ? "toggle-button-active" : ""}`}
+                className={authoringMode === "builder" ? "primary-button toggle-button-active" : "ghost-button"}
                 onClick={() => setAuthoringMode("builder")}
                 type="button"
               >
@@ -3596,7 +3634,7 @@ export function CourseWorkbench({
                 onClick={() => setAuthoringMode("source")}
                 type="button"
               >
-                Source Editor
+                Source Editor (optional)
               </button>
               <button
                 className="ghost-button"
@@ -3778,7 +3816,7 @@ nodes:
                 <li>
                   <strong>Guided and Source editing:</strong> Guided Editor is a
                   form-based layer that writes structured YAML internally. Switch to
-                  Source Editor any time to review or edit the underlying definition.
+                  Source Editor (optional) any time to review or edit the underlying definition.
                 </li>
                 <li>
                   <strong>Node types:</strong> Use <code>content</code> for
@@ -4280,7 +4318,7 @@ nodes:
         <div className="preview-column" hidden={activeStudioStep === "setup" || activeStudioStep === "edit"}>
           <section className="panel preview-cta-panel" hidden={activeStudioStep !== "preview"}>
             <div>
-              <p className="eyebrow">Preview</p>
+              <p className="eyebrow">Learner Preview</p>
               <div className="help-inline-row">
                 <h2>Review the learner experience before export</h2>
                 <HelpHint
@@ -4290,8 +4328,8 @@ nodes:
               </div>
               <p className="panel-copy">
                 {isReadyToExport
-                  ? "The preview is ready. When everything looks right, move to export."
-                  : "Use this area to check the latest changes, then export once the checks are clear."}
+                  ? "This learner preview is ready. When the lesson feels right, move to export."
+                  : "Use this view to check what learners will see before you export SCORM."}
               </p>
               <p className="editing-surface-note">{previewSurfaceSummary.label}</p>
             </div>
@@ -5164,5 +5202,8 @@ nodes:
     </main>
   );
 }
+
+
+
 
 
