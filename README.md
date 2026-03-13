@@ -1,18 +1,18 @@
 # Sapio Forge
 
-Sapio Forge is a structured learning platform for creating interactive training from source.
+Sapio Forge is a structured learning platform for building interactive training from source.
 
 Build learning systems like software.
 
-Create training as structured source, preview it in the browser, and export SCORM packages for any LMS.
+Define training modules as structured source, preview them in the browser, and export SCORM packages for any LMS.
 
-Sapio Forge replaces slide-based course tools with structured authoring, reusable modules, realistic simulation shells, and reliable builds.
+Sapio Forge replaces slide-based course tools with structured authoring, reusable modules, realistic simulation shells, and reproducible builds.
 
 ## Key Idea
 
 - define courses as structured source
-- compile them into SCORM packages
-- deploy them to any LMS
+- preview the learner experience in the browser
+- compile SCORM packages for any LMS
 
 ## Core Capabilities
 
@@ -185,16 +185,16 @@ The studio now exposes two clear starting modes:
 
 - beginner path
   - choose a starter project
-  - use Builder mode
-  - compile preview
+  - use Guided Editor
+  - update the learner preview
   - export SCORM
 - advanced path
-  - open source/project mode
+  - open Source Editor and project mode
   - inspect YAML and project structure
   - validate project integrity
   - build reproducible export artifacts
 
-Use Builder mode when you want the fastest first module.
+Use Guided Editor when you want the fastest first module.
 
 Use the starter repo and project mode when you want source-controlled team workflows.
 

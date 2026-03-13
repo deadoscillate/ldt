@@ -1,6 +1,6 @@
 # Getting Started
 
-Sapio Forge helps teams create interactive training from structured source, preview it in the browser, and export SCORM packages for any LMS.
+Sapio Forge helps teams define training modules as structured source, preview them in the browser, and export SCORM packages for any LMS.
 
 This starter repository is meant to be easy to clone, understand, and use right away.
 
@@ -26,8 +26,8 @@ The starter set now includes three structured simulation contexts:
 
 If you are new to the platform:
 
-- choose `Build your first course` for the beginner path
-- choose `Open source view` when you want the Git-friendly advanced path
+- choose `Start in Guided Editor` for the easiest first run
+- choose `Open Source Editor` when you want the Git-friendly advanced path
 
 ## Validate starter source
 

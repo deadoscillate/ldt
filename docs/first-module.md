@@ -5,18 +5,18 @@ This is the shortest path from first open to first exported SCORM package.
 ## Beginner path
 
 1. Open `/studio`.
-2. Click `Build your first course`.
-3. Keep `Builder View` selected.
+2. Click `Start in Guided Editor`.
+3. Keep `Guided Editor` selected.
 4. Edit the starter title, text, or choice options.
-5. Click `Compile source`.
-6. Run the `Compiled Preview`.
+5. Click `Update preview`.
+6. Run the learner preview.
 7. Click `Export SCORM 1.2`.
 8. Download the package and inspect the package contents.
 9. Test the package in SCORM Cloud first.
 
 ## Intermediate path
 
-Use `Start from a template pack` when you want:
+Use `Start from a course template` when you want:
 
 - one shared structure
 - multiple variable sets
@@ -24,7 +24,7 @@ Use `Start from a template pack` when you want:
 
 ## Advanced path
 
-Use `Open source view` when you want:
+Use `Open Source Editor` when you want:
 
 - YAML as the primary editing surface
 - project-level source files
@@ -39,7 +39,7 @@ By the end of the first run, you should have:
 - previewed the compiled course
 - exported a SCORM package
 - inspected the package contents
-- a clear sense of whether Builder mode or Course-as-Code project mode fits your workflow
+- a clear sense of whether Guided Editor or Course-as-Code project mode fits your workflow
 
 ## After first export
 

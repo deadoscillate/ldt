@@ -32,9 +32,9 @@ export function StudioPathChooser({
         <p className="eyebrow">First-run onboarding</p>
         <h2>Welcome to {BRAND.studioName}</h2>
         <p className="panel-copy">
-          Pick the easiest starting point for how you like to work. Builder view
-          uses guided fields. Source view lets you work directly in YAML and project
-          files.
+          Pick the starting point that matches how you work. If you are not sure,
+          start in Guided Editor. Source Editor stays available for YAML and project
+          files whenever you need it.
         </p>
         <div className="studio-path-grid">
           {paths.map((path) => (

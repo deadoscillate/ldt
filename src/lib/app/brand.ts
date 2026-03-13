@@ -6,18 +6,18 @@ export const BRAND = {
   modulesName: "Sapio Forge Modules",
   testName: "Sapio Forge Test",
   tagline: "Build learning systems like software.",
-  shortDescription: "Structured training, built from source.",
+  shortDescription: "Structured learning infrastructure.",
   metaTitle: "Sapio Forge - Course-as-Code Learning Platform",
   positioningStatement:
-    "Sapio Forge helps teams create interactive training from structured source, preview it in the browser, and export SCORM packages for any LMS.",
+    "Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.",
   longDescription:
-    "Sapio Forge replaces slide-based course tools with structured authoring, reusable modules, and reliable SCORM builds.",
+    "Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, and reproducible SCORM builds for training content.",
   heroSubheadline:
-    "Create interactive training from structured source, preview it instantly, and export SCORM for any LMS.",
+    "Start from a template, edit in guided forms or source, preview the learner experience, and export SCORM packages for any LMS.",
   metaDescription:
-    "Create interactive training from structured source with reusable modules and reliable SCORM exports.",
+    "Structured authoring, reusable modules, and reproducible SCORM builds for modern training systems.",
   landingValueProp:
-    "Sapio Forge helps teams create interactive training from structured source, preview it in the browser, and export SCORM packages for any LMS.",
+    "Define training modules as structured source, preview them in the browser, and export SCORM packages for any LMS.",
   contactEmail: "hello@sapioforge.app",
   githubUrl: "https://github.com/deadoscillate/ldt",
   siteUrl: "https://ldt-opccbpr6c-deadoscillates-projects.vercel.app",

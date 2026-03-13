@@ -950,7 +950,7 @@ export function CourseWorkbench({
     clearLastBatchExport();
     setActiveVariantId(null);
     setActiveStudioSurface("builder");
-    setSourceLabel(`Builder-generated variant: ${variantDraftTitle}`);
+    setSourceLabel(`Guided Editor draft: ${variantDraftTitle}`);
 
     startTransition(() => {
       setDraftSnapshot(nextSnapshot);
@@ -1753,7 +1753,7 @@ export function CourseWorkbench({
     if (!nextSnapshot.canonicalCourse) {
       setFeedback({
         tone: "error",
-        title: "Builder sync failed",
+        title: "Guided Editor sync failed",
         message:
           "Fix the current source issues first, then sync the builder from the canonical normalized source definition.",
       });
@@ -1764,9 +1764,9 @@ export function CourseWorkbench({
     setActiveStudioSurface("builder");
     setFeedback({
       tone: "success",
-      title: "Builder synced",
+      title: "Guided Editor synced",
       message:
-        "Builder mode now reflects the latest validated source definition. Advanced template constructs are flattened into the guided builder model.",
+        "Guided Editor now reflects the latest validated course source. Advanced template constructs are flattened into the guided editing model.",
     });
   }
 
@@ -2015,7 +2015,7 @@ export function CourseWorkbench({
       setDraftYaml(nextSource);
       clearLastExportedPackage();
       clearLastBatchExport();
-      setSourceLabel(`Source definition updated with ${selectedSharedModule.id}`);
+      setSourceLabel(`Course source updated with ${selectedSharedModule.id}`);
       updateDraftPipeline(
         nextSource,
         templateDataValues,
@@ -2079,7 +2079,7 @@ export function CourseWorkbench({
       setDraftYaml(extracted.nextSource);
       clearLastExportedPackage();
       clearLastBatchExport();
-      setSourceLabel(`Source definition extracted ${moduleExtractStepId} into ${moduleDraftId}`);
+      setSourceLabel(`Course source extracted ${moduleExtractStepId} into ${moduleDraftId}`);
       updateDraftPipeline(
         extracted.nextSource,
         templateDataValues,
@@ -2597,17 +2597,17 @@ export function CourseWorkbench({
   const walkthroughSteps = [
     {
       targetRef: templateSelectorRef,
-      title: availableProjects.length > 0 ? "Start with a source project." : "Start with a template pack.",
+      title: availableProjects.length > 0 ? "Start with a course project." : "Start with a template pack.",
       description:
         availableProjects.length > 0
-          ? "Choose a source project, then select the template, variable set, and theme you want to compile."
+          ? "Choose a course project, then select the template, saved version, and theme you want to compile."
           : "Choose a pack, then select a shared template and variable set for the course family you want to generate.",
     },
     {
       targetRef: yamlEditorRef,
-      title: "Edit shared source or builder fields.",
+      title: "Edit the course in Guided Editor or Source Editor.",
       description:
-        "Update the shared branching structure in YAML or use Builder View while keeping the structured source definition transparent.",
+        "Use Guided Editor for the easiest path, or switch to Source Editor when you want direct control of the course source.",
     },
     {
       targetRef: previewPanelRef,
@@ -2628,25 +2628,29 @@ export function CourseWorkbench({
       <section className="hero">
         <div className="hero-copy-block">
           <p className="eyebrow">{BRAND.studioName}</p>
-          <h1>Create interactive training from source.</h1>
-          <p className="hero-subheadline">{BRAND.positioningStatement}</p>
-          <WorkflowSteps steps={["Project", "Template", "Variant", "Theme", "SCORM"]} />
+          <h1>Create interactive training, preview it, and export SCORM.</h1>
+          <p className="hero-subheadline">
+            Start with a template, make changes in guided forms or source, preview
+            the learner experience, and export a SCORM package when it looks right.
+          </p>
+          <WorkflowSteps steps={["Choose", "Edit", "Preview", "Export", "Test"]} />
           <p className="hero-copy">
-            Start with a project or template, make your edits, preview the learner
-            experience, and export a SCORM package when it looks right.
+            Most instructional designers should start in Guided Editor. Source
+            Editor, project files, tests, and build tooling stay available when you
+            need a deeper workflow.
           </p>
         </div>
         <div className="hero-summary">
           <div className="summary-card">
-            <strong>Source definition</strong>
-            <span>Your course content and rules live here.</span>
+            <strong>Course source</strong>
+            <span>Your course content, branching, and rules live here.</span>
           </div>
           <div className="summary-card">
-            <strong>Compiled preview</strong>
-            <span>Preview what learners will see before you export.</span>
+            <strong>Learner preview</strong>
+            <span>Check the learner experience before you export.</span>
           </div>
           <div className="summary-card">
-            <strong>Export build</strong>
+            <strong>SCORM export</strong>
             <span>Generate a SCORM package from the same source.</span>
           </div>
         </div>
@@ -2675,9 +2679,9 @@ export function CourseWorkbench({
               <p className="eyebrow">Start Here</p>
               <h2>Welcome to Sapio Forge Studio</h2>
               <p className="panel-copy">
-                Builder view is the easiest way to get started. Source view gives
-                you direct control over the YAML. Both paths lead to the same
-                preview and SCORM export.
+                Guided Editor is the easiest way to get started. Source Editor gives
+                you direct control over the YAML and project files. Both paths lead
+                to the same learner preview and SCORM export.
               </p>
               {selectedStartingPath ? (
                 <p className="panel-copy">
@@ -2692,7 +2696,7 @@ export function CourseWorkbench({
                 onClick={() => handleChooseStartingPath("beginner")}
                 type="button"
               >
-                Build your first course
+                Start in Guided Editor
               </button>
               <button
                 className="ghost-button"
@@ -2706,7 +2710,7 @@ export function CourseWorkbench({
                 onClick={() => handleChooseStartingPath("advanced")}
                 type="button"
               >
-                Open source view
+                Open Source Editor
               </button>
               <button
                 className="ghost-button"
@@ -2720,7 +2724,7 @@ export function CourseWorkbench({
                 onClick={openFirstModuleGuide}
                 type="button"
               >
-                Build Your First Module
+                Build your first module
               </button>
               {selectedProject ? (
                 <button
@@ -2743,19 +2747,19 @@ export function CourseWorkbench({
 
           <div className="validation-state-grid onboarding-concepts">
             <HelpHint
-              label="Source definition"
+              label="Course source"
               description="The course content and logic you edit. Preview and export are built from this."
             />
             <HelpHint
-              label="Builder mode"
+              label="Guided Editor"
               description="A guided form that edits the course for you without making you write YAML."
             />
             <HelpHint
-              label="Template pack"
-              description="A reusable starting point with saved versions you can adapt quickly."
+              label="Course template"
+              description="A reusable starting point you can adapt quickly."
             />
             <HelpHint
-              label="Variant"
+              label="Saved version"
               description="One saved version of a course, such as a client, audience, or scenario type."
             />
             <HelpHint
@@ -2763,12 +2767,12 @@ export function CourseWorkbench({
               description="The visual style for the course, such as colors, type, and logo."
             />
             <HelpHint
-              label="Compiled preview"
+              label="Learner preview"
               description="A live preview of what learners will see."
             />
             <HelpHint
-              label="Export build"
-              description="The SCORM package created from your source and theme."
+              label="SCORM export"
+              description="The SCORM package created from your course source and theme."
             />
             <HelpHint
               label="SCORM package"
@@ -2866,7 +2870,7 @@ export function CourseWorkbench({
               ))}
               {advancedExamples.map((example) => (
                 <article className="runtime-status-card" key={example.id}>
-                  <span className="runtime-status-label">Advanced example</span>
+                  <span className="runtime-status-label">Technical example</span>
                   <strong>{example.title}</strong>
                   <p className="panel-copy">{example.description}</p>
                   <button
@@ -2883,10 +2887,10 @@ export function CourseWorkbench({
 
           <div className="preflight-check-grid">
             <article className="runtime-status-card">
-              <span className="runtime-status-label">Use Builder mode when</span>
+              <span className="runtime-status-label">Use Guided Editor when</span>
               <strong>You want the fastest first course</strong>
               <p className="panel-copy">
-                Builder mode is the best path for quick course creation, form-based
+                Guided Editor is the best path for quick course creation, form-based
                 editing, and a first SCORM export without managing project files.
               </p>
             </article>
@@ -2901,7 +2905,7 @@ export function CourseWorkbench({
           </div>
 
           <div className="validation-state-grid">
-            <span className="status-pill">Use Builder mode for quick course creation</span>
+            <span className="status-pill">Use Guided Editor for quick course creation</span>
             <span className="status-pill">Use the starter repo for source-controlled team workflows</span>
             <span className="status-pill">Source stays editable; SCORM stays generated</span>
           </div>
@@ -2910,11 +2914,12 @@ export function CourseWorkbench({
 
       <section className="panel studio-quick-nav-panel">
         <div>
-          <p className="eyebrow">Quick Navigation</p>
-          <h2>Jump to the part you need</h2>
+          <p className="eyebrow">Main Steps</p>
+          <h2>Move through the Studio in order</h2>
           <p className="panel-copy">
-            Use these shortcuts to move between setup, editing, preview, export,
-            and LMS validation without hunting through the full Studio page.
+            If you are new, work left to right: choose a setup, edit the course,
+            preview it, then export. Advanced validation tools stay further down the
+            page when you need them.
           </p>
         </div>
         <div className="button-row">
@@ -2971,20 +2976,20 @@ export function CourseWorkbench({
             <div className="section-heading-row">
               <div>
                 <p className="eyebrow">
-                  {availableProjects.length > 0 ? "Source Projects" : "Template Packs"}
+                  {availableProjects.length > 0 ? "Course Projects" : "Template Packs"}
                 </p>
                 <div className="help-inline-row">
                   <p className="panel-copy section-copy">
                     {projectSurfaceSummary.label}
                   </p>
                   <HelpHint
-                    label="Source definition"
-                    description="This is the structured source project that drives compile, preview, and export."
+                    label="Course source"
+                    description="This source project drives the learner preview and SCORM export."
                   />
                 </div>
                 <p className="panel-copy section-copy">
                   {availableProjects.length > 0
-                    ? "Choose a source project, then select the template, variable set, and theme that will drive the compiled preview and exported build. The starter examples in this studio load directly from course-projects/."
+                    ? "Choose a course project, then select the template, saved version, and theme that will drive the learner preview and SCORM export. The starter examples in this studio load directly from course-projects/."
                     : "Choose a pack, select a shared template, then swap variable sets to generate repeatable course variants from one source."}
                 </p>
               </div>
@@ -3399,7 +3404,7 @@ export function CourseWorkbench({
 
           <section className="panel repeatable-workflow-panel">
             <p className="eyebrow">Built for Repeatable Workflows</p>
-            <h2>Create one template, generate many variants</h2>
+            <h2>Create one course structure, then reuse it</h2>
             <p className="panel-copy">
               Shared template source plus variable sets remain the system of record.
               Compiled course variants and SCORM packages are build outputs that can
@@ -3419,18 +3424,18 @@ export function CourseWorkbench({
               <div className="help-inline-row">
                 <h2>
                   {authoringMode === "builder"
-                    ? "Variant Builder Draft"
-                    : "Source Definition"}
+                    ? "Guided Editor"
+                    : "Course source"}
                 </h2>
                 <HelpHint
-                  label={authoringMode === "builder" ? "Builder mode" : "Source definition"}
+                  label={authoringMode === "builder" ? "Guided Editor" : "Course source"}
                   description={authoringSurfaceSummary.description}
                 />
               </div>
               <p className="panel-copy">
                 {authoringMode === "builder"
-                  ? "Use guided forms to update the current source-backed variant, then switch to Source view any time to inspect or edit the YAML directly. Builder fields compile into scene shells and ordered components, including email, chat, and dashboard simulations."
-                  : "Keep YAML as the source of truth. Validation covers schema shape, variables, layouts, branching integrity, and the derived scene/component model before normalization."}
+                  ? "Use guided fields to update the current course. When you want deeper control, switch to Source Editor to inspect or edit the YAML directly."
+                  : "Keep YAML as the source of truth. Validation checks the course structure, variables, layouts, branching, and the derived scene/component model before export."}
               </p>
               <p className="editing-surface-note">{authoringSurfaceSummary.label}</p>
               <button
@@ -3438,14 +3443,14 @@ export function CourseWorkbench({
                 onClick={openAuthoringGuide}
                 type="button"
               >
-                Authoring Guide
+                Authoring guide
               </button>
               <button
                 className="inline-link-button"
                 onClick={openFirstModuleGuide}
                 type="button"
               >
-                Build Your First Module
+                Build your first module
               </button>
             </div>
             <div className="button-row">
@@ -3468,21 +3473,21 @@ export function CourseWorkbench({
                 onClick={() => setAuthoringMode("builder")}
                 type="button"
               >
-                Builder View
+                Guided Editor
               </button>
               <button
                 className={`ghost-button ${authoringMode === "source" ? "toggle-button-active" : ""}`}
                 onClick={() => setAuthoringMode("source")}
                 type="button"
               >
-                Source View
+                Source Editor
               </button>
               <button
                 className="ghost-button"
                 onClick={() => fileInputRef.current?.click()}
                 type="button"
               >
-                Upload source YAML
+                Upload course source
               </button>
               <button
                 className="ghost-button"
@@ -3504,7 +3509,7 @@ export function CourseWorkbench({
                 onClick={handleDownloadSourceYaml}
                 type="button"
               >
-                Download source YAML
+                Download course source
               </button>
               <button
                 className="ghost-button"
@@ -3552,7 +3557,7 @@ export function CourseWorkbench({
                 Sync builder from source
               </button>
               <button className="primary-button" onClick={handleCompile} type="button">
-                {isPending ? "Compiling..." : "Compile source"}
+                {isPending ? "Updating preview..." : "Update preview"}
               </button>
             </div>
           </div>
@@ -3564,19 +3569,19 @@ export function CourseWorkbench({
             open={isFirstModuleGuideOpen}
             ref={firstModuleGuideRef}
           >
-            <summary>Build Your First Module</summary>
+            <summary>Build your first module</summary>
             <div className="details-copy">
               <ol className="guide-bullet-list ordered-guide-list">
                 <li>
-                  Start with <strong>Build your first course</strong> to load the
-                  simplest starter project in Builder mode.
+                  Start with <strong>Start in Guided Editor</strong> to load the
+                  simplest starter project.
                 </li>
                 <li>
-                  Edit the title, content, or choices in Builder mode. If you want
-                  to inspect the YAML, switch to <strong>Source View</strong>.
+                  Edit the title, content, or choices in Guided Editor. If you want
+                  to inspect the YAML, switch to <strong>Source Editor</strong>.
                 </li>
                 <li>
-                  Click <strong>Compile source</strong> and use the compiled preview
+                  Click <strong>Update preview</strong> and use the learner preview
                   to verify the learner flow.
                 </li>
                 <li>
@@ -3596,7 +3601,7 @@ export function CourseWorkbench({
                   </p>
                 </article>
                 <article className="runtime-status-card">
-                  <span className="runtime-status-label">Advanced example</span>
+                  <span className="runtime-status-label">Technical example</span>
                   <strong>Security awareness project</strong>
                   <p className="panel-copy">
                     Best when you want to inspect source, variants, themes, and build
@@ -3614,12 +3619,12 @@ export function CourseWorkbench({
             open={isAuthoringGuideOpen}
             ref={authoringGuideRef}
           >
-            <summary>Authoring Guide</summary>
+            <summary>Authoring guide</summary>
             <div className="details-copy">
               <p className="panel-copy">
-                Builder mode and Source view both produce the same structured course
-                definition. Start with top-level course metadata, add nodes in order,
-                and use branching targets like <code>next</code>, <code>passNext</code>,
+                Guided Editor and Source Editor both produce the same structured
+                course definition. Start with top-level course details, add steps in
+                order, and use branching targets like <code>next</code>, <code>passNext</code>,
                 and <code>failNext</code> to move through the scenario.
               </p>
               <pre className="json-preview guide-code-block">
@@ -3653,9 +3658,9 @@ nodes:
               </pre>
               <ul className="guide-bullet-list">
                 <li>
-                  <strong>Builder and Source:</strong> Builder mode is a guided
-                  layer that writes structured YAML internally. Switch to Source
-                  view any time to review or edit the underlying definition.
+                  <strong>Guided and Source editing:</strong> Guided Editor is a
+                  form-based layer that writes structured YAML internally. Switch to
+                  Source Editor any time to review or edit the underlying definition.
                 </li>
                 <li>
                   <strong>Node types:</strong> Use <code>content</code> for
@@ -3697,7 +3702,7 @@ nodes:
             >
               {hasUncompiledChanges
                 ? "Draft source changed since the last compiled build"
-                : "Compiled preview is in sync with validated source"}
+                : "Learner preview is in sync with validated source"}
             </span>
           </div>
 
@@ -4157,18 +4162,18 @@ nodes:
         <div className="preview-column">
           <section className="panel preview-cta-panel">
             <div>
-              <p className="eyebrow">Compile Workflow</p>
+              <p className="eyebrow">Preview</p>
               <div className="help-inline-row">
-                <h2>{"Source definition -> compiled preview -> export build"}</h2>
+                <h2>Review the learner experience before export</h2>
                 <HelpHint
-                  label="Compiled preview"
+                  label="Learner preview"
                   description={previewSurfaceSummary.description}
                 />
               </div>
               <p className="panel-copy">
                 {isReadyToExport
-                  ? "The preview is ready. Use the export tools in the left column to build your package."
-                  : "Use this area to preview the latest changes, then return to the export tools once the checks are clear."}
+                  ? "The preview is ready. When everything looks right, move to export."
+                  : "Use this area to check the latest changes, then export once the checks are clear."}
               </p>
               <p className="editing-surface-note">{previewSurfaceSummary.label}</p>
             </div>
@@ -4202,22 +4207,22 @@ nodes:
               <RuntimePlayer course={activePreviewCourse} />
             ) : (
               <section className="panel runtime-panel placeholder-panel">
-                <p className="eyebrow">Compiled Preview</p>
-                <h2>Compiled preview unavailable</h2>
+                <p className="eyebrow">Learner Preview</p>
+                <h2>Preview unavailable</h2>
                 <p className="panel-copy">
-                  Compile the source successfully to render the learner experience,
-                  validate the runtime graph, and unlock SCORM export.
+                  Update the preview successfully to render the learner experience
+                  and unlock SCORM export.
                 </p>
               </section>
             )}
           </div>
 
           <section className="panel notes-panel" ref={validationSectionRef}>
-            <p className="eyebrow">SCORM Preflight</p>
+            <p className="eyebrow">Before Export</p>
             <div className="help-inline-row">
               <h2>Ready for LMS validation</h2>
               <HelpHint
-                label="Export build"
+                label="SCORM export"
                 description={exportSurfaceSummary.description}
               />
             </div>
@@ -4266,12 +4271,12 @@ nodes:
           />
 
           <details className="details-panel studio-advanced-panel">
-            <summary>Advanced tools, tests, and project details</summary>
+            <summary>Advanced tools for source, testing, and modules</summary>
             <div className="details-copy studio-advanced-stack">
 
           {selectedProject ? (
           <section className="panel notes-panel">
-            <p className="eyebrow">Source Project</p>
+            <p className="eyebrow">Course Project</p>
             <h2>Current project</h2>
             <p className="panel-copy">
               Projects keep your editable source, saved variants, themes, and

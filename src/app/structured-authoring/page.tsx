@@ -22,7 +22,7 @@ export default function StructuredAuthoringPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Course-as-Code</p>
-          <h1>Write the course once, then preview and export it</h1>
+          <h1>Define the course once, then preview and export it</h1>
           <p className="panel-copy">{structuredAuthoringIntro}</p>
         </div>
 

@@ -1,6 +1,6 @@
 # Sapio Forge Documentation
 
-Sapio Forge helps teams create interactive training from structured source, preview it in the browser, and export SCORM packages for any LMS.
+Sapio Forge helps teams define training modules as structured source, preview them in the browser, and export SCORM packages for any LMS.
 
 Use these docs to understand the source-first workflow, how preview and export work, and how to build repeatable training content without relying on slide decks.
 

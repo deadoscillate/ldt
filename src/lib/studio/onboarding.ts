@@ -68,45 +68,45 @@ export const DEFAULT_STUDIO_ONBOARDING_STATE: StudioOnboardingState = {
 export const STUDIO_STARTING_PATHS: readonly StudioPathDefinition[] = [
   {
     id: "beginner",
-    label: "Beginner",
-    title: "Build your first course",
+    label: "Recommended",
+    title: "Start in Guided Editor",
     description:
-      "Start with guided fields, change a few pieces of content, preview the result, and export your first SCORM package.",
-    actionLabel: "Open Builder path",
+      "Use guided fields to update a starter course, preview the learner experience, and export your first SCORM package.",
+    actionLabel: "Start guided editing",
     recommendedProjectId: "customer-service",
     recommendedTemplateId: "customer-service-escalation",
     recommendedVariantId: "retail-support",
     recommendedThemeId: "default",
     authoringMode: "builder",
-    emphasis: "Best if you want a quick first win without editing YAML.",
+    emphasis: "Best for most instructional designers and the fastest first export.",
   },
   {
     id: "intermediate",
-    label: "Intermediate",
-    title: "Start from a template pack",
+    label: "Repeatable",
+    title: "Start from a course template",
     description:
-      "Use a reusable template, choose a saved variant, and generate a course without starting from scratch.",
-    actionLabel: "Open template path",
+      "Choose a reusable template, pick a saved version, and generate a course without starting from scratch.",
+    actionLabel: "Open template workflow",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
     recommendedVariantId: "k12-district",
     recommendedThemeId: "default",
     authoringMode: "builder",
-    emphasis: "Best for repeatable course families and small content changes.",
+    emphasis: "Best for repeatable course families and quick client or department changes.",
   },
   {
     id: "advanced",
-    label: "Advanced",
-    title: "Open source and project mode",
+    label: "Technical",
+    title: "Open Source Editor and project files",
     description:
       "Work directly in project files and YAML, validate the course, and build SCORM from source-controlled content.",
-    actionLabel: "Open source path",
+    actionLabel: "Open source workflow",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
     recommendedVariantId: "enterprise",
     recommendedThemeId: "corporate-blue",
     authoringMode: "source",
-    emphasis: "Best for Git-based team workflows and deeper control.",
+    emphasis: "Best for technical instructional designers, Git workflows, and deeper control.",
   },
 ] as const;
 
@@ -116,7 +116,7 @@ export const STARTER_EXAMPLES: readonly StarterExampleDefinition[] = [
     audience: "beginner",
     title: "Simple linear module",
     description:
-      "Use the customer-service project to update a few fields in Builder mode and export quickly.",
+      "Use the customer-service project to update a few fields in Guided Editor and export quickly.",
     projectId: "customer-service",
     templateId: "customer-service-escalation",
     variantId: "retail-support",
@@ -140,7 +140,7 @@ export const STARTER_EXAMPLES: readonly StarterExampleDefinition[] = [
     audience: "advanced",
     title: "Course family project",
     description:
-      "Inspect a multi-variant project in source mode and validate the shared template, variable sets, and shared module composition.",
+      "Inspect a multi-variant project in Source Editor and validate the shared template, variable sets, and shared module composition.",
     projectId: "security-awareness",
     templateId: "phishing-awareness",
     variantId: "healthcare",
@@ -319,7 +319,7 @@ export function buildFirstModuleChecklist(input: {
       id: "editing",
       label:
         input.authoringMode === "builder"
-          ? "Edit the course in Builder mode."
+          ? "Edit the course in Guided Editor."
           : "Edit the structured source or project files.",
       complete: input.hasStarterSelection,
     },
@@ -343,13 +343,13 @@ export function buildEditingSurfaceSummary(input: {
   switch (input.surface) {
     case "builder":
       return {
-        label: "You are editing the guided form",
+        label: "You are editing in Guided Editor",
         description:
           "Use simple fields to update the course. Sapio Forge writes the structured source for you.",
       };
     case "source":
       return {
-        label: "You are editing the source",
+        label: "You are editing in Source Editor",
         description:
           "This YAML is the main editable source for preview and export.",
       };

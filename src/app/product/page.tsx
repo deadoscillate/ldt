@@ -25,9 +25,9 @@ export default async function ProductPage() {
           <p className="eyebrow">Product</p>
           <h1>Structured authoring for teams who need repeatable training</h1>
           <p className="panel-copy">
-            Sapio Forge helps teams create interactive training from source,
-            preview it quickly, and export SCORM without rebuilding the same
-            branching logic by hand.
+            Sapio Forge helps teams define training modules as source, preview the
+            learner experience quickly, and export SCORM without rebuilding the
+            same branching logic by hand.
           </p>
         </div>
 
