@@ -22,7 +22,7 @@ export default function StructuredAuthoringPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Course-as-Code</p>
-          <h1>Training modules defined as source, then compiled into output</h1>
+          <h1>Write the course once, then preview and export it</h1>
           <p className="panel-copy">{structuredAuthoringIntro}</p>
         </div>
 
@@ -38,7 +38,7 @@ export default function StructuredAuthoringPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Shared Modules In Action</p>
-          <h2>Reusable learning components, not duplicated slide logic</h2>
+          <h2>Reuse shared learning components instead of duplicating content</h2>
           <p className="panel-copy">{sharedModulesIntro}</p>
         </div>
 
@@ -54,7 +54,7 @@ export default function StructuredAuthoringPage() {
       <section className="landing-section comparison-section">
         <div className="section-heading">
           <p className="eyebrow">Why Sapio Forge Exists</p>
-          <h2>Learning infrastructure instead of fragile course assembly</h2>
+          <h2>A clearer workflow than duplicated screens and fragile exports</h2>
           <p className="panel-copy">{comparisonIntro}</p>
         </div>
 

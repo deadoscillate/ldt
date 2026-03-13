@@ -1,12 +1,12 @@
 # Sapio Forge
 
-Sapio Forge is a structured learning infrastructure platform for building and compiling training modules.
+Sapio Forge is a structured learning platform for creating interactive training from source.
 
 Build learning systems like software.
 
-Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.
+Create training as structured source, preview it in the browser, and export SCORM packages for any LMS.
 
-Sapio Forge replaces slide-based course builders with structured authoring, reusable modules, reusable simulation shells, and reproducible builds for training content.
+Sapio Forge replaces slide-based course tools with structured authoring, reusable modules, realistic simulation shells, and reliable builds.
 
 ## Key Idea
 

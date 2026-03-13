@@ -23,11 +23,10 @@ export function MarketingDemoSection({
     <section className="landing-section">
       <div className="section-heading">
         <p className="eyebrow">Demo</p>
-        <h2>See the current product workflow</h2>
+        <h2>See how a course moves from source to preview</h2>
         <p className="panel-copy">
-          The demo reuses the shipped sample course and preview runtime so the page
-          stays aligned with the actual authoring experience, including constrained
-          simulation shells for email, chat, and dashboard-based training scenes.
+          This demo uses the same sample content and preview runtime that ship with
+          the studio, so what you see here matches the actual authoring workflow.
         </p>
       </div>
 
@@ -43,8 +42,8 @@ export function MarketingDemoSection({
               <span className="editor-language">YAML</span>
             </div>
             <p className="demo-snippet-note">
-              Short sample showing course metadata, template data, one reusable block,
-              and the first branching node.
+              Short sample showing course setup, template values, and the first
+              branching step.
             </p>
             <pre className="demo-code-preview demo-code-preview-compact">
               {featuredSnippet}
@@ -60,16 +59,16 @@ export function MarketingDemoSection({
 
           <div className="demo-callout-grid">
             <div className="summary-card">
-              <strong>YAML authoring</strong>
-              <span>Write branching flows in a single structured course file.</span>
+              <strong>Course source</strong>
+              <span>Keep the flow in one readable source file.</span>
             </div>
             <div className="summary-card">
-              <strong>Browser preview</strong>
-              <span>Run shell-backed learner paths in the browser before packaging.</span>
+              <strong>Live preview</strong>
+              <span>Check the learner experience before exporting.</span>
             </div>
             <div className="summary-card">
               <strong>SCORM export</strong>
-              <span>Download a SCORM 1.2 zip from the validated course definition.</span>
+              <span>Export a SCORM package from the same validated source.</span>
             </div>
           </div>
 

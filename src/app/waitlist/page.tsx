@@ -18,7 +18,7 @@ export default async function WaitlistPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Early Access</p>
-          <h1>Join the beta without digging through the full site first</h1>
+          <h1>Get beta updates without digging through the full site</h1>
           <p className="panel-copy">
             Try the studio now, or join the list for beta updates and broader LMS
             validation results.

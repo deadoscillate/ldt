@@ -78,6 +78,26 @@ textarea {
   align-items: center;
   gap: 1rem;
   padding: 0.35rem 0 1rem;
+  flex-wrap: wrap;
+}
+
+.landing-nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem 1.25rem;
+  flex: 1 1 42rem;
+  min-width: 0;
+}
+
+.landing-nav-primary {
+  flex: 1 1 26rem;
+  min-width: 0;
+}
+
+.landing-nav-cta {
+  justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 .brand-link,
@@ -180,6 +200,10 @@ textarea {
 .section-heading {
   max-width: 58rem;
   margin-bottom: 1.3rem;
+}
+
+.section-heading .panel-copy {
+  max-width: 52rem;
 }
 
 .section-heading h2 {
@@ -889,6 +913,10 @@ textarea {
 
 .footer-meta {
   max-width: 32rem;
+}
+
+.footer-meta .panel-copy {
+  margin-top: 0.45rem;
 }
 
 .footer-links {
@@ -2634,6 +2662,14 @@ textarea {
     max-width: none;
   }
 
+  .landing-nav-content {
+    justify-content: flex-start;
+  }
+
+  .landing-nav-cta {
+    justify-content: flex-start;
+  }
+
   .feature-grid,
   .who-grid,
   .roadmap-grid,
@@ -2671,6 +2707,36 @@ textarea {
   }
 }
 
+@media (max-width: 900px) {
+  .landing-shell,
+  .page-shell {
+    width: min(100vw - 1.5rem, 100%);
+  }
+
+  .landing-hero-copy,
+  .landing-hero-panel,
+  .summary-card,
+  .panel {
+    padding: 1.15rem;
+  }
+
+  .landing-nav-primary {
+    flex-basis: 100%;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .proof-checklist,
+  .who-grid,
+  .roadmap-grid,
+  .proof-status-band,
+  .proof-platform-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 720px) {
   .landing-shell,
   .page-shell {
@@ -2691,6 +2757,7 @@ textarea {
   }
 
   .landing-nav,
+  .landing-nav-content,
   .landing-nav-links,
   .hero-actions,
   .waitlist-input-row,
@@ -2703,6 +2770,23 @@ textarea {
 
   .landing-nav {
     padding-inline: 0.25rem;
+  }
+
+  .landing-nav-content,
+  .landing-nav-primary,
+  .landing-nav-cta {
+    width: 100%;
+    flex: none;
+  }
+
+  .landing-nav-links {
+    gap: 0.75rem;
+  }
+
+  .landing-nav-cta .button-link,
+  .hero-actions .button-link,
+  .demo-footer .button-link {
+    width: 100%;
   }
 
   .panel-header,
@@ -2764,12 +2848,34 @@ textarea {
     justify-content: space-between;
   }
 
+  .hero h1 {
+    max-width: none;
+    font-size: clamp(2rem, 9vw, 3rem);
+  }
+
   .landing-hero-copy h1 {
     max-width: none;
   }
 
+  .landing-section .section-heading h1 {
+    font-size: clamp(1.9rem, 8vw, 2.7rem);
+  }
+
+  .section-heading h2 {
+    font-size: clamp(1.5rem, 7vw, 2.1rem);
+  }
+
+  .hero-subheadline,
+  .hero-copy,
+  .landing-hero-note,
+  .panel-copy {
+    font-size: 0.98rem;
+    line-height: 1.65;
+  }
+
   .comparison-row {
     gap: 0.5rem;
+    padding: 0.9rem 0.95rem;
   }
 
   .walkthrough-card {
@@ -2801,5 +2907,25 @@ textarea {
     bottom: 4.8rem;
     width: auto;
     max-height: calc(100vh - 6rem);
+  }
+}
+
+@media (max-width: 560px) {
+  .hero,
+  .panel,
+  .landing-hero-copy,
+  .summary-card,
+  .landing-hero-panel {
+    padding: 0.95rem;
+  }
+
+  .workflow-item {
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .waitlist-input,
+  .waitlist-select {
+    min-height: 3rem;
   }
 }

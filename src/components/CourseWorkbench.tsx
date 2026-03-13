@@ -2608,26 +2608,26 @@ export function CourseWorkbench({
       <section className="hero">
         <div className="hero-copy-block">
           <p className="eyebrow">{BRAND.studioName}</p>
-          <h1>Structured authoring, compiled preview, reproducible SCORM output.</h1>
+          <h1>Create interactive training from source.</h1>
           <p className="hero-subheadline">{BRAND.positioningStatement}</p>
           <WorkflowSteps steps={["Project", "Template", "Variant", "Theme", "SCORM"]} />
           <p className="hero-copy">
-            Welcome to {BRAND.studioName}. Define course source, compile it into a
-            learner-ready preview, and generate SCORM as a build artifact.
+            Start with a project or template, make your edits, preview the learner
+            experience, and export a SCORM package when it looks right.
           </p>
         </div>
         <div className="hero-summary">
           <div className="summary-card">
             <strong>Source definition</strong>
-            <span>Template variables, source YAML, and guided builder fields stay in one structured definition.</span>
+            <span>Your course content and rules live here.</span>
           </div>
           <div className="summary-card">
             <strong>Compiled preview</strong>
-            <span>Compile the source into a validated runtime preview before exporting any package.</span>
+            <span>Preview what learners will see before you export.</span>
           </div>
           <div className="summary-card">
             <strong>Export build</strong>
-            <span>Generate a SCORM 1.2 package as build output from the same validated source.</span>
+            <span>Generate a SCORM package from the same source.</span>
           </div>
         </div>
       </section>
@@ -2655,12 +2655,9 @@ export function CourseWorkbench({
               <p className="eyebrow">Start Here</p>
               <h2>Welcome to Sapio Forge Studio</h2>
               <p className="panel-copy">
-                Use Source view to define structured training modules. Use Builder
-                view to work through guided fields and preview the compiled course.
-                Sapio Forge separates course source from course output so training
-                systems stay reusable, testable, and version-controlled. Shared
-                modules let you compose courses from reusable source components
-                instead of duplicating the same lesson logic across projects.
+                Builder view is the easiest way to get started. Source view gives
+                you direct control over the YAML. Both paths lead to the same
+                preview and SCORM export.
               </p>
               {selectedStartingPath ? (
                 <p className="panel-copy">
@@ -2682,7 +2679,7 @@ export function CourseWorkbench({
                 onClick={() => handleChooseStartingPath("intermediate")}
                 type="button"
               >
-                Start from a template pack
+                Use a starter template
               </button>
               <button
                 className="ghost-button"
@@ -2727,35 +2724,35 @@ export function CourseWorkbench({
           <div className="validation-state-grid onboarding-concepts">
             <HelpHint
               label="Source definition"
-              description="The YAML and project files you edit. This stays authoritative for preview and export."
+              description="The course content and logic you edit. Preview and export are built from this."
             />
             <HelpHint
               label="Builder mode"
-              description="A guided form layer that writes structured source for you."
+              description="A guided form that edits the course for you without making you write YAML."
             />
             <HelpHint
               label="Template pack"
-              description="A reusable template plus saved variable sets for repeatable course families."
+              description="A reusable starting point with saved versions you can adapt quickly."
             />
             <HelpHint
               label="Variant"
-              description="One saved set of template values that generates a specific course version."
+              description="One saved version of a course, such as a client, audience, or scenario type."
             />
             <HelpHint
               label="Theme"
-              description="Branding tokens applied at build time without changing course structure."
+              description="The visual style for the course, such as colors, type, and logo."
             />
             <HelpHint
               label="Compiled preview"
-              description="The learner-facing runtime generated from validated source."
+              description="A live preview of what learners will see."
             />
             <HelpHint
               label="Export build"
-              description="A generated SCORM package produced from validated source and selected theme."
+              description="The SCORM package created from your source and theme."
             />
             <HelpHint
               label="SCORM package"
-              description="The zip you upload to SCORM Cloud or your LMS. It is a build artifact, not the editable source."
+              description="The zip file you upload to SCORM Cloud or your LMS."
             />
           </div>
 
@@ -3665,7 +3662,7 @@ nodes:
               <p className="panel-copy">
                 These messages update from the current draft and are tied to the
                 active editing mode, so you can fix missing fields, broken paths,
-                and missing variables before you export anything.
+                and missing values before you export.
               </p>
               <ValidationIssueList issues={displayedValidationErrors} />
             </div>
@@ -3675,8 +3672,7 @@ nodes:
             <div className="error-panel">
               <h3>Build warnings to review</h3>
               <p className="panel-copy">
-                These warnings do not block compile, but they do affect
-                reproducibility and shared-source hygiene.
+                These warnings will not stop export, but they may still be worth fixing.
               </p>
               <ValidationIssueList issues={activeSnapshot.warnings} />
             </div>
@@ -3685,14 +3681,14 @@ nodes:
           <div className="export-bar">
             <div>
               <p className="eyebrow">Export Build</p>
-              <h3>Build SCORM 1.2 package</h3>
+              <h3>Export your course as SCORM</h3>
               <p className="panel-copy">
-                Choose a standard package or an LMS validation build with diagnostics.
-                The source definition stays unchanged; export remains a build step.
+                Choose a standard package for normal delivery or a validation build
+                when you need extra diagnostics.
               </p>
               <p className="panel-copy">
-                SCORM Cloud is the current validated baseline. Broader LMS testing is
-                tracked in the proof center and should use the LMS validation build.
+                SCORM Cloud is the current validated baseline. Use the validation
+                build when you want extra help testing in a real LMS.
               </p>
               <div className="validation-state-grid">
                 {selectedProject ? (
@@ -3740,8 +3736,8 @@ nodes:
                 Selected mode:{" "}
                 <strong>
                   {exportMode === "validation"
-                    ? "LMS validation build with diagnostics enabled"
-                    : "Standard SCORM 1.2 package with diagnostics disabled"}
+                    ? "Validation build with diagnostics on"
+                    : "Standard SCORM package"}
                 </strong>
               </p>
               {selectedProject ? (
@@ -3758,8 +3754,8 @@ nodes:
               ) : null}
               {selectedProject ? (
                 <p className="panel-copy">
-                  Source project <strong>{selectedProject.id}</strong> stays editable in
-                  Git. The SCORM zip and build manifest are generated outputs.
+                  Project source stays editable. The SCORM zip and build manifest
+                  are generated output files.
                 </p>
               ) : null}
               <Link className="inline-link-button" href="/validation">
@@ -3902,9 +3898,8 @@ nodes:
                       : "SCORM 1.2 package generated successfully."}
                   </h3>
                   <p className="panel-copy">
-                    The exported SCORM package is a build artifact generated from the
-                    validated source definition. Download it again or inspect the file
-                    structure before importing it into an LMS.
+                    Your package is ready. Download it now or review the files
+                    inside before importing it into an LMS.
                   </p>
                 </div>
                 <div className="button-row">
@@ -4096,8 +4091,8 @@ nodes:
               </div>
               <p className="panel-copy">
                 {isReadyToExport
-                  ? "The compiled source passed export preflight and is ready for LMS validation."
-                  : "Keep the compiled preview in sync with the latest source definition, then clear SCORM preflight before exporting."}
+                  ? "The course passed preflight and is ready to export."
+                  : "Preview the latest changes and clear the preflight checks before exporting."}
               </p>
               <p className="editing-surface-note">{previewSurfaceSummary.label}</p>
             </div>
@@ -4136,9 +4131,8 @@ nodes:
               <p className="eyebrow">Source Project</p>
               <h2>Project panel</h2>
               <p className="panel-copy">
-                Course projects keep templates, variable sets, themes, and build
-                outputs separate. The source project remains the editable system of
-                record; compiled preview and SCORM are generated from it.
+                Projects keep your editable source, saved variants, themes, and
+                exported files separate.
               </p>
               <p className="editing-surface-note">{projectSurfaceSummary.description}</p>
               <div className="runtime-status-grid inspector-grid">

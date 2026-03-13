@@ -23,8 +23,12 @@ export default async function ProductPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Product</p>
-          <h1>Sapio Forge is structured authoring for modern training systems</h1>
-          <p className="panel-copy">{BRAND.positioningStatement}</p>
+          <h1>Structured authoring for teams who need repeatable training</h1>
+          <p className="panel-copy">
+            Sapio Forge helps teams create interactive training from source,
+            preview it quickly, and export SCORM without rebuilding the same
+            branching logic by hand.
+          </p>
         </div>
 
         <div className="problem-solution-grid">
@@ -44,7 +48,7 @@ export default async function ProductPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Core Capabilities</p>
-          <h2>What the platform already supports</h2>
+          <h2>What you can do today</h2>
         </div>
 
         <div className="feature-grid">
@@ -67,10 +71,10 @@ export default async function ProductPage() {
       <section className="landing-section">
         <div className="section-heading">
           <p className="eyebrow">Export Output</p>
-          <h2>Show exactly what the SCORM package contains</h2>
+          <h2>See exactly what the SCORM package contains</h2>
           <p className="panel-copy">
-            Export a standards-compliant SCORM 1.2 package generated from the validated
-            course definition.
+            Export a standards-compliant SCORM 1.2 package generated from the
+            validated course source.
           </p>
         </div>
 

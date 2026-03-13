@@ -71,42 +71,42 @@ export const STUDIO_STARTING_PATHS: readonly StudioPathDefinition[] = [
     label: "Beginner",
     title: "Build your first course",
     description:
-      "Start from structured source through Builder view, change a few fields, compile the preview, and export your first SCORM package.",
+      "Start with guided fields, change a few pieces of content, preview the result, and export your first SCORM package.",
     actionLabel: "Open Builder path",
     recommendedProjectId: "customer-service",
     recommendedTemplateId: "customer-service-escalation",
     recommendedVariantId: "retail-support",
     recommendedThemeId: "default",
     authoringMode: "builder",
-    emphasis: "Best for first-time users who want a fast first export.",
+    emphasis: "Best if you want a quick first win without editing YAML.",
   },
   {
     id: "intermediate",
     label: "Intermediate",
     title: "Start from a template pack",
     description:
-      "Use reusable templates, shared modules, variable sets, and themes to generate a specific course variant without rewriting shared source.",
+      "Use a reusable template, choose a saved variant, and generate a course without starting from scratch.",
     actionLabel: "Open template path",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
     recommendedVariantId: "k12-district",
     recommendedThemeId: "default",
     authoringMode: "builder",
-    emphasis: "Best when you want repeatable scenario generation from shared source.",
+    emphasis: "Best for repeatable course families and small content changes.",
   },
   {
     id: "advanced",
     label: "Advanced",
     title: "Open source and project mode",
     description:
-      "Inspect the source project, work directly in YAML, validate the canonical model, trace shared module dependencies, and build reproducible SCORM output from structured source.",
+      "Work directly in project files and YAML, validate the course, and build SCORM from source-controlled content.",
     actionLabel: "Open source path",
     recommendedProjectId: "security-awareness",
     recommendedTemplateId: "phishing-awareness",
     recommendedVariantId: "enterprise",
     recommendedThemeId: "corporate-blue",
     authoringMode: "source",
-    emphasis: "Best for Git-based workflows and structured source control.",
+    emphasis: "Best for Git-based team workflows and deeper control.",
   },
 ] as const;
 
@@ -343,45 +343,45 @@ export function buildEditingSurfaceSummary(input: {
   switch (input.surface) {
     case "builder":
       return {
-        label: "You are editing builder fields",
+        label: "You are editing the guided form",
         description:
-          "Use guided forms to update structured source, then compile the current course into preview and export output.",
+          "Use simple fields to update the course. Sapio Forge writes the structured source for you.",
       };
     case "source":
       return {
-        label: "You are editing structured source",
+        label: "You are editing the source",
         description:
-          "This YAML definition is the source of truth for compile, preview, and export.",
+          "This YAML is the main editable source for preview and export.",
       };
     case "project":
       return {
-        label: "You are editing project selection",
+        label: "You are choosing the active project",
         description:
-          "Choose which source project, template, variant, and theme define the current course source and build target.",
+          "Choose which project, template, variant, and theme you want to work on.",
       };
     case "variables":
       return {
-        label: "You are editing template variables",
+        label: "You are editing template values",
         description:
-          "These values customize a shared template at compile time without changing its branching structure.",
+          "These values personalize a shared template without changing the core flow.",
       };
     case "theme":
       return {
-        label: "You are editing theme selection",
+        label: "You are choosing the visual theme",
         description:
-          "Theme packs change branding and presentation only. Course structure stays in source.",
+          "Themes change branding and styling only. The course flow stays the same.",
       };
     case "preview":
       return {
-        label: "You are viewing the compiled preview",
+        label: "You are viewing the learner preview",
         description:
-          "This is the learner-facing runtime generated from validated source, not the editable project.",
+          "This is what learners will see after the current source is compiled.",
       };
     case "export":
       return {
-        label: "You are building export output",
+        label: "You are exporting the course",
         description:
-          "The SCORM package is generated from validated source and should be treated as a build artifact.",
+          "The SCORM package is generated from the source. It is something you deliver, not something you edit.",
       };
     default:
       return input.authoringMode === "builder"
@@ -405,8 +405,8 @@ export function buildFirstExportFeedback(input: {
       title: "Your first SCORM package is ready.",
       message:
         input.exportMode === "validation"
-          ? "You can now download the package, inspect its contents, and test it in SCORM Cloud or your LMS with diagnostics enabled."
-          : "You can now download the package, inspect its contents, and test it in SCORM Cloud or your LMS.",
+          ? "Download the package, review the files inside, and test it in SCORM Cloud or your LMS with diagnostics turned on."
+          : "Download the package, review the files inside, and test it in SCORM Cloud or your LMS.",
     };
   }
 
@@ -417,7 +417,7 @@ export function buildFirstExportFeedback(input: {
         : "SCORM 1.2 package generated successfully.",
     message:
       input.exportMode === "validation"
-        ? "Download the diagnostics-enabled package or inspect the validation notes and file structure."
-        : "Download the package or inspect the generated file structure.",
+        ? "Download the diagnostics build or review the validation notes and package files."
+        : "Download the package or review the generated files.",
   };
 }

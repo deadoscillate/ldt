@@ -32,9 +32,9 @@ export function StudioPathChooser({
         <p className="eyebrow">First-run onboarding</p>
         <h2>Welcome to {BRAND.studioName}</h2>
         <p className="panel-copy">
-          Pick the workflow that matches how you want to start. Source view defines
-          structured training modules directly. Builder view helps you work through
-          that same source with guided fields and faster preview.
+          Pick the easiest starting point for how you like to work. Builder view
+          uses guided fields. Source view lets you work directly in YAML and project
+          files.
         </p>
         <div className="studio-path-grid">
           {paths.map((path) => (

@@ -2,44 +2,44 @@ import { BRAND } from "@/lib/app/brand";
 
 export const featureCards = [
   {
-    title: "Structured course definitions",
+    title: "Structured course files",
     description:
-      "Define course logic, scene shells, and reusable content as readable source instead of fragile exports.",
+      "Write course content and logic as readable source instead of rebuilding the same screens by hand.",
   },
   {
     title: "Reusable module libraries",
-    description: "Reuse scenarios, lessons, and checks across course families.",
+    description: "Reuse intros, lessons, and checks across many courses.",
   },
   {
-    title: "SCORM compilation",
-    description: "Compile validated source into deployable SCORM 1.2 packages.",
+    title: "Reliable SCORM export",
+    description: "Turn validated source into SCORM 1.2 packages you can test and deliver.",
   },
   {
-    title: "Version-controlled training systems",
+    title: "Version-friendly workflow",
     description:
-      "Keep source, tests, themes, and builds organized like software projects.",
+      "Keep source, tests, themes, and builds organized in a way teams can review and reuse.",
   },
 ] as const;
 
 export const conceptCards = [
   {
     title: "Structured Authoring",
-    description: "Define training content as structured source instead of slide decks.",
+    description: "Write training content as structured source instead of slide decks.",
   },
   {
     title: "Reusable Modules",
-    description: "Build libraries of knowledge checks, scenarios, and lessons.",
+    description: "Reuse lessons, checks, and scenarios across more than one course.",
   },
   {
     title: "Reproducible Builds",
-    description: "Compile consistent SCORM packages every time.",
+    description: "Generate the same SCORM package from the same source every time.",
   },
 ] as const;
 
 export const audienceCards = [
   "Instructional designers building branching scenario training.",
   "Training consultants producing repeatable SCORM content.",
-  "Technical L&D teams who want structured authoring instead of manual branching assembly.",
+  "Technical L&D teams who want a clearer workflow than manual branching and duplicated slides.",
 ] as const;
 
 export const comparisonRows = [
@@ -67,15 +67,15 @@ export const comparisonRows = [
 
 export const structuredAuthoringPoints = [
   "Readable YAML source files stay as the system of record.",
-  "Compiled preview and SCORM packages are generated from validated source.",
-  "Templates and variables make repeated course families faster to ship.",
+  "Preview and SCORM output are generated from validated source.",
+  "Templates and variables make repeated course families faster to create.",
   "Plain-text source works naturally with Git, review, and version history.",
 ] as const;
 
 export const sharedModuleExamplePoints = [
   "One phishing intro module can appear in K-12, healthcare, and enterprise variants.",
   "A shared reporting procedure can drive multiple conduct-reporting course families.",
-  "Module changes flow into dependency graphs, affected rebuilds, and logic-test runs.",
+  "One module change can update multiple builds and tests at once.",
 ] as const;
 
 export const roadmapItems = [
@@ -92,18 +92,18 @@ export const recentProgressItems = [
 ] as const;
 
 export const productProblemCopy = {
-  problemTitle: "Training logic is still too manual in traditional builders",
+  problemTitle: "Traditional course tools make branching hard to maintain",
   problemBody:
-    "Many teams still manage branching logic through duplicated screens, repeated manual edits, and exports that are hard to review or rebuild.",
-  solutionTitle: "Define source once, then compile preview and SCORM output",
+    "Many teams still manage branching through duplicated screens, repeated manual edits, and exports that are hard to review or rebuild.",
+  solutionTitle: "Define it once, then preview and export from the same source",
   solutionBody:
-    "Sapio Forge keeps course source readable, reusable, and versionable, then compiles that same definition into browser preview and SCORM build artifacts.",
+    "Sapio Forge keeps course source readable and reusable, then turns that same definition into a browser preview and SCORM build.",
 } as const;
 
 export const structuredAuthoringIntro =
-  "Instead of building courses as slide decks, Sapio Forge treats training modules as structured source. This allows teams to version, reuse, test, and compile learning systems the same way developers build software.";
+  "Instead of building courses as slide decks, Sapio Forge treats training modules as structured source. Teams can reuse, test, review, and export them with a workflow that feels much more reliable.";
 
 export const sharedModulesIntro =
-  "Sapio Forge treats intros, reminders, reporting steps, and scenario fragments like reusable source modules. One source change can then flow through affected rebuilds instead of forcing teams to manually update separate course copies.";
+  "Sapio Forge treats intros, reminders, reporting steps, and scenario fragments as reusable modules. One source change can then update the right builds instead of forcing manual copy-and-paste edits.";
 
-export const comparisonIntro = `${BRAND.productName} is not a Storyline clone or a presentation builder. It is for teams that want training systems to be maintainable, reusable, and buildable from source.`;
+export const comparisonIntro = `${BRAND.productName} is not a slide editor. It is for teams that want training content to stay readable, reusable, and easy to rebuild from source.`;

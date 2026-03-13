@@ -242,14 +242,14 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       </div>
 
       <p className="runtime-tracking-note">
-        This compiled preview is rendered from the validated source definition and
-        mirrors the learner progress and score that SCORM export reports to an LMS.
+        This preview is built from the current source and shows the same progress
+        and score the SCORM package will report.
       </p>
       {course.theme.name ? (
         <p className="runtime-tracking-note">
           Theme pack: <strong>{course.theme.name}</strong>
-          {course.theme.version ? ` (${course.theme.version})` : ""}. Branding is
-          applied as a build layer on top of the structured source definition.
+          {course.theme.version ? ` (${course.theme.version})` : ""}. This changes
+          the look of the course, not the course flow.
         </p>
       ) : null}
 
@@ -257,15 +257,14 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
         <summary>Scene inspector</summary>
         <div className="details-copy">
           <p className="panel-copy">
-            Current scene shell: <strong>{currentNode.scene.layout}</strong>. The
-            runtime resolves each component through the scene registry while keeping
-            branching and scoring logic in the canonical node model.
+            Current scene type: <strong>{currentNode.scene.layout}</strong>. This
+            helps you see how the current step is being rendered.
           </p>
           {scenarioStateEntries.length > 0 ? (
             <>
               <p className="panel-copy">
-                Scenario state persists across scenes, so earlier learner actions can
-                change what appears next and how later decisions are scored.
+                These saved values carry learner choices from one step to the next.
+                They are what make multi-step simulations react to earlier decisions.
               </p>
               <ul className="scene-component-inspector">
                 {scenarioStateEntries.map(([key, value]) => (
@@ -282,8 +281,7 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
           {actionHistory.length > 0 ? (
             <>
               <p className="panel-copy">
-                Recent action path: review the latest learner actions to replay the
-                scenario flow step by step while authoring.
+                Recent actions: use this to check the path the learner just took.
               </p>
               <ul className="scene-component-inspector">
                 {actionHistory.map((entry, index) => (
@@ -430,8 +428,8 @@ export function RuntimePlayer({ course }: RuntimePlayerProps) {
       </article>
 
       <p className="save-note">
-        Preview progress resumes locally for course id <code>{course.id}</code>. Last
-        save {formatTimestamp(runtimeState.updatedAt)}.
+        Preview progress is saved locally for <code>{course.id}</code>. Last save{" "}
+        {formatTimestamp(runtimeState.updatedAt)}.
       </p>
     </section>
   );

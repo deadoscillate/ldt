@@ -1,8 +1,8 @@
 # Sapio Forge Documentation
 
-Sapio Forge is a structured learning platform that lets teams define training modules as source, compile them into SCORM packages, and deploy them to any LMS.
+Sapio Forge helps teams create interactive training from structured source, preview it in the browser, and export SCORM packages for any LMS.
 
-Use these docs to understand the structured authoring model, the compile/build pipeline, and the source-first workflow behind the platform.
+Use these docs to understand the source-first workflow, how preview and export work, and how to build repeatable training content without relying on slide decks.
 
 Start here if you are adopting the repository as a starter template:
 
