@@ -188,6 +188,29 @@ function getBrowserStorage(): Storage | null {
   return window.localStorage;
 }
 
+function scrollToElement(element: HTMLElement | null): void {
+  if (!element) {
+    return;
+  }
+
+  if (typeof window === "undefined") {
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  });
+}
+
 function courseProjectToTemplatePack(project: CourseProject): TemplatePack {
   return {
     id: project.id,
@@ -347,9 +370,12 @@ export function CourseWorkbench({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const templateDataFileInputRef = useRef<HTMLInputElement>(null);
   const projectSourceFileInputRef = useRef<HTMLInputElement>(null);
+  const startHerePanelRef = useRef<HTMLElement>(null);
   const templateSelectorRef = useRef<HTMLDivElement>(null);
   const yamlEditorRef = useRef<HTMLDivElement>(null);
   const previewPanelRef = useRef<HTMLDivElement>(null);
+  const exportSectionRef = useRef<HTMLDivElement>(null);
+  const validationSectionRef = useRef<HTMLElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const authoringGuideRef = useRef<HTMLDetailsElement>(null);
   const firstModuleGuideRef = useRef<HTMLDetailsElement>(null);
@@ -939,18 +965,12 @@ export function CourseWorkbench({
 
   function openAuthoringGuide(): void {
     setIsAuthoringGuideOpen(true);
-    authoringGuideRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    scrollToElement(authoringGuideRef.current);
   }
 
   function openFirstModuleGuide(): void {
     setIsFirstModuleGuideOpen(true);
-    firstModuleGuideRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    scrollToElement(firstModuleGuideRef.current);
   }
 
   function trackStudioEvent(
@@ -2649,7 +2669,7 @@ export function CourseWorkbench({
       </section>
 
       {!onboardingState.startHereDismissed ? (
-        <section className="panel onboarding-panel">
+        <section className="panel onboarding-panel" ref={startHerePanelRef}>
           <div className="section-heading-row">
             <div>
               <p className="eyebrow">Start Here</p>
@@ -2888,6 +2908,63 @@ export function CourseWorkbench({
         </section>
       ) : null}
 
+      <section className="panel studio-quick-nav-panel">
+        <div>
+          <p className="eyebrow">Quick Navigation</p>
+          <h2>Jump to the part you need</h2>
+          <p className="panel-copy">
+            Use these shortcuts to move between setup, editing, preview, export,
+            and LMS validation without hunting through the full Studio page.
+          </p>
+        </div>
+        <div className="button-row">
+          {!onboardingState.startHereDismissed ? (
+            <button
+              className="ghost-button"
+              onClick={() => scrollToElement(startHerePanelRef.current)}
+              type="button"
+            >
+              Start Here
+            </button>
+          ) : null}
+          <button
+            className="ghost-button"
+            onClick={() => scrollToElement(templateSelectorRef.current)}
+            type="button"
+          >
+            Project setup
+          </button>
+          <button
+            className="ghost-button"
+            onClick={() => scrollToElement(yamlEditorRef.current)}
+            type="button"
+          >
+            Editor
+          </button>
+          <button
+            className="ghost-button"
+            onClick={() => scrollToElement(previewPanelRef.current)}
+            type="button"
+          >
+            Preview
+          </button>
+          <button
+            className="ghost-button"
+            onClick={() => scrollToElement(exportSectionRef.current)}
+            type="button"
+          >
+            Export
+          </button>
+          <button
+            className="ghost-button"
+            onClick={() => scrollToElement(validationSectionRef.current)}
+            type="button"
+          >
+            Validation
+          </button>
+        </div>
+      </section>
+
       <section className="workbench-grid">
         <div className="panel editor-panel">
           <div className="panel-section" ref={templateSelectorRef}>
@@ -2912,30 +2989,28 @@ export function CourseWorkbench({
                 </p>
               </div>
               <div className="button-row">
+                <input
+                  accept=".zip"
+                  className="file-input"
+                  onChange={(event) => void handleImportProjectSource(event)}
+                  ref={projectSourceFileInputRef}
+                  type="file"
+                />
+                <button
+                  className="ghost-button"
+                  onClick={() => projectSourceFileInputRef.current?.click()}
+                  type="button"
+                >
+                  Import Project Source
+                </button>
                 {selectedProject ? (
-                  <>
-                    <input
-                      accept=".zip"
-                      className="file-input"
-                      onChange={(event) => void handleImportProjectSource(event)}
-                      ref={projectSourceFileInputRef}
-                      type="file"
-                    />
-                    <button
-                      className="ghost-button"
-                      onClick={() => projectSourceFileInputRef.current?.click()}
-                      type="button"
-                    >
-                      Import Project Source
-                    </button>
-                    <button
-                      className="ghost-button"
-                      onClick={() => void handleExportProjectSource()}
-                      type="button"
-                    >
-                      Export Project Source
-                    </button>
-                  </>
+                  <button
+                    className="ghost-button"
+                    onClick={() => void handleExportProjectSource()}
+                    type="button"
+                  >
+                    Export Project Source
+                  </button>
                 ) : null}
                 <button
                   className="ghost-button"
@@ -3678,7 +3753,7 @@ nodes:
             </div>
           ) : null}
 
-          <div className="export-bar">
+          <div className="export-bar" ref={exportSectionRef}>
             <div>
               <p className="eyebrow">Export Build</p>
               <h3>Export your course as SCORM</h3>
@@ -3776,6 +3851,7 @@ nodes:
                 className="primary-button export-button"
                 disabled={!isReadyToExport || isExporting}
                 onClick={() => void handleExport()}
+                ref={exportButtonRef}
                 type="button"
               >
                 {isExporting
@@ -4091,48 +4167,115 @@ nodes:
               </div>
               <p className="panel-copy">
                 {isReadyToExport
-                  ? "The course passed preflight and is ready to export."
-                  : "Preview the latest changes and clear the preflight checks before exporting."}
+                  ? "The preview is ready. Use the export tools in the left column to build your package."
+                  : "Use this area to preview the latest changes, then return to the export tools once the checks are clear."}
               </p>
               <p className="editing-surface-note">{previewSurfaceSummary.label}</p>
             </div>
             <div className="button-row">
-              {selectedProject ? (
-                <button
-                  className="ghost-button"
-                  onClick={handleValidateProject}
-                  type="button"
-                >
-                  Validate Project
-                </button>
-              ) : null}
               <button
-                className="primary-button export-button"
-                disabled={!isReadyToExport || isExporting}
-                onClick={() => void handleExport()}
-                ref={exportButtonRef}
+                className="ghost-button"
+                onClick={() => scrollToElement(yamlEditorRef.current)}
                 type="button"
               >
-                {isExporting
-                  ? "Building..."
-                  : selectedProject
-                    ? exportMode === "validation"
-                      ? "Build Validation Project"
-                      : "Build Project"
-                    : exportMode === "validation"
-                      ? "Export LMS Validation Build"
-                      : "Export SCORM 1.2"}
+                Jump to editor
+              </button>
+              <button
+                className="primary-button export-button"
+                onClick={() => scrollToElement(exportSectionRef.current)}
+                type="button"
+              >
+                Jump to export tools
+              </button>
+              <button
+                className="ghost-button"
+                onClick={() => scrollToElement(validationSectionRef.current)}
+                type="button"
+              >
+                Jump to validation
               </button>
             </div>
           </section>
 
+          <div ref={previewPanelRef}>
+            {activePreviewCourse ? (
+              <RuntimePlayer course={activePreviewCourse} />
+            ) : (
+              <section className="panel runtime-panel placeholder-panel">
+                <p className="eyebrow">Compiled Preview</p>
+                <h2>Compiled preview unavailable</h2>
+                <p className="panel-copy">
+                  Compile the source successfully to render the learner experience,
+                  validate the runtime graph, and unlock SCORM export.
+                </p>
+              </section>
+            )}
+          </div>
+
+          <section className="panel notes-panel" ref={validationSectionRef}>
+            <p className="eyebrow">SCORM Preflight</p>
+            <div className="help-inline-row">
+              <h2>Ready for LMS validation</h2>
+              <HelpHint
+                label="Export build"
+                description={exportSurfaceSummary.description}
+              />
+            </div>
+            <p className="panel-copy">
+              Preflight checks the manifest, launch file, course graph, lesson status
+              behavior, score behavior, and selected export mode before build output is
+              generated.
+            </p>
+            <p className="editing-surface-note">{exportSurfaceSummary.label}</p>
+            <div className="validation-state-grid">
+              <span
+                className={`status-pill ${
+                  exportPlan?.metadata.preflight.ready ? "status-ready" : "status-warn"
+                }`}
+              >
+                {exportPlan?.metadata.preflight.ready
+                  ? "Ready for LMS validation"
+                  : "Preflight needs attention"}
+              </span>
+              <span className="status-pill">Export mode: {exportMode}</span>
+              <span className="status-pill">
+                Diagnostics: {exportMode === "validation" ? "enabled" : "disabled"}
+              </span>
+              <span className="status-pill">
+                Theme: {selectedThemePack?.name ?? "None"}
+              </span>
+            </div>
+            <div className="preflight-check-grid">
+              {exportPlan?.metadata.preflight.checks.map((check) => (
+                <article className="runtime-status-card" key={check.id}>
+                  <span className="runtime-status-label">{check.label}</span>
+                  <strong>{check.passed ? "Passed" : "Needs attention"}</strong>
+                  <p className="panel-copy">{check.details}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <LmsValidationPanel catalog={validationCatalog} />
+          <LmsValidationWorkspace
+            catalog={validationCatalog}
+            onSelectTarget={setSelectedValidationTargetId}
+            selectedTargetId={
+              selectedValidationTarget?.id ?? validationCatalog.platforms[0].id
+            }
+          />
+
+          <details className="details-panel studio-advanced-panel">
+            <summary>Advanced tools, tests, and project details</summary>
+            <div className="details-copy studio-advanced-stack">
+
           {selectedProject ? (
-            <section className="panel notes-panel">
-              <p className="eyebrow">Source Project</p>
-              <h2>Project panel</h2>
-              <p className="panel-copy">
-                Projects keep your editable source, saved variants, themes, and
-                exported files separate.
+          <section className="panel notes-panel">
+            <p className="eyebrow">Source Project</p>
+            <h2>Current project</h2>
+            <p className="panel-copy">
+              Projects keep your editable source, saved variants, themes, and
+              exported files separate.
               </p>
               <p className="editing-surface-note">{projectSurfaceSummary.description}</p>
               <div className="runtime-status-grid inspector-grid">
@@ -4801,67 +4944,6 @@ nodes:
             </div>
           </section>
 
-          <div ref={previewPanelRef}>
-            {activePreviewCourse ? (
-              <RuntimePlayer course={activePreviewCourse} />
-            ) : (
-              <section className="panel runtime-panel placeholder-panel">
-                <p className="eyebrow">Compiled Preview</p>
-                <h2>Compiled preview unavailable</h2>
-                <p className="panel-copy">
-                  Compile the source successfully to render the learner experience,
-                  validate the runtime graph, and unlock SCORM export.
-                </p>
-              </section>
-            )}
-          </div>
-
-          <section className="panel notes-panel">
-            <p className="eyebrow">SCORM Preflight</p>
-            <div className="help-inline-row">
-              <h2>Ready for LMS validation</h2>
-              <HelpHint
-                label="Export build"
-                description={exportSurfaceSummary.description}
-              />
-            </div>
-            <p className="panel-copy">
-              Preflight checks the manifest, launch file, course graph, lesson status
-              behavior, score behavior, and selected export mode before build output is
-              generated.
-            </p>
-            <p className="editing-surface-note">{exportSurfaceSummary.label}</p>
-            <div className="validation-state-grid">
-              <span
-                className={`status-pill ${
-                  exportPlan?.metadata.preflight.ready ? "status-ready" : "status-warn"
-                }`}
-              >
-                {exportPlan?.metadata.preflight.ready
-                  ? "Ready for LMS validation"
-                  : "Preflight needs attention"}
-              </span>
-              <span className="status-pill">
-                Export mode: {exportMode}
-              </span>
-              <span className="status-pill">
-                Diagnostics: {exportMode === "validation" ? "enabled" : "disabled"}
-              </span>
-              <span className="status-pill">
-                Theme: {selectedThemePack?.name ?? "None"}
-              </span>
-            </div>
-            <div className="preflight-check-grid">
-              {exportPlan?.metadata.preflight.checks.map((check) => (
-                <article className="runtime-status-card" key={check.id}>
-                  <span className="runtime-status-label">{check.label}</span>
-                  <strong>{check.passed ? "Passed" : "Needs attention"}</strong>
-                  <p className="panel-copy">{check.details}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
           <section className="panel notes-panel">
             <p className="eyebrow">Structure Inspector</p>
             <h2>Canonical model summary</h2>
@@ -4933,30 +5015,9 @@ nodes:
             </div>
           </section>
 
-          <section className="panel notes-panel">
-            <p className="eyebrow">Trust Signal</p>
-            <h2>Current validation status</h2>
-            <p className="panel-copy">
-              Validated in SCORM Cloud for launch, completion, score,
-              pass/fail, and resume. Real LMS interoperability still needs
-              broader testing.
-            </p>
-            <div className="trust-grid">
-              <span className="trust-pill">Launch passed</span>
-              <span className="trust-pill">Completion passed</span>
-              <span className="trust-pill">Score passed</span>
-              <span className="trust-pill">Resume passed</span>
             </div>
-          </section>
+          </details>
 
-          <LmsValidationPanel catalog={validationCatalog} />
-          <LmsValidationWorkspace
-            catalog={validationCatalog}
-            onSelectTarget={setSelectedValidationTargetId}
-            selectedTargetId={
-              selectedValidationTarget?.id ?? validationCatalog.platforms[0].id
-            }
-          />
         </div>
       </section>
 

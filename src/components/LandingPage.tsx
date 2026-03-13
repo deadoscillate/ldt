@@ -4,7 +4,6 @@ import { BRAND } from "@/lib/app/brand";
 import { MarketingDemoSection } from "@/components/marketing/MarketingDemoSection";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { MarketingWaitlistSection } from "@/components/marketing/MarketingWaitlistSection";
-import { ProofSummaryCard } from "@/components/ProofSummaryCard";
 import { TrackedLink } from "@/components/TrackedLink";
 import { WorkflowSteps } from "@/components/WorkflowSteps";
 import type { CourseSample } from "@/lib/course/sample-catalog";
@@ -34,7 +33,6 @@ export function LandingPage({
   featuredSource,
   validationCatalog,
 }: LandingPageProps) {
-  const featuredSample = samples[0];
   const scormCloudPlatform = validationCatalog.platforms.find(
     (platform) => platform.id === "scorm-cloud"
   );
@@ -96,7 +94,7 @@ export function LandingPage({
       <section className="landing-proof-band panel" id="proof">
         <div className="landing-proof-copy">
           <p className="eyebrow">Proof</p>
-          <h2>Validated behavior, presented platform by platform</h2>
+          <h2>Know what has been tested so far</h2>
           <p className="panel-copy">{validationCatalog.philosophy}</p>
         </div>
         <div className="proof-checklist" aria-label="Validation checklist">
@@ -123,10 +121,6 @@ export function LandingPage({
             </article>
           ))}
         </div>
-      </section>
-
-      <section className="landing-section">
-        <ProofSummaryCard catalog={validationCatalog} />
       </section>
 
       <section className="landing-section">

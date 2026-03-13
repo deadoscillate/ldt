@@ -2583,6 +2583,17 @@ textarea {
   margin-bottom: 1.25rem;
 }
 
+.studio-quick-nav-panel {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.studio-advanced-stack {
+  display: grid;
+  gap: 1rem;
+}
+
 .onboarding-concepts {
   align-items: start;
 }
